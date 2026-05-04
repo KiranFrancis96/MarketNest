@@ -1,7 +1,7 @@
 import pinoHttp from 'pino-http'
-import logger from '../utils/looger.js'
+import logger from '../utils/logger.ts'
 
-const httpLogger = pinoHttp.default({
+const httpLogger = pinoHttp({
     logger,
 })
 
