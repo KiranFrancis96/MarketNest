@@ -7,6 +7,7 @@ import { MerchantResetPasswordForm } from "@/features/merchantAuth/ui/MerchantRe
 import { RoleSwitcher } from "@/shared/ui/RoleSwitcher";
 import { useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
+import { useEffect } from "react";
 
 export const MerchantAuthPage = () => {
   const isMerchantAuthenticated = useSelector((state: any) => state.merchant.isAuthenticated);
@@ -24,7 +25,40 @@ export const MerchantAuthPage = () => {
     verifyOtp,
     forgotPassword,
     resetPassword,
+    loginWithGoogle,
   } = useMerchantAuth();
+
+  useEffect(() => {
+    if (step === "login") {
+      const initializeGoogle = () => {
+        if ((window as any).google) {
+          (window as any).google.accounts.id.initialize({
+            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+            callback: (response: any) => {
+              if (response.credential) {
+                loginWithGoogle(response.credential);
+              }
+            },
+          });
+          (window as any).google.accounts.id.renderButton(
+            document.getElementById("google-merchant-signin-btn"),
+            { theme: "outline", size: "large", width: 384, text: "signin_with" }
+          );
+        }
+      };
+
+      if (!(window as any).google) {
+        const script = document.createElement("script");
+        script.src = "https://accounts.google.com/gsi/client";
+        script.async = true;
+        script.defer = true;
+        script.onload = initializeGoogle;
+        document.body.appendChild(script);
+      } else {
+        initializeGoogle();
+      }
+    }
+  }, [step, loginWithGoogle]);
 
   if (isMerchantAuthenticated) return <Navigate to="/merchant/dashboard" replace />;
   if (isUserAuthenticated)     return <Navigate to="/"                   replace />;
@@ -65,13 +99,23 @@ export const MerchantAuthPage = () => {
         )}
 
         {step === "login" && (
-          <MerchantLoginForm 
-            onSubmit={login} 
-            email={email} 
-            setEmail={setEmail} 
-            isLoading={isLoading} 
-            onForgotClick={() => setStep("forgotPassword")} 
-          />
+          <>
+            <MerchantLoginForm 
+              onSubmit={login} 
+              email={email} 
+              setEmail={setEmail} 
+              isLoading={isLoading} 
+              onForgotClick={() => setStep("forgotPassword")} 
+            />
+            <div style={{ margin: "1.5rem 0 1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ flex: 1, height: "1px", backgroundColor: "#cbd5e1" }}></div>
+              <span style={{ padding: "0 0.75rem", fontSize: "0.875rem", color: "#64748b", fontWeight: "500" }}>or</span>
+              <div style={{ flex: 1, height: "1px", backgroundColor: "#cbd5e1" }}></div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
+              <div id="google-merchant-signin-btn" style={{ minHeight: "44px" }}></div>
+            </div>
+          </>
         )}
         
         {step === "register" && (

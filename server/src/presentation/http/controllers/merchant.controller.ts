@@ -9,6 +9,8 @@ import type {
   IMerchantResendOtpUseCase,
   IMerchantReapplyUseCase,
   IMerchantLogoutUseCase,
+  IMerchantGoogleAuthUseCase,
+  ICompleteMerchantProfileUseCase,
 } from "@/application/IUseCases/merchant/IMerchantUseCases.ts";
 import {
   MSG_EMAIL_REQUIRED,
@@ -35,8 +37,37 @@ export class MerchantController {
     private _getProfileUseCase: IGetMerchantProfileUseCase,
     private _resendOtpUseCase: IMerchantResendOtpUseCase,
     private _reapplyUseCase: IMerchantReapplyUseCase,
-    private _logoutUseCase: IMerchantLogoutUseCase
+    private _logoutUseCase: IMerchantLogoutUseCase,
+    private _googleAuthUseCase: IMerchantGoogleAuthUseCase,
+    private _completeProfileUseCase: ICompleteMerchantProfileUseCase
   ) {}
+
+  googleAuth = async (req: Request, res: Response): Promise<void> => {
+    const { credential } = req.body;
+    if (!credential) {
+      res.status(400).json({ message: "Credential token is required" });
+      return;
+    }
+
+    const { merchant, accessToken, refreshToken, isProfileComplete } = await this._googleAuthUseCase.execute(credential);
+
+    res.cookie("merchantAccessToken", accessToken, { httpOnly: true, sameSite: "lax", maxAge: 15 * 60 * 1000 });
+    res.cookie("merchantRefreshToken", refreshToken, { httpOnly: true, sameSite: "lax", maxAge: 7 * 24 * 60 * 60 * 1000 });
+
+    res.json({ message: MSG_MERCHANT_LOGIN_SUCCESS, merchant, isProfileComplete });
+  };
+
+  completeProfile = async (req: Request, res: Response): Promise<void> => {
+    // @ts-ignore
+    const merchantId = req.user?.id;
+    if (!merchantId) {
+      res.status(401).json({ message: MSG_UNAUTHORIZED });
+      return;
+    }
+
+    const updated = await this._completeProfileUseCase.execute(merchantId, req.body);
+    res.json({ message: "Merchant onboarding completed successfully", merchant: updated });
+  };
 
   register = async (req: Request, res: Response): Promise<void> => {
     await this._registerUseCase.execute(req.body);

@@ -8,6 +8,7 @@ import { UserResendOtpUseCase } from "@/application/useCases/auth/resendOtp.usec
 import { UserLogoutUseCase } from "@/application/useCases/auth/logout.usecase.ts";
 import { UserRefreshTokenUseCase } from "@/application/useCases/auth/refreshToken.usecase.ts";
 import { GetUserProfileUseCase } from "@/application/useCases/auth/getUserProfile.usecase.ts";
+import { UserGoogleAuthUseCase } from "@/application/useCases/auth/googleUserAuth.usecase.ts";
 
 export const userRegisterUseCase = new UserRegisterUseCase(userRepository);
 export const userVerifyOtpUseCase = new UserVerifyOtpUseCase(userRepository);
@@ -18,3 +19,4 @@ export const userResendOtpUseCase = new UserResendOtpUseCase(userRepository);
 export const userLogoutUseCase = new UserLogoutUseCase();
 export const userRefreshTokenUseCase = new UserRefreshTokenUseCase();
 export const getUserProfileUseCase = new GetUserProfileUseCase(userRepository);
+export const userGoogleAuthUseCase = new UserGoogleAuthUseCase(userRepository);

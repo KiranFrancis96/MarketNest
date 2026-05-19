@@ -46,3 +46,11 @@ export interface IGetMerchantProfileUseCase {
 export interface IMerchantLogoutUseCase {
   execute(): Promise<boolean>;
 }
+
+export interface IMerchantGoogleAuthUseCase {
+  execute(credential: string): Promise<MerchantLoginOutputDTO & { isProfileComplete: boolean }>;
+}
+
+export interface ICompleteMerchantProfileUseCase {
+  execute(id: string, input: any): Promise<Merchant>;
+}

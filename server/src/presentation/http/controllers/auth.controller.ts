@@ -9,6 +9,7 @@ import type {
   IUserLogoutUseCase,
   IUserRefreshTokenUseCase,
   IGetUserProfileUseCase,
+  IUserGoogleAuthUseCase,
 } from "@/application/IUseCases/user/IUserUseCases.ts";
 import {
   MSG_ALL_FIELDS_REQUIRED,
@@ -36,8 +37,33 @@ export class AuthController {
     private _resendOtpUseCase: IUserResendOtpUseCase,
     private _logoutUseCase: IUserLogoutUseCase,
     private _refreshTokenUseCase: IUserRefreshTokenUseCase,
-    private _getUserProfileUseCase: IGetUserProfileUseCase
+    private _getUserProfileUseCase: IGetUserProfileUseCase,
+    private _googleAuthUseCase: IUserGoogleAuthUseCase
   ) {}
+
+  googleAuth = async (req: Request, res: Response): Promise<void> => {
+    const { credential } = req.body;
+
+    if (!credential) {
+      res.status(400).json({ message: "Credential token is required" });
+      return;
+    }
+
+    const result = await this._googleAuthUseCase.execute(credential);
+
+    res
+      .cookie("accessToken", result.accessToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+      })
+      .cookie("refreshToken", result.refreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+      })
+      .json({ message: MSG_USER_LOGIN_SUCCESS, user: result.user });
+  };
 
   register = async (req: Request, res: Response): Promise<void> => {
     const { firstName, lastName, email, password } = req.body;

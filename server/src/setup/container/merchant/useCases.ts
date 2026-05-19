@@ -8,6 +8,8 @@ import { ResendMerchantOtpUseCase } from "@/application/useCases/merchant/auth/r
 import { ReapplyMerchantUseCase } from "@/application/useCases/merchant/auth/reapplyMerchant.usecase.ts";
 import { GetMerchantProfileUseCase } from "@/application/useCases/merchant/auth/getMerchantProfile.usecase.ts";
 import { LogoutMerchantUseCase } from "@/application/useCases/merchant/auth/logoutMerchant.usecase.ts";
+import { GoogleMerchantAuthUseCase } from "@/application/useCases/merchant/auth/googleMerchantAuth.usecase.ts";
+import { CompleteMerchantProfileUseCase } from "@/application/useCases/merchant/auth/completeMerchantProfile.usecase.ts";
 
 export const registerMerchantUseCase = new RegisterMerchantUseCase(merchantRepository);
 export const verifyMerchantOtpUseCase = new VerifyMerchantOtpUseCase(merchantRepository);
@@ -18,3 +20,5 @@ export const resendMerchantOtpUseCase = new ResendMerchantOtpUseCase(merchantRep
 export const reapplyMerchantUseCase = new ReapplyMerchantUseCase(merchantRepository);
 export const getMerchantProfileUseCase = new GetMerchantProfileUseCase(merchantRepository);
 export const logoutMerchantUseCase = new LogoutMerchantUseCase();
+export const googleMerchantAuthUseCase = new GoogleMerchantAuthUseCase(merchantRepository);
+export const completeMerchantProfileUseCase = new CompleteMerchantProfileUseCase(merchantRepository);

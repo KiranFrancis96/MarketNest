@@ -2,9 +2,41 @@ import { useLogin } from "@/features/auth/model/useLogin";
 import { Link } from "react-router-dom";
 import { RoleSwitcher } from "@/shared/ui/RoleSwitcher";
 import { LoginForm } from "@/features/auth/ui/LoginForm";
+import { useEffect } from "react";
 
 export const LoginPage = () => {
-  const { error, setError, isLoading, login } = useLogin();
+  const { error, setError, isLoading, login, loginWithGoogle } = useLogin();
+
+  useEffect(() => {
+    const initializeGoogle = () => {
+      if ((window as any).google) {
+        (window as any).google.accounts.id.initialize({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          callback: (response: any) => {
+            if (response.credential) {
+              loginWithGoogle(response.credential);
+            }
+          },
+        });
+        (window as any).google.accounts.id.renderButton(
+          document.getElementById("google-signin-btn"),
+          { theme: "outline", size: "large", width: 384, text: "signin_with" }
+        );
+      }
+    };
+
+    if (!(window as any).google) {
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      script.onload = initializeGoogle;
+      document.body.appendChild(script);
+    } else {
+      initializeGoogle();
+    }
+  }, [loginWithGoogle]);
+
   return (
     <div className="auth-container">
       <div className="auth-card">
@@ -27,6 +59,16 @@ export const LoginPage = () => {
           isLoading={isLoading} 
           onClearError={() => setError("")} 
         />
+
+        <div style={{ margin: "1.5rem 0 1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ flex: 1, height: "1px", backgroundColor: "#cbd5e1" }}></div>
+          <span style={{ padding: "0 0.75rem", fontSize: "0.875rem", color: "#64748b", fontWeight: "500" }}>or</span>
+          <div style={{ flex: 1, height: "1px", backgroundColor: "#cbd5e1" }}></div>
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}>
+          <div id="google-signin-btn" style={{ minHeight: "44px" }}></div>
+        </div>
 
         <div style={{ marginTop: "1rem", textAlign: "right" }}>
           <Link to="/forgot-password" style={{ fontSize: "0.875rem", color: "var(--primary)", fontWeight: "500", textDecoration: "none" }}>

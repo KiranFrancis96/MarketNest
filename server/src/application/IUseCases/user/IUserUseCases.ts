@@ -45,3 +45,7 @@ export interface IUserRefreshTokenUseCase {
 export interface IGetUserProfileUseCase {
   execute(id: string): Promise<User>;
 }
+
+export interface IUserGoogleAuthUseCase {
+  execute(credential: string): Promise<UserLoginOutputDTO>;
+}

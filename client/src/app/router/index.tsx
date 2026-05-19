@@ -7,6 +7,7 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import { GuestRoute } from "./GuestRoute";
 import { MerchantAuthPage } from "@/pages/merchant-auth/MerchantAuthPage";
 import { MerchantDashboardPage } from "@/pages/merchant-dashboard/MerchantDashboardPage";
+import { MerchantCompleteProfilePage } from "@/pages/merchant-auth/MerchantCompleteProfilePage";
 import AdminLoginPage from "@/pages/admin-auth/AdminLoginPage";
 import AdminDashboardPage from "@/pages/admin-dashboard/AdminDashboardPage";
 import { AdminProtectedRoute } from "./AdminProtectedRoute";
@@ -34,6 +35,7 @@ export const AppRouter = () => {
       {/* Merchant Routes */}
       <Route path="/merchant/auth" element={<MerchantAuthPage />} />
       <Route path="/merchant/dashboard" element={<MerchantDashboardPage />} />
+      <Route path="/merchant/complete-profile" element={<MerchantCompleteProfilePage />} />
 
       {/* Admin Routes */}
       <Route path="/admin/login" element={<AdminLoginPage />} />

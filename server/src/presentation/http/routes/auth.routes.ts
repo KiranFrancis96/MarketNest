@@ -11,6 +11,7 @@ import {
   ROUTE_RESET_PW,
   ROUTE_REFRESH,
   ROUTE_PROFILE,
+  ROUTE_GOOGLE,
 } from "./routes.constants.ts";
 
 const router = express.Router();
@@ -24,5 +25,6 @@ router.post(ROUTE_LOGOUT, authController.logout);
 router.post(ROUTE_FORGOT_PW, authController.forgotPassword);
 router.post(ROUTE_RESET_PW, authController.resetPassword);
 router.post(ROUTE_RESEND_OTP, authController.resendOtp);
+router.post(ROUTE_GOOGLE, authController.googleAuth);
 
 export default router;

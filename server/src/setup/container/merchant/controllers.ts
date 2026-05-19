@@ -10,5 +10,7 @@ export const merchantController = new MerchantController(
   useCases.getMerchantProfileUseCase,
   useCases.resendMerchantOtpUseCase,
   useCases.reapplyMerchantUseCase,
-  useCases.logoutMerchantUseCase
+  useCases.logoutMerchantUseCase,
+  useCases.googleMerchantAuthUseCase,
+  useCases.completeMerchantProfileUseCase
 );

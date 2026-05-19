@@ -19,4 +19,5 @@ export const userApi = {
   resendOtp: (email: string) => baseApi.post("/auth/resend-otp", { email }),
   getProfile: () => baseApi.get("/auth/profile"),
   logout: () => baseApi.post("/auth/logout"),
+  googleLogin: (credential: string) => baseApi.post("/auth/google", { credential }),
 };

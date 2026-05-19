@@ -16,6 +16,14 @@ export const MerchantDashboardPage = () => {
   const [reapplyErrors, setReapplyErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    if (!merchant) {
+      navigate("/merchant/auth");
+    } else if (merchant.isProfileComplete === false || merchant.gstNumber?.startsWith("PENDING-")) {
+      navigate("/merchant/complete-profile");
+    }
+  }, [merchant, navigate]);
+
+  useEffect(() => {
     const fetchProfile = async () => {
       try {
         const res = await merchantApi.getProfile();

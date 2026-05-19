@@ -38,10 +38,30 @@ export const useLogin = () => {
     }
   };
 
+  const loginWithGoogle = async (credential: string) => {
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const response = await userApi.googleLogin(credential);
+      
+      if (response.data?.user) {
+        dispatch(setUser(response.data.user));
+      }
+      
+      navigate("/", { replace: true });
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     error,
     setError,
     isLoading,
     login,
+    loginWithGoogle,
   };
 };

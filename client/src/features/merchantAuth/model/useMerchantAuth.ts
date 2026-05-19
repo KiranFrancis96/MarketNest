@@ -115,6 +115,24 @@ export const useMerchantAuth = () => {
     }
   };
 
+  const loginWithGoogle = async (credential: string) => {
+    setError("");
+    setIsLoading(true);
+    try {
+      const res = await merchantApi.googleLogin(credential);
+      dispatch(setMerchant(res.data.merchant));
+      if (res.data.isProfileComplete === false) {
+        navigate("/merchant/complete-profile", { replace: true });
+      } else {
+        navigate("/merchant/dashboard", { replace: true });
+      }
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     step,
     setStep,
@@ -130,6 +148,7 @@ export const useMerchantAuth = () => {
     verifyOtp,
     forgotPassword,
     resetPassword,
+    loginWithGoogle,
     getErrorMessage
   };
 };

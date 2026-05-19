@@ -15,6 +15,7 @@ export interface Merchant {
   ownerName: string;
   documentUrl?: string | undefined;
   isEmailVerified: boolean;
+  isProfileComplete?: boolean;
   isAdminVerified: boolean;
   isBlocked: boolean;
   status: "pending" | "approved" | "rejected";

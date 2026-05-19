@@ -13,6 +13,7 @@ export const ROUTE_FORGOT_PW     = "/forgot-password";
 export const ROUTE_RESET_PW      = "/reset-password";
 export const ROUTE_REFRESH       = "/refresh";
 export const ROUTE_PROFILE       = "/profile";
+export const ROUTE_GOOGLE        = "/google";
 
 // ─── Admin Routes ─────────────────────────────────────────────────────────────
 export const ROUTE_USERS                   = "/users";
@@ -27,3 +28,4 @@ export const ROUTE_USER_UNBLOCK            = "/users/:id/unblock";
 // ─── Merchant Routes ──────────────────────────────────────────────────────────
 export const ROUTE_MERCHANT_ME             = "/me";
 export const ROUTE_MERCHANT_REAPPLY        = "/reapply";
+export const ROUTE_MERCHANT_COMPLETE_PROFILE = "/complete-profile";

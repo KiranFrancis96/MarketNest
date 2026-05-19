@@ -11,6 +11,8 @@ import {
   ROUTE_RESEND_OTP,
   ROUTE_MERCHANT_ME,
   ROUTE_MERCHANT_REAPPLY,
+  ROUTE_GOOGLE,
+  ROUTE_MERCHANT_COMPLETE_PROFILE,
 } from "./routes.constants.ts";
 
 const router = express.Router();
@@ -22,9 +24,11 @@ router.post(ROUTE_VERIFY_OTP, merchantController.verifyOtp);
 router.post(ROUTE_FORGOT_PW, merchantController.forgotPassword);
 router.post(ROUTE_RESET_PW, merchantController.resetPassword);
 router.post(ROUTE_RESEND_OTP, merchantController.resendOtp);
+router.post(ROUTE_GOOGLE, merchantController.googleAuth);
 
 // Protected routes
 router.get(ROUTE_MERCHANT_ME, authenticateMerchant, merchantController.getProfile);
 router.patch(ROUTE_MERCHANT_REAPPLY, authenticateMerchant, merchantController.reapply);
+router.post(ROUTE_MERCHANT_COMPLETE_PROFILE, authenticateMerchant, merchantController.completeProfile);
 
 export default router;

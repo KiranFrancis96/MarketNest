@@ -22,4 +22,8 @@ export const merchantApi = {
   logout: () => baseApi.post("/merchant/logout"),
 
   reapply: (data: Record<string, unknown>) => baseApi.patch("/merchant/reapply", data),
+
+  googleLogin: (credential: string) => baseApi.post("/merchant/google", { credential }),
+
+  completeProfile: (data: Record<string, unknown>) => baseApi.post("/merchant/complete-profile", data),
 };
