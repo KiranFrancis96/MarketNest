@@ -3,14 +3,14 @@ import type { IMerchantResetPasswordUseCase } from "@/application/IUseCases/merc
 import type { MerchantResetPasswordInputDTO } from "@/application/dtos/merchant/MerchantDtos.ts";
 import bcrypt from "bcrypt";
 import { ApiError } from "@/utils/apiError.ts";
-import { MSG_MERCHANT_NOT_FOUND, MSG_MERCHANT_INVALID_OTP } from "./messages.constants.ts";
+import { MSG_MERCHANT_NOT_FOUND, MSG_MERCHANT_INVALID_OTP, MSG_MERCHANT_PASSWORD_REQUIRED } from "./messages.constants.ts";
 
 export class ResetMerchantPasswordUseCase implements IMerchantResetPasswordUseCase {
   constructor(private _merchantRepository: IMerchantRepository) {}
 
   async execute({ email, otp, password }: MerchantResetPasswordInputDTO): Promise<void> {
     if (!password) {
-      throw new ApiError(400, "Password is required");
+      throw new ApiError(400, MSG_MERCHANT_PASSWORD_REQUIRED);
     }
 
     const merchant = await this._merchantRepository.findByEmail(email);

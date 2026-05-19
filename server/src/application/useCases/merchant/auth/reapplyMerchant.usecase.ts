@@ -3,7 +3,11 @@ import type { IMerchantReapplyUseCase } from "@/application/IUseCases/merchant/I
 import type { MerchantReapplyInputDTO } from "@/application/dtos/merchant/MerchantDtos.ts";
 import type { Merchant } from "@/domain/entities/merchant.entity.ts";
 import { ApiError } from "@/utils/apiError.ts";
-import { MSG_MERCHANT_NOT_FOUND, MSG_MERCHANT_ONLY_REJECTED_CAN_REAPPLY } from "./messages.constants.ts";
+import {
+  MSG_MERCHANT_NOT_FOUND,
+  MSG_MERCHANT_ONLY_REJECTED_CAN_REAPPLY,
+  MSG_MERCHANT_REAPPLY_FAILED,
+} from "./messages.constants.ts";
 
 export class ReapplyMerchantUseCase implements IMerchantReapplyUseCase {
   constructor(private _merchantRepository: IMerchantRepository) {}
@@ -24,7 +28,7 @@ export class ReapplyMerchantUseCase implements IMerchantReapplyUseCase {
     });
 
     if (!updated) {
-      throw new ApiError(500, "Failed to update merchant reapplication");
+      throw new ApiError(500, MSG_MERCHANT_REAPPLY_FAILED);
     }
 
     return updated;

@@ -5,6 +5,8 @@ export const MSG_USER_INVALID_CREDENTIALS    = "Invalid email or password";
 export const MSG_USER_NOT_VERIFIED           = "Please verify your email address before logging in";
 export const MSG_USER_BLOCKED                = "Your account has been blocked. Please contact support.";
 export const MSG_USER_INVALID_OTP            = "Invalid or expired OTP";
+export const MSG_USER_CREATE_FAILED          = "Failed to create user account";
+export const MSG_USER_PASSWORD_REQUIRED      = "Password is required";
 
 // ─── OTP / Email ──────────────────────────────────────────────────────────────
 export const MSG_OTP_EMAIL_FAILED            = "Could not send OTP email. Check your email credentials and try again.";

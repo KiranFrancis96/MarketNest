@@ -16,7 +16,7 @@ export class UserRepository extends BaseRepository<User, any> implements IUserRe
 
   async update(user: Partial<User>, email: string): Promise<void> {
     const docData = this.mapper.toDocument(user as User);
-    // remove empty/undefined values so we don't overwrite with undefined
+    
     Object.keys(docData).forEach((key) => {
       if (docData[key] === undefined) {
         delete docData[key];

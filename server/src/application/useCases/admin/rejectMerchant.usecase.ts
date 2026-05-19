@@ -5,6 +5,7 @@ import { ApiError } from "@/utils/apiError.ts";
 import {
   MSG_MERCHANT_NOT_FOUND,
   MSG_MERCHANT_ALREADY_REJECTED,
+  MSG_MERCHANT_UPDATE_FAILED,
 } from "./messages.constants.ts";
 
 export class RejectMerchantUseCase implements IRejectMerchantUseCase {
@@ -24,7 +25,7 @@ export class RejectMerchantUseCase implements IRejectMerchantUseCase {
       rejectionReason: reason,
     });
 
-    if (!updated) throw new ApiError(500, "Failed to update merchant status");
+    if (!updated) throw new ApiError(500, MSG_MERCHANT_UPDATE_FAILED);
 
     return {
       id: updated._id || id,

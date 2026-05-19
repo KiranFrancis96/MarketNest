@@ -5,6 +5,10 @@ import { verifyGoogleToken } from "@/utils/google.ts";
 import { generateAccessToken, generateRefreshToken } from "@/infrastructure/services/jwt.service.ts";
 import { ApiError } from "@/utils/apiError.ts";
 import bcrypt from "bcrypt";
+import {
+  MSG_USER_CREATE_FAILED,
+  MSG_USER_BLOCKED,
+} from "./messages.constants.ts";
 
 export class UserGoogleAuthUseCase implements IUserGoogleAuthUseCase {
   constructor(private _userRepository: IUserRepository) {}
@@ -32,11 +36,11 @@ export class UserGoogleAuthUseCase implements IUserGoogleAuthUseCase {
       }) as any;
 
       if (!user) {
-        throw new ApiError(500, "Failed to create user account");
+        throw new ApiError(500, MSG_USER_CREATE_FAILED);
       }
     } else {
       if (user.isBlocked) {
-        throw new ApiError(403, "User account is blocked. Please contact support.");
+        throw new ApiError(403, MSG_USER_BLOCKED);
       }
 
       if (!user.isVerified) {

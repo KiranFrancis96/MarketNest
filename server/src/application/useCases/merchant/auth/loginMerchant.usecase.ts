@@ -8,6 +8,7 @@ import {
   MSG_MERCHANT_INVALID_CREDENTIALS,
   MSG_MERCHANT_NOT_VERIFIED,
   MSG_MERCHANT_BLOCKED,
+  MSG_MERCHANT_PASSWORD_REQUIRED,
 } from "./messages.constants.ts";
 
 export class LoginMerchantUseCase implements IMerchantLoginUseCase {
@@ -15,7 +16,7 @@ export class LoginMerchantUseCase implements IMerchantLoginUseCase {
 
   async execute({ email, password }: MerchantLoginInputDTO): Promise<MerchantVerifyOtpOutputDTO> {
     if (!password) {
-      throw new ApiError(400, "Password is required");
+      throw new ApiError(400, MSG_MERCHANT_PASSWORD_REQUIRED);
     }
 
     const merchant = await this._merchantRepository.findByEmail(email);

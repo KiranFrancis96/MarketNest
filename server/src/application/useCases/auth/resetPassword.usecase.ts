@@ -3,14 +3,14 @@ import type { IUserResetPasswordUseCase } from "@/application/IUseCases/user/IUs
 import type { UserResetPasswordInputDTO } from "@/application/dtos/user/UserDtos.ts";
 import bcrypt from "bcrypt";
 import { ApiError } from "@/utils/apiError.ts";
-import { MSG_USER_NOT_FOUND, MSG_USER_INVALID_OTP } from "./messages.constants.ts";
+import { MSG_USER_NOT_FOUND, MSG_USER_INVALID_OTP, MSG_USER_PASSWORD_REQUIRED } from "./messages.constants.ts";
 
 export class UserResetPasswordUseCase implements IUserResetPasswordUseCase {
   constructor(private _userRepository: IUserRepository) {}
 
   async execute({ email, otp, password }: UserResetPasswordInputDTO): Promise<void> {
     if (!password) {
-      throw new ApiError(400, "Password is required");
+      throw new ApiError(400, MSG_USER_PASSWORD_REQUIRED);
     }
 
     const user = await this._userRepository.findByEmail(email);

@@ -10,6 +10,7 @@ import {
   MSG_USER_ALREADY_EXISTS,
   MSG_OTP_EMAIL_FAILED,
   LOG_OTP_EMAIL_FAILED,
+  MSG_USER_PASSWORD_REQUIRED,
 } from "./messages.constants.ts";
 
 export class UserRegisterUseCase implements IUserRegisterUseCase {
@@ -17,7 +18,7 @@ export class UserRegisterUseCase implements IUserRegisterUseCase {
 
   async execute({ firstName, lastName, email, password }: UserRegisterInputDTO): Promise<void> {
     if (!password) {
-      throw new ApiError(400, "Password is required");
+      throw new ApiError(400, MSG_USER_PASSWORD_REQUIRED);
     }
 
     const existing = await this._userRepository.findByEmail(email);

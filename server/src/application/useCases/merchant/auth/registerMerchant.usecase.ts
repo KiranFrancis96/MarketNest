@@ -11,6 +11,7 @@ import {
   MSG_MERCHANT_GST_ALREADY_EXISTS,
   MSG_OTP_EMAIL_FAILED,
   LOG_OTP_EMAIL_FAILED,
+  MSG_MERCHANT_PASSWORD_REQUIRED,
 } from "./messages.constants.ts";
 
 export class RegisterMerchantUseCase implements IMerchantRegisterUseCase {
@@ -18,7 +19,7 @@ export class RegisterMerchantUseCase implements IMerchantRegisterUseCase {
 
   async execute(data: MerchantRegisterInputDTO): Promise<void> {
     if (!data.password) {
-      throw new ApiError(400, "Password is required");
+      throw new ApiError(400, MSG_MERCHANT_PASSWORD_REQUIRED);
     }
 
     const existingEmail = await this._merchantRepository.findByEmail(data.email);

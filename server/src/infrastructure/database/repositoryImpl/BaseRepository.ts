@@ -22,7 +22,7 @@ export abstract class BaseRepository<T, D> implements IBaseRepository<T> {
 
   async create(data: Partial<T>): Promise<T | null> {
     const docData = this.mapper.toDocument(data as T);
-    // Remove undefined values to avoid overwriting database fields with undefined
+    
     Object.keys(docData).forEach((key) => {
       if (docData[key] === undefined) {
         delete docData[key];

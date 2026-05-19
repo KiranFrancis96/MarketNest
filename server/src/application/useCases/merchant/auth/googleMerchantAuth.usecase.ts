@@ -5,6 +5,11 @@ import { verifyGoogleToken } from "@/utils/google.ts";
 import { generateAccessToken, generateRefreshToken } from "@/infrastructure/services/jwt.service.ts";
 import { ApiError } from "@/utils/apiError.ts";
 import bcrypt from "bcrypt";
+import {
+  MSG_MERCHANT_CREATE_FAILED,
+  MSG_MERCHANT_ACCOUNT_BLOCKED,
+  MSG_MERCHANT_VERIFICATION_UPDATE_FAILED,
+} from "./messages.constants.ts";
 
 export class GoogleMerchantAuthUseCase implements IMerchantGoogleAuthUseCase {
   constructor(private _merchantRepository: IMerchantRepository) {}
@@ -45,18 +50,18 @@ export class GoogleMerchantAuthUseCase implements IMerchantGoogleAuthUseCase {
       });
 
       if (!merchant) {
-        throw new ApiError(500, "Failed to create merchant account");
+        throw new ApiError(500, MSG_MERCHANT_CREATE_FAILED);
       }
     } else {
       if (merchant.isBlocked) {
-        throw new ApiError(403, "Merchant account is blocked. Please contact support.");
+        throw new ApiError(403, MSG_MERCHANT_ACCOUNT_BLOCKED);
       }
 
       if (!merchant.isEmailVerified) {
         // Since Google verified the email, set it to true
         const updated = await this._merchantRepository.updateById(merchant._id as string, { isEmailVerified: true });
         if (!updated) {
-          throw new ApiError(500, "Failed to update merchant verification status");
+          throw new ApiError(500, MSG_MERCHANT_VERIFICATION_UPDATE_FAILED);
         }
         merchant = updated;
       }

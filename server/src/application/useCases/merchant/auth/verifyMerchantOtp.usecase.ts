@@ -7,6 +7,7 @@ import {
   MSG_MERCHANT_NOT_FOUND,
   MSG_MERCHANT_ALREADY_VERIFIED,
   MSG_MERCHANT_INVALID_OTP,
+  MSG_MERCHANT_FETCH_FAILED_AFTER_VERIFY,
 } from "./messages.constants.ts";
 
 export class VerifyMerchantOtpUseCase implements IMerchantVerifyOtpUseCase {
@@ -36,10 +37,10 @@ export class VerifyMerchantOtpUseCase implements IMerchantVerifyOtpUseCase {
       email
     );
 
-    // We fetch the updated merchant to ensure we have the latest state before generating tokens
+    
     const updatedMerchant = await this._merchantRepository.findByEmail(email);
     if (!updatedMerchant) {
-      throw new ApiError(500, "Failed to fetch updated merchant after OTP verification");
+      throw new ApiError(500, MSG_MERCHANT_FETCH_FAILED_AFTER_VERIFY);
     }
 
     const accessToken = generateAccessToken({

@@ -16,7 +16,7 @@ export class AdminRepository implements IAdminRepository {
 
   async update(email: string, updateData: Partial<Admin>): Promise<void> {
     const docData = updateData.id ? updateData : AdminMapper.toDocument(updateData as Admin);
-    // remove empty/undefined values so we don't overwrite with undefined
+    
     Object.keys(docData).forEach((key) => {
       if (docData[key] === undefined) {
         delete docData[key];

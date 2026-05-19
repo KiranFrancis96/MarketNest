@@ -8,6 +8,7 @@ import {
   MSG_USER_INVALID_CREDENTIALS,
   MSG_USER_NOT_VERIFIED,
   MSG_USER_BLOCKED,
+  MSG_USER_PASSWORD_REQUIRED,
 } from "./messages.constants.ts";
 
 export class UserLoginUseCase implements IUserLoginUseCase {
@@ -15,7 +16,7 @@ export class UserLoginUseCase implements IUserLoginUseCase {
 
   async execute({ email, password }: UserLoginInputDTO): Promise<UserLoginOutputDTO> {
     if (!password) {
-      throw new ApiError(400, "Password is required");
+      throw new ApiError(400, MSG_USER_PASSWORD_REQUIRED);
     }
 
     const user = await this._userRepository.findByEmail(email);
