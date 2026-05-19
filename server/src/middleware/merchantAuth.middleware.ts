@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { ApiError } from "@/utils/apiError.ts";
-import { MerchantModel } from "@/infrastructure/database/merchant.model.ts";
+import { MerchantModel } from "@/infrastructure/database/models/merchant.model.ts";
 import {
   MSG_MERCHANT_TOKEN_MISSING,
   MSG_MERCHANT_TOKEN_INVALID,

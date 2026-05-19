@@ -2,9 +2,9 @@ import express from 'express'
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import dotenv from 'dotenv'
-import authRoutes from "./interface/routes/auth.routes.ts";
-import merchantRoutes from "./interface/routes/merchant.routes.ts";
-import adminRoutes from "./interface/routes/admin.routes.ts";
+import authRoutes from "./presentation/http/routes/auth.routes.ts";
+import merchantRoutes from "./presentation/http/routes/merchant.routes.ts";
+import adminRoutes from "./presentation/http/routes/admin.routes.ts";
 import cors from "cors";
 import httpLogger from './middleware/middleware.ts'
 import logger from './utils/logger.ts'
@@ -14,7 +14,7 @@ import {
   BASE_AUTH_ROUTE,
   BASE_MERCHANT_ROUTE,
   BASE_ADMIN_ROUTE,
-} from "./interface/routes/routes.constants.ts";
+} from "./presentation/http/routes/routes.constants.ts";
 
 dotenv.config()
 
@@ -45,7 +45,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 mongoose.connect(process.env.MONGO_URI!).then(() => {
-    logger.info("DB connected");
+  logger.info("DB connected");
   app.listen(PORT, '0.0.0.0', () => {
     logger.info(`server started running at : http://localhost:${PORT}`)
   })

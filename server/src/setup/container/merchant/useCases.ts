@@ -1,0 +1,20 @@
+import { merchantRepository } from "./repositories.ts";
+import { RegisterMerchantUseCase } from "@/application/useCases/merchant/auth/registerMerchant.usecase.ts";
+import { VerifyMerchantOtpUseCase } from "@/application/useCases/merchant/auth/verifyMerchantOtp.usecase.ts";
+import { LoginMerchantUseCase } from "@/application/useCases/merchant/auth/loginMerchant.usecase.ts";
+import { ForgotMerchantPasswordUseCase } from "@/application/useCases/merchant/auth/forgotMerchantPassword.usecase.ts";
+import { ResetMerchantPasswordUseCase } from "@/application/useCases/merchant/auth/resetMerchantPassword.usecase.ts";
+import { ResendMerchantOtpUseCase } from "@/application/useCases/merchant/auth/resendMerchantOtp.usecase.ts";
+import { ReapplyMerchantUseCase } from "@/application/useCases/merchant/auth/reapplyMerchant.usecase.ts";
+import { GetMerchantProfileUseCase } from "@/application/useCases/merchant/auth/getMerchantProfile.usecase.ts";
+import { LogoutMerchantUseCase } from "@/application/useCases/merchant/auth/logoutMerchant.usecase.ts";
+
+export const registerMerchantUseCase = new RegisterMerchantUseCase(merchantRepository);
+export const verifyMerchantOtpUseCase = new VerifyMerchantOtpUseCase(merchantRepository);
+export const loginMerchantUseCase = new LoginMerchantUseCase(merchantRepository);
+export const forgotMerchantPasswordUseCase = new ForgotMerchantPasswordUseCase(merchantRepository);
+export const resetMerchantPasswordUseCase = new ResetMerchantPasswordUseCase(merchantRepository);
+export const resendMerchantOtpUseCase = new ResendMerchantOtpUseCase(merchantRepository);
+export const reapplyMerchantUseCase = new ReapplyMerchantUseCase(merchantRepository);
+export const getMerchantProfileUseCase = new GetMerchantProfileUseCase(merchantRepository);
+export const logoutMerchantUseCase = new LogoutMerchantUseCase();

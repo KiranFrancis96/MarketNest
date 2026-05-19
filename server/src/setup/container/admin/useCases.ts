@@ -1,0 +1,28 @@
+import { adminRepository, userRepository, merchantRepository } from "./repositories.ts";
+import { AdminLoginUseCase } from "@/application/useCases/admin/adminLogin.usecase.ts";
+import { ApproveMerchantUseCase } from "@/application/useCases/admin/approveMerchant.usecase.ts";
+import { BlockMerchantUseCase } from "@/application/useCases/admin/blockMerchant.usecase.ts";
+import { BlockUserUseCase } from "@/application/useCases/admin/blockUser.usecase.ts";
+import { ForgotPasswordUseCase } from "@/application/useCases/admin/forgotPassword.usecase.ts";
+import { GetMerchantsUseCase } from "@/application/useCases/admin/getMerchants.usecase.ts";
+import { GetPendingMerchantsUseCase } from "@/application/useCases/admin/getPendingMerchants.usecase.ts";
+import { GetUsersUseCase } from "@/application/useCases/admin/getUsers.usecase.ts";
+import { RejectMerchantUseCase } from "@/application/useCases/admin/rejectMerchant.usecase.ts";
+import { ResendAdminOtpUseCase } from "@/application/useCases/admin/resendAdminOtp.usecase.ts";
+import { ResetPasswordUseCase } from "@/application/useCases/admin/resetPassword.usecase.ts";
+import { UnblockMerchantUseCase } from "@/application/useCases/admin/unblockMerchant.usecase.ts";
+import { UnblockUserUseCase } from "@/application/useCases/admin/unblockUser.usecase.ts";
+
+export const adminLoginUseCase = new AdminLoginUseCase(adminRepository);
+export const approveMerchantUseCase = new ApproveMerchantUseCase(merchantRepository);
+export const blockMerchantUseCase = new BlockMerchantUseCase(merchantRepository);
+export const blockUserUseCase = new BlockUserUseCase(userRepository);
+export const forgotPasswordUseCase = new ForgotPasswordUseCase(adminRepository);
+export const getMerchantsUseCase = new GetMerchantsUseCase(merchantRepository);
+export const getPendingMerchantsUseCase = new GetPendingMerchantsUseCase(merchantRepository);
+export const getUsersUseCase = new GetUsersUseCase(userRepository);
+export const rejectMerchantUseCase = new RejectMerchantUseCase(merchantRepository);
+export const resendAdminOtpUseCase = new ResendAdminOtpUseCase(adminRepository);
+export const resetPasswordUseCase = new ResetPasswordUseCase(adminRepository);
+export const unblockMerchantUseCase = new UnblockMerchantUseCase(merchantRepository);
+export const unblockUserUseCase = new UnblockUserUseCase(userRepository);

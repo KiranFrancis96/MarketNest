@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { ApiError } from "@/utils/apiError.ts";
-import { UserModel } from "@/infrastructure/database/user.model.ts";
+import { UserModel } from "@/infrastructure/database/models/user.model.ts";
 import {
   MSG_AUTH_TOKEN_MISSING,
   MSG_AUTH_TOKEN_INVALID,

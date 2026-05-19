@@ -1,0 +1,20 @@
+import { userRepository } from "./repositories.ts";
+import { UserRegisterUseCase } from "@/application/useCases/auth/register.usecase.ts";
+import { UserVerifyOtpUseCase } from "@/application/useCases/auth/verifyOtp.usecase.ts";
+import { UserLoginUseCase } from "@/application/useCases/auth/login.usecase.ts";
+import { UserForgotPasswordUseCase } from "@/application/useCases/auth/forgotPassword.usecase.ts";
+import { UserResetPasswordUseCase } from "@/application/useCases/auth/resetPassword.usecase.ts";
+import { UserResendOtpUseCase } from "@/application/useCases/auth/resendOtp.usecase.ts";
+import { UserLogoutUseCase } from "@/application/useCases/auth/logout.usecase.ts";
+import { UserRefreshTokenUseCase } from "@/application/useCases/auth/refreshToken.usecase.ts";
+import { GetUserProfileUseCase } from "@/application/useCases/auth/getUserProfile.usecase.ts";
+
+export const userRegisterUseCase = new UserRegisterUseCase(userRepository);
+export const userVerifyOtpUseCase = new UserVerifyOtpUseCase(userRepository);
+export const userLoginUseCase = new UserLoginUseCase(userRepository);
+export const userForgotPasswordUseCase = new UserForgotPasswordUseCase(userRepository);
+export const userResetPasswordUseCase = new UserResetPasswordUseCase(userRepository);
+export const userResendOtpUseCase = new UserResendOtpUseCase(userRepository);
+export const userLogoutUseCase = new UserLogoutUseCase();
+export const userRefreshTokenUseCase = new UserRefreshTokenUseCase();
+export const getUserProfileUseCase = new GetUserProfileUseCase(userRepository);
