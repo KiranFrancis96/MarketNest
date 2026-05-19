@@ -13,8 +13,8 @@ export class AdminRepository implements IAdminRepository {
       lastName: user.lastName,
       isAdmin: user.isAdmin,
       password: user.password,
-      otp: user.otp,
-      otpExpires: user.otpExpires,
+      otp: user.otp ?? undefined,
+      otpExpires: user.otpExpires ?? undefined,
     };
   }
 

@@ -3,5 +3,5 @@ import { MerchantRepository } from "@/infrastructure/repositories/merchant.repos
 const repo = new MerchantRepository();
 
 export const getMerchants = async (status?: string) => {
-  return await repo.findAll(status);
+  return await repo.findAll(status as any);
 };

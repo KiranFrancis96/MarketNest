@@ -13,14 +13,14 @@ export interface Merchant {
   zipCode: string;
   country: string;
   ownerName: string;
-  documentUrl?: string;
+  documentUrl?: string | undefined;
   isEmailVerified: boolean;
   isAdminVerified: boolean;
   isBlocked: boolean;
   status: "pending" | "approved" | "rejected";
-  rejectionReason?: string;
-  otp?: string;
-  otpExpires?: Date;
-  createdAt?: Date;
-  updatedAt?: Date;
+  rejectionReason?: string | undefined;
+  otp?: string | undefined;
+  otpExpires?: Date | undefined;
+  createdAt?: Date | undefined;
+  updatedAt?: Date | undefined;
 }

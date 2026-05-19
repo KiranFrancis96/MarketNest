@@ -5,7 +5,6 @@ import { LoginForm } from "@/features/auth/ui/LoginForm";
 
 export const LoginPage = () => {
   const { error, setError, isLoading, login } = useLogin();
-
   return (
     <div className="auth-container">
       <div className="auth-card">

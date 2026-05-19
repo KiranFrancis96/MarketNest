@@ -20,4 +20,6 @@ export const merchantApi = {
   resendOtp: (email: string) => baseApi.post("/merchant/resend-otp", { email }),
 
   logout: () => baseApi.post("/merchant/logout"),
+
+  reapply: (data: Record<string, unknown>) => baseApi.patch("/merchant/reapply", data),
 };

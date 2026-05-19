@@ -4,18 +4,24 @@ import { generateOtp } from "@/utils/generateOtp.ts";
 import { sendOtpEmail } from "@/infrastructure/services/otp.service.ts";
 import logger from "@/utils/logger.ts";
 import { ApiError } from "@/utils/apiError.ts";
+import {
+  MSG_MERCHANT_EMAIL_ALREADY_EXISTS,
+  MSG_MERCHANT_GST_ALREADY_EXISTS,
+  MSG_OTP_EMAIL_FAILED,
+  LOG_OTP_EMAIL_FAILED,
+} from "./messages.constants.ts";
 
 const repo = new MerchantRepository();
 
 export const registerMerchant = async (data: any) => {
   const existingEmail = await repo.findByEmail(data.email);
   if (existingEmail?.isEmailVerified) {
-    throw new ApiError(409, "A merchant with this email already exists and is verified");
+    throw new ApiError(409, MSG_MERCHANT_EMAIL_ALREADY_EXISTS);
   }
 
   const existingGst = await repo.findByGst(data.gstNumber);
   if (existingGst && existingGst.email !== data.email) {
-    throw new ApiError(409, "A merchant with this GST number is already registered");
+    throw new ApiError(409, MSG_MERCHANT_GST_ALREADY_EXISTS);
   }
 
   const hashed = await bcrypt.hash(data.password, 10);
@@ -41,7 +47,7 @@ export const registerMerchant = async (data: any) => {
   try {
     await sendOtpEmail(data.email, otp);
   } catch (error) {
-    logger.error(error, "Failed to send OTP email to merchant");
-    throw new ApiError(502, "Could not send OTP email. Please try again.");
+    logger.error(error, LOG_OTP_EMAIL_FAILED);
+    throw new ApiError(502, MSG_OTP_EMAIL_FAILED);
   }
 };

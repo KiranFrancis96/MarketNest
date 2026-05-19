@@ -2,6 +2,7 @@ import { AdminRepository } from "@/infrastructure/repositories/admin.repository.
 import { ApiError } from "@/utils/apiError.ts";
 import { generateOtp } from "@/utils/generateOtp.ts";
 import { sendOtpEmail } from "@/infrastructure/services/otp.service.ts";
+import { MSG_ADMIN_NOT_FOUND } from "./messages.constants.ts";
 
 const repo = new AdminRepository();
 
@@ -9,7 +10,7 @@ export const forgotPassword = async (email: string) => {
   const admin = await repo.findByEmail(email);
 
   if (!admin || !admin.isAdmin) {
-    throw new ApiError(404, "Admin not found");
+    throw new ApiError(404, MSG_ADMIN_NOT_FOUND);
   }
 
   const otp = generateOtp();

@@ -44,7 +44,7 @@ export const useMerchantAuth = () => {
     try {
       const res = await merchantApi.login({ email, password: pass });
       dispatch(setMerchant(res.data.merchant));
-      navigate("/merchant/dashboard");
+      navigate("/merchant/dashboard", { replace: true });
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -74,7 +74,7 @@ export const useMerchantAuth = () => {
     try {
       const res = await merchantApi.verifyOtp({ email, otp });
       dispatch(setMerchant(res.data.merchant));
-      navigate("/merchant/dashboard");
+      navigate("/merchant/dashboard", { replace: true });
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {

@@ -1,24 +1,22 @@
 import { MerchantRepository } from "@/infrastructure/repositories/merchant.repository.impl.ts";
 import { ApiError } from "@/utils/apiError.ts";
-import {
-  MSG_MERCHANT_NOT_FOUND,
-  MSG_MERCHANT_ALREADY_REJECTED,
-} from "./messages.constants.ts";
+import { MSG_MERCHANT_NOT_FOUND, MSG_MERCHANT_ONLY_REJECTED_CAN_REAPPLY } from "./messages.constants.ts";
 
 const repo = new MerchantRepository();
 
-export const rejectMerchant = async (id: string, reason: string) => {
+export const reapplyMerchant = async (id: string, updateData: Record<string, unknown>) => {
   const merchant = await repo.findById(id);
   if (!merchant) throw new ApiError(404, MSG_MERCHANT_NOT_FOUND);
 
-  if (merchant.status === "rejected") {
-    throw new ApiError(400, MSG_MERCHANT_ALREADY_REJECTED);
+  if (merchant.status !== "rejected") {
+    throw new ApiError(400, MSG_MERCHANT_ONLY_REJECTED_CAN_REAPPLY);
   }
 
   const updated = await repo.updateById(id, {
-    status: "rejected",
+    ...updateData,
+    status: "pending",
+    rejectionReason: undefined,
     isAdminVerified: false,
-    rejectionReason: reason,
   });
 
   return updated;

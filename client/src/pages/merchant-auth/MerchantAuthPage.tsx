@@ -5,8 +5,12 @@ import { MerchantOtpForm } from "@/features/merchantAuth/ui/MerchantOtpForm";
 import { MerchantForgotPasswordForm } from "@/features/merchantAuth/ui/MerchantForgotPasswordForm";
 import { MerchantResetPasswordForm } from "@/features/merchantAuth/ui/MerchantResetPasswordForm";
 import { RoleSwitcher } from "@/shared/ui/RoleSwitcher";
+import { useSelector } from "react-redux";
+import { Navigate } from "react-router-dom";
 
 export const MerchantAuthPage = () => {
+  const isMerchantAuthenticated = useSelector((state: any) => state.merchant.isAuthenticated);
+  const isUserAuthenticated     = useSelector((state: any) => state.user.isAuthenticated);
   const {
     step,
     setStep,
@@ -21,6 +25,9 @@ export const MerchantAuthPage = () => {
     forgotPassword,
     resetPassword,
   } = useMerchantAuth();
+
+  if (isMerchantAuthenticated) return <Navigate to="/merchant/dashboard" replace />;
+  if (isUserAuthenticated)     return <Navigate to="/"                   replace />;
 
   return (
     <div className="auth-container">

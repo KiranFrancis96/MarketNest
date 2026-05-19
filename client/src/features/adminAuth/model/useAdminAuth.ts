@@ -15,7 +15,7 @@ export const useAdminAuth = () => {
     try {
       const response = await adminApi.login(credentials);
       dispatch(setAdmin(response.data.user));
-      navigate("/admin/dashboard");
+      navigate("/admin/dashboard", { replace: true });
     } catch (err: any) {
       dispatch(setError(err.response?.data?.message || "Login failed"));
     } finally {

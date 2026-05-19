@@ -30,7 +30,7 @@ export const useLogin = () => {
         dispatch(setUser(response.data.user));
       }
       
-      navigate("/");
+      navigate("/", { replace: true });
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {

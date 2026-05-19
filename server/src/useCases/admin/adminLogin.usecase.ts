@@ -2,6 +2,10 @@ import { AdminRepository } from "@/infrastructure/repositories/admin.repository.
 import { ApiError } from "@/utils/apiError.ts";
 import bcrypt from "bcrypt";
 import { generateAccessToken, generateRefreshToken } from "@/infrastructure/services/jwt.service.ts";
+import {
+  MSG_ADMIN_INVALID_CREDENTIALS,
+  MSG_ADMIN_ACCESS_DENIED,
+} from "./messages.constants.ts";
 
 const repo = new AdminRepository();
 
@@ -9,16 +13,16 @@ export const adminLogin = async (email: string, password: string) => {
   const admin = await repo.findByEmail(email);
 
   if (!admin || !admin.password) {
-    throw new ApiError(401, "Invalid email or password");
+    throw new ApiError(401, MSG_ADMIN_INVALID_CREDENTIALS);
   }
 
   const isPasswordValid = await bcrypt.compare(password, admin.password);
   if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid email or password");
+    throw new ApiError(401, MSG_ADMIN_INVALID_CREDENTIALS);
   }
 
   if (!admin.isAdmin) {
-    throw new ApiError(403, "Access denied. Not an admin.");
+    throw new ApiError(403, MSG_ADMIN_ACCESS_DENIED);
   }
 
   const payload = { id: admin.id, email: admin.email, isAdmin: true };

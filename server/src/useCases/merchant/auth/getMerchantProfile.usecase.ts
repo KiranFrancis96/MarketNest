@@ -1,13 +1,14 @@
 import { MerchantRepository } from "@/infrastructure/repositories/merchant.repository.impl.ts";
 import { ApiError } from "@/utils/apiError.ts";
+import { MSG_MERCHANT_NOT_FOUND } from "./messages.constants.ts";
 
 const repo = new MerchantRepository();
 
 export const getMerchantProfile = async (id: string) => {
   const merchant = await repo.findById(id);
-  
+
   if (!merchant) {
-    throw new ApiError(404, "Merchant not found");
+    throw new ApiError(404, MSG_MERCHANT_NOT_FOUND);
   }
 
   return {

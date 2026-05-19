@@ -5,6 +5,6 @@ export interface Admin {
   lastName: string;
   isAdmin: boolean;
   password?: string;
-  otp?: string;
-  otpExpires?: Date;
+  otp?: string | undefined;
+  otpExpires?: Date | undefined;
 }

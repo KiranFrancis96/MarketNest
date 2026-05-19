@@ -10,6 +10,11 @@ import httpLogger from './middleware/middleware.ts'
 import logger from './utils/logger.ts'
 import { ApiError } from './utils/apiError.ts';
 import type { NextFunction, Request, Response } from 'express';
+import {
+  BASE_AUTH_ROUTE,
+  BASE_MERCHANT_ROUTE,
+  BASE_ADMIN_ROUTE,
+} from "./interface/routes/routes.constants.ts";
 
 dotenv.config()
 
@@ -25,9 +30,9 @@ app.use(express.json())
 app.use(cookieParser());
 app.use(httpLogger)
 
-app.use("/api/auth", authRoutes);
-app.use("/api/merchant", merchantRoutes);
-app.use("/api/admin", adminRoutes);
+app.use(BASE_AUTH_ROUTE, authRoutes);
+app.use(BASE_MERCHANT_ROUTE, merchantRoutes);
+app.use(BASE_ADMIN_ROUTE, adminRoutes);
 
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof ApiError) {
