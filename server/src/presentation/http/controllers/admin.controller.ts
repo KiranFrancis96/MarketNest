@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { tokenBlacklistService } from "@/infrastructure/services/tokenBlacklist.service.ts";
 import type {
   IAdminLoginUseCase,
   IApproveMerchantUseCase,
@@ -54,14 +55,14 @@ export class AdminController {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 15 * 60 * 1000, // 15 mins
+      maxAge: 15 * 60 * 1000,
     });
 
     res.cookie("adminRefreshToken", result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     res.json({
@@ -76,7 +77,13 @@ export class AdminController {
     });
   };
 
-  logout = (req: Request, res: Response): void => {
+  logout = async (req: Request, res: Response): Promise<void> => {
+    const accessToken = req.cookies.adminAccessToken;
+    const refreshToken = req.cookies.adminRefreshToken;
+
+    if (accessToken) await tokenBlacklistService.blacklistToken(accessToken);
+    if (refreshToken) await tokenBlacklistService.blacklistToken(refreshToken);
+
     const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

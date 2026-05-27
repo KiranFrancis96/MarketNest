@@ -6,6 +6,6 @@ export interface User {
   password: string;
   isVerified: boolean;
   otp?: string | undefined;
-  otpExpires?: Date | undefined;
+  otpExpiresAt?: Date | undefined;
   isBlocked: boolean;
 }

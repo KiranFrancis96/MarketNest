@@ -3,12 +3,20 @@ import { useDispatch, useSelector } from "react-redux";
 import { merchantApi } from "@/entities/merchant/api/merchantApi";
 import { setMerchant, logoutMerchant } from "@/entities/merchant/model/merchantSlice";
 import { useNavigate } from "react-router-dom";
+import { ProductTable } from "@/shared/components/ProductTable";
+import { AddProductModal } from "@/features/product/ui/AddProductModal";
+import { fetchMerchantProducts, deleteProduct, type Product } from "@/features/product/model/productSlice";
+import type { RootState, AppDispatch } from "@/app/store";
 
 export const MerchantDashboardPage = () => {
-  const dispatch   = useDispatch();
+  const dispatch   = useDispatch<AppDispatch>();
   const navigate   = useNavigate();
   const merchant   = useSelector((state: any) => state.merchant.merchant);
   const isLoading  = useSelector((state: any) => state.merchant.isLoading);
+  const merchantProducts = useSelector((state: RootState) => state.product.merchantProducts);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const [isReapplying, setIsReapplying] = useState(false);
   const [reapplyError, setReapplyError] = useState("");
@@ -37,7 +45,7 @@ export const MerchantDashboardPage = () => {
     fetchProfile();
 
     // Set up polling if the merchant is pending
-    let intervalId: NodeJS.Timeout;
+    let intervalId: any;
     if (merchant?.status === "pending") {
       intervalId = setInterval(fetchProfile, 10000); // Poll every 10 seconds
     }
@@ -46,6 +54,12 @@ export const MerchantDashboardPage = () => {
       if (intervalId) clearInterval(intervalId);
     };
   }, [dispatch, navigate, merchant?.status]);
+
+  useEffect(() => {
+    if (merchant?.status === "approved") {
+      dispatch(fetchMerchantProducts());
+    }
+  }, [dispatch, merchant?.status]);
 
   const handleLogout = async () => {
     try {
@@ -337,7 +351,7 @@ export const MerchantDashboardPage = () => {
             <div className="stats-grid">
               <div className="stat-card">
                 <p className="stat-label">Total Sales</p>
-                <h3 className="stat-value">$0.00</h3>
+                <h3 className="stat-value">₹0.00</h3>
               </div>
               <div className="stat-card">
                 <p className="stat-label">Orders</p>
@@ -345,14 +359,43 @@ export const MerchantDashboardPage = () => {
               </div>
               <div className="stat-card">
                 <p className="stat-label">Products</p>
-                <h3 className="stat-value">0</h3>
+                <h3 className="stat-value">{merchantProducts.length}</h3>
               </div>
             </div>
 
-            <div style={{ marginTop: "3rem", padding: "3rem", background: "white", borderRadius: "24px", border: "1px dashed #cbd5e1", textAlign: "center" }}>
-              <p style={{ color: "#64748b", fontWeight: "600" }}>Your store is live! Start by adding your first product.</p>
-              <button className="btn-primary" style={{ maxWidth: "200px", margin: "1.5rem auto 0" }}>+ Add Product</button>
+            <div style={{ marginTop: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+              <h2 style={{ fontSize: "1.5rem", fontWeight: 700 }}>Your Listings</h2>
+              <button 
+                className="btn-primary" 
+                onClick={() => { setEditingProduct(null); setIsModalOpen(true); }}
+                style={{ width: "auto", marginTop: 0, padding: "0.625rem 1.25rem", borderRadius: "10px" }}
+              >
+                + Add Product
+              </button>
             </div>
+
+            <ProductTable 
+              products={merchantProducts} 
+              mode="merchant"
+              onEdit={(prod) => {
+                setEditingProduct(prod);
+                setIsModalOpen(true);
+              }}
+              onDelete={(id) => {
+                if (window.confirm("Are you sure you want to delete this product listing? This action is permanent.")) {
+                  dispatch(deleteProduct(id));
+                }
+              }}
+            />
+
+            <AddProductModal 
+              isOpen={isModalOpen} 
+              onClose={() => {
+                setIsModalOpen(false);
+                setEditingProduct(null);
+              }} 
+              productToEdit={editingProduct} 
+            />
           </div>
         );
       

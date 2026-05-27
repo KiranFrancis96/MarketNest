@@ -3,7 +3,7 @@ import type { IMerchantResetPasswordUseCase } from "@/application/IUseCases/merc
 import type { MerchantResetPasswordInputDTO } from "@/application/dtos/merchant/MerchantDtos.ts";
 import bcrypt from "bcrypt";
 import { ApiError } from "@/utils/apiError.ts";
-import { MSG_MERCHANT_NOT_FOUND, MSG_MERCHANT_INVALID_OTP, MSG_MERCHANT_PASSWORD_REQUIRED } from "./messages.constants.ts";
+import { MSG_MERCHANT_NOT_FOUND, MSG_MERCHANT_INVALID_OTP, MSG_MERCHANT_PASSWORD_REQUIRED, MSG_MERCHANT_OTP_EXPIRED } from "./messages.constants.ts";
 
 export class ResetMerchantPasswordUseCase implements IMerchantResetPasswordUseCase {
   constructor(private _merchantRepository: IMerchantRepository) {}
@@ -16,7 +16,15 @@ export class ResetMerchantPasswordUseCase implements IMerchantResetPasswordUseCa
     const merchant = await this._merchantRepository.findByEmail(email);
     if (!merchant) throw new ApiError(404, MSG_MERCHANT_NOT_FOUND);
 
-    if (!merchant.otp || merchant.otp !== otp || !merchant.otpExpires || new Date() > merchant.otpExpires) {
+    if (!merchant.otp || !merchant.otpExpiresAt) {
+      throw new ApiError(400, MSG_MERCHANT_INVALID_OTP);
+    }
+
+    if (merchant.otpExpiresAt < new Date()) {
+      throw new ApiError(400, MSG_MERCHANT_OTP_EXPIRED);
+    }
+
+    if (merchant.otp !== otp) {
       throw new ApiError(400, MSG_MERCHANT_INVALID_OTP);
     }
 
@@ -26,7 +34,7 @@ export class ResetMerchantPasswordUseCase implements IMerchantResetPasswordUseCa
       {
         password: hashed,
         otp: undefined,
-        otpExpires: undefined,
+        otpExpiresAt: undefined,
       },
       email
     );

@@ -1,4 +1,5 @@
 import type { IMerchantRepository } from "@/domain/interface/merchant.repository.ts";
+import { OTP_CONFIG } from "@/config/otp.config.ts";
 import type { IMerchantResendOtpUseCase } from "@/application/IUseCases/merchant/IMerchantUseCases.ts";
 import type { MerchantResendOtpInputDTO } from "@/application/dtos/merchant/MerchantDtos.ts";
 import { ApiError } from "@/utils/apiError.ts";
@@ -20,7 +21,7 @@ export class ResendMerchantOtpUseCase implements IMerchantResendOtpUseCase {
     await this._merchantRepository.update(
       {
         otp,
-        otpExpires: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+        otpExpiresAt: new Date(Date.now() + OTP_CONFIG.EXPIRY_MS), // 10 minutes
       },
       email
     );

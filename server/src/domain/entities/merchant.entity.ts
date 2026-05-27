@@ -21,7 +21,7 @@ export interface Merchant {
   status: "pending" | "approved" | "rejected";
   rejectionReason?: string | undefined;
   otp?: string | undefined;
-  otpExpires?: Date | undefined;
+  otpExpiresAt?: Date | undefined;
   createdAt?: Date | undefined;
   updatedAt?: Date | undefined;
 }

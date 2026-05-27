@@ -26,7 +26,7 @@ export class MerchantMapper {
       status: doc.status,
       rejectionReason: doc.rejectionReason ?? undefined,
       otp: doc.otp ?? undefined,
-      otpExpires: doc.otpExpires ?? undefined,
+      otpExpiresAt: doc.otpExpiresAt ?? undefined,
       createdAt: doc.createdAt ?? undefined,
       updatedAt: doc.updatedAt ?? undefined,
     };
@@ -55,7 +55,7 @@ export class MerchantMapper {
       status: entity.status,
       rejectionReason: entity.rejectionReason,
       otp: entity.otp,
-      otpExpires: entity.otpExpires,
+      otpExpiresAt: entity.otpExpiresAt,
     };
   }
 }

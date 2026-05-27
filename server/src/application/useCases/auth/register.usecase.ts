@@ -1,4 +1,5 @@
 import type { IUserRepository } from "@/domain/interface/user.repository.ts";
+import { OTP_CONFIG } from "@/config/otp.config.ts";
 import type { IUserRegisterUseCase } from "@/application/IUseCases/user/IUserUseCases.ts";
 import type { UserRegisterInputDTO } from "@/application/dtos/user/UserDtos.ts";
 import bcrypt from "bcrypt";
@@ -35,7 +36,7 @@ export class UserRegisterUseCase implements IUserRegisterUseCase {
       password: hashed,
       isVerified: false,
       otp,
-      otpExpires: new Date(Date.now() + 5 * 60 * 1000),
+      otpExpiresAt: new Date(Date.now() + OTP_CONFIG.EXPIRY_MS),
       isBlocked: false,
     };
 

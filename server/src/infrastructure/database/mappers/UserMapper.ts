@@ -11,7 +11,7 @@ export class UserMapper {
       password: doc.password,
       isVerified: doc.isVerified,
       otp: doc.otp ?? undefined,
-      otpExpires: doc.otpExpires ?? undefined,
+      otpExpiresAt: doc.otpExpiresAt ?? undefined,
       isBlocked: doc.isBlocked,
     };
   }
@@ -24,7 +24,7 @@ export class UserMapper {
       password: entity.password,
       isVerified: entity.isVerified,
       otp: entity.otp,
-      otpExpires: entity.otpExpires,
+      otpExpiresAt: entity.otpExpiresAt,
       isBlocked: entity.isBlocked,
     };
   }

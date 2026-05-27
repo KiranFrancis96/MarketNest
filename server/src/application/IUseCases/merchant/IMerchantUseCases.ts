@@ -44,7 +44,7 @@ export interface IGetMerchantProfileUseCase {
 }
 
 export interface IMerchantLogoutUseCase {
-  execute(): Promise<boolean>;
+  execute(input?: { accessToken?: string; refreshToken?: string }): Promise<boolean>;
 }
 
 export interface IMerchantGoogleAuthUseCase {

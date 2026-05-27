@@ -3,6 +3,9 @@ import { RegisterPage } from "@/pages/register/RegisterPage";
 import { LoginPage } from "@/pages/login/LoginPage";
 import { ForgotPasswordPage } from "@/pages/login/ForgotPasswordPage";
 import { HomePage } from "@/pages/home/HomePage";
+import { ProductCatalogPage } from "@/pages/home/Catalog";
+import { CartPage } from "@/pages/home/CartPage";
+import { WishlistPage } from "@/pages/home/WishlistPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { GuestRoute } from "./GuestRoute";
 import { MerchantAuthPage } from "@/pages/merchant-auth/MerchantAuthPage";
@@ -19,6 +22,18 @@ export const AppRouter = () => {
       <Route path="/" element={
         <ProtectedRoute>
           <HomePage />
+        </ProtectedRoute>} />
+      <Route path="/catalog" element={
+        <ProtectedRoute>
+          <ProductCatalogPage />
+        </ProtectedRoute>} />
+      <Route path="/cart" element={
+        <ProtectedRoute>
+          <CartPage />
+        </ProtectedRoute>} />
+      <Route path="/wishlist" element={
+        <ProtectedRoute>
+          <WishlistPage />
         </ProtectedRoute>} />
 
       {/* Guest-only user routes */}

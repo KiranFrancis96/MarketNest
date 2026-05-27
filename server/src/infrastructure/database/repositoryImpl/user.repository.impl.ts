@@ -16,17 +16,30 @@ export class UserRepository extends BaseRepository<User, any> implements IUserRe
 
   async update(user: Partial<User>, email: string): Promise<void> {
     const docData = this.mapper.toDocument(user as User);
-    
+    const $set: any = {};
+    const $unset: any = {};
+
     Object.keys(docData).forEach((key) => {
-      if (docData[key] === undefined) {
-        delete docData[key];
+      if (key in user) {
+        if (docData[key] === undefined) {
+          $unset[key] = "";
+        } else {
+          $set[key] = docData[key];
+        }
       }
     });
-    await this.model.updateOne({ email }, { $set: docData });
+
+    const updateQuery: any = {};
+    if (Object.keys($set).length > 0) updateQuery.$set = $set;
+    if (Object.keys($unset).length > 0) updateQuery.$unset = $unset;
+
+    if (Object.keys(updateQuery).length > 0) {
+      await this.model.updateOne({ email }, updateQuery);
+    }
   }
 
   async findAll(): Promise<User[]> {
-    const docs = await this.model.find({}, { password: 0, otp: 0, otpExpires: 0 }).sort({ createdAt: -1 }).lean();
+    const docs = await this.model.find({}, { password: 0, otp: 0, otpExpiresAt: 0 }).sort({ createdAt: -1 }).lean();
     return docs.map((doc) => this.mapper.toEntity(doc) as User);
   }
 

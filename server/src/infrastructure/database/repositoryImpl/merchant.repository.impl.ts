@@ -21,18 +21,30 @@ export class MerchantRepository extends BaseRepository<Merchant, any> implements
 
   async update(merchantData: Partial<Merchant>, email: string): Promise<Merchant | null> {
     const docData = this.mapper.toDocument(merchantData as Merchant);
+    const $set: any = {};
+    const $unset: any = {};
+
     Object.keys(docData).forEach((key) => {
-      if (docData[key] === undefined) {
-        delete docData[key];
+      if (key in merchantData) {
+        if (docData[key] === undefined) {
+          $unset[key] = "";
+        } else {
+          $set[key] = docData[key];
+        }
       }
     });
-    const updated = await this.model.findOneAndUpdate({ email }, { $set: docData }, { new: true }).lean();
+
+    const updateQuery: any = {};
+    if (Object.keys($set).length > 0) updateQuery.$set = $set;
+    if (Object.keys($unset).length > 0) updateQuery.$unset = $unset;
+
+    const updated = await this.model.findOneAndUpdate({ email }, updateQuery, { new: true }).lean();
     return this.mapper.toEntity(updated);
   }
 
   async findAll(status?: Merchant["status"] | "all"): Promise<Merchant[]> {
     const query = status && status !== "all" ? { status } : {};
-    const docs = await this.model.find(query, { password: 0, otp: 0, otpExpires: 0 }).sort({ createdAt: -1 }).lean();
+    const docs = await this.model.find(query, { password: 0, otp: 0, otpExpiresAt: 0 }).sort({ createdAt: -1 }).lean();
     return docs.map((doc) => this.mapper.toEntity(doc) as Merchant);
   }
 

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { OTP_CONFIG } from "@/config/otp.config.ts";
 
 const userSchema = new mongoose.Schema({
   firstName: { type: String, required: true },
@@ -8,7 +9,13 @@ const userSchema = new mongoose.Schema({
   isAdmin: { type: Boolean, default: false },
   isVerified: { type: Boolean, default: false },
   otp: String,
-  otpExpires: Date,
+  otpExpiresAt: {
+    type: Date,
+    default: () => new Date(Date.now() + OTP_CONFIG.EXPIRY_MS),
+    index: {
+      expires: 0
+    }
+  },
   isBlocked: { type: Boolean, default: false },
 });
 

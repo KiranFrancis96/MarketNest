@@ -1,4 +1,5 @@
 import type { IUserRepository } from "@/domain/interface/user.repository.ts";
+import { OTP_CONFIG } from "@/config/otp.config.ts";
 import type { IUserResendOtpUseCase } from "@/application/IUseCases/user/IUserUseCases.ts";
 import type { UserResendOtpInputDTO } from "@/application/dtos/user/UserDtos.ts";
 import { ApiError } from "@/utils/apiError.ts";
@@ -20,7 +21,7 @@ export class UserResendOtpUseCase implements IUserResendOtpUseCase {
     await this._userRepository.update(
       {
         otp,
-        otpExpires: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+        otpExpiresAt: new Date(Date.now() + OTP_CONFIG.EXPIRY_MS), // 10 minutes
       },
       email
     );

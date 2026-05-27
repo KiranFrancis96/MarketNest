@@ -35,11 +35,11 @@ export interface IUserResendOtpUseCase {
 }
 
 export interface IUserLogoutUseCase {
-  execute(): Promise<boolean>;
+  execute(input?: { accessToken?: string; refreshToken?: string }): Promise<boolean>;
 }
 
 export interface IUserRefreshTokenUseCase {
-  execute(token: string): string;
+  execute(token: string): Promise<string>;
 }
 
 export interface IGetUserProfileUseCase {

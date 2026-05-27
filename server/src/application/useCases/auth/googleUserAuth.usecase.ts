@@ -22,7 +22,7 @@ export class UserGoogleAuthUseCase implements IUserGoogleAuthUseCase {
     if (!user) {
       const firstName = payload.given_name || payload.name || "Google";
       const lastName = payload.family_name || "User";
-      // Generate a random secure password for database constraints
+      
       const randomPassword = Math.random().toString(36).slice(-10) + Date.now().toString();
       const hashed = await bcrypt.hash(randomPassword, 10);
 

@@ -8,6 +8,7 @@ import {
   MSG_MERCHANT_ALREADY_VERIFIED,
   MSG_MERCHANT_INVALID_OTP,
   MSG_MERCHANT_FETCH_FAILED_AFTER_VERIFY,
+  MSG_MERCHANT_OTP_EXPIRED,
 } from "./messages.constants.ts";
 
 export class VerifyMerchantOtpUseCase implements IMerchantVerifyOtpUseCase {
@@ -24,7 +25,15 @@ export class VerifyMerchantOtpUseCase implements IMerchantVerifyOtpUseCase {
       throw new ApiError(400, MSG_MERCHANT_ALREADY_VERIFIED);
     }
 
-    if (!merchant.otp || merchant.otp !== otp || !merchant.otpExpires || new Date() > merchant.otpExpires) {
+    if (!merchant.otp || !merchant.otpExpiresAt) {
+      throw new ApiError(400, MSG_MERCHANT_INVALID_OTP);
+    }
+
+    if (merchant.otpExpiresAt < new Date()) {
+      throw new ApiError(400, MSG_MERCHANT_OTP_EXPIRED);
+    }
+
+    if (merchant.otp !== otp) {
       throw new ApiError(400, MSG_MERCHANT_INVALID_OTP);
     }
 
@@ -32,7 +41,7 @@ export class VerifyMerchantOtpUseCase implements IMerchantVerifyOtpUseCase {
       {
         isEmailVerified: true,
         otp: undefined,
-        otpExpires: undefined,
+        otpExpiresAt: undefined,
       },
       email
     );

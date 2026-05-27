@@ -14,6 +14,7 @@ export const MSG_MERCHANT_VERIFICATION_UPDATE_FAILED = "Failed to update merchan
 export const MSG_MERCHANT_PASSWORD_REQUIRED       = "Password is required";
 export const MSG_MERCHANT_REAPPLY_FAILED          = "Failed to update merchant reapplication";
 export const MSG_MERCHANT_FETCH_FAILED_AFTER_VERIFY = "Failed to fetch updated merchant after OTP verification";
+export const MSG_MERCHANT_OTP_EXPIRED              = "OTP expired";
 
 // ─── Profile Onboarding ────────────────────────────────────────────────────────
 export const MSG_MERCHANT_ONBOARDING_FIELDS_REQUIRED = "All onboarding fields are required";

@@ -1,90 +1,242 @@
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { userApi } from "@/entities/user/api/userApi";
-import { logout } from "@/entities/user/model/userSlice";
-import { useNavigate } from "react-router-dom";
+import { fetchShoppingFeed } from "@/features/product/model/productSlice";
+import { ProductCard } from "@/shared/components/ProductCard";
+import { Header } from "@/shared/components/Header";
+import type { RootState, AppDispatch } from "@/app/store";
+import { ArrowRight, Sparkles, Flame, Percent, HeartHandshake } from "lucide-react";
+import { Link } from "react-router-dom";
 
-export const HomePage = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const user = useSelector((state: any) => state.user.user);
+export const HomePage: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const user = useSelector((state: RootState) => state.user.user);
+  const shoppingFeed = useSelector((state: RootState) => state.product.shoppingFeed);
+  const loading = useSelector((state: RootState) => state.product.loading);
 
-  const handleLogout = async () => {
-    await userApi.logout(); 
-    dispatch(logout());
-    navigate("/login");
-  };
+  useEffect(() => {
+    dispatch(fetchShoppingFeed());
+  }, [dispatch]);
 
-  const mockProducts = [
-    {
-      id: 1,
-      title: "Custom Engraved Wood Watch",
-      merchant: "by ArtisanTimbers",
-      price: "$120.00",
-      image: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?q=80&w=600&auto=format&fit=crop",
-    },
-    {
-      id: 2,
-      title: "Personalized Leather Wallet",
-      merchant: "by LeatherCraft",
-      price: "$45.00",
-      image: "https://images.unsplash.com/photo-1627123424574-724758594e93?q=80&w=600&auto=format&fit=crop",
-    },
-    {
-      id: 3,
-      title: "Hand-Stamped Silver Necklace",
-      merchant: "by SilverLinings",
-      price: "$65.00",
-      image: "https://images.unsplash.com/photo-1599643478524-fb66f70d00cf?q=80&w=600&auto=format&fit=crop",
-    },
-    {
-      id: 4,
-      title: "Monogrammed Canvas Tote",
-      merchant: "by Stitch & Co.",
-      price: "$35.00",
-      image: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?q=80&w=600&auto=format&fit=crop",
-    }
-  ];
+  const userName = user?.email ? user.email.split("@")[0] : "Shopper";
 
   return (
-    <div className="dashboard-container">
-      <header className="dashboard-header">
-        <div className="dashboard-logo">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 16V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12"></path>
-            <path d="M8 21h8"></path>
-            <path d="M12 17v4"></path>
-            <path d="M4 16h16"></path>
-            <path d="M12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path>
-          </svg>
-          MarketNest
-        </div>
-        <button className="btn-logout" onClick={handleLogout}>
-          Sign Out
-        </button>
-      </header>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <Header />
 
-      <main>
-        <section className="dashboard-welcome">
-          <h1>Discover Unique, Personalized Products</h1>
-          <p>Support independent merchants and find something made just for you, {user?.email?.split('@')[0] || "Guest"}.</p>
+      <main style={{ flex: 1, backgroundColor: "#f8fafc" }}>
+        {/* Banner Section */}
+        <section style={heroSectionStyles}>
+          <div style={heroContentStyles}>
+            <span style={heroSubtitleStyles}>MarketNest Premium Experience</span>
+            <h1 style={heroTitleStyles}>Discover Unique Creations Crafted Just For You</h1>
+            <p style={heroDescriptionStyles}>
+              Hello, <strong>{userName}</strong>! Explore thousands of bespoke items and support
+              independent, passionate merchants. Live a tailored shopping experience designed statically for your interests.
+            </p>
+            <Link to="/catalog" className="btn-primary" style={heroBtnStyles}>
+              Explore Catalog <ArrowRight size={18} />
+            </Link>
+          </div>
         </section>
 
-        <section className="product-grid">
-          {mockProducts.map((product, index) => (
-            <div className="product-card" key={product.id} style={{ animationDelay: `${index * 0.1}s` }}>
-              <div className="product-image">
-                <img src={product.image} alt={product.title} />
-              </div>
-              <div className="product-info">
-                <h3 className="product-title">{product.title}</h3>
-                <p className="product-merchant">{product.merchant}</p>
-                <div className="product-price">{product.price}</div>
-                <button className="btn-customize">Customize & Buy</button>
-              </div>
-            </div>
-          ))}
-        </section>
+        {loading && !shoppingFeed ? (
+          <div style={spinnerContainerStyles}>
+            <div className="animate-spin" style={spinnerStyles}></div>
+            <p style={{ marginTop: "1rem", color: "var(--text-muted)", fontWeight: 600 }}>
+              Tailoring your personalized recommendations...
+            </p>
+          </div>
+        ) : (
+          <div style={sectionsWrapperStyles}>
+            {/* 1. Recommended For You */}
+            {shoppingFeed?.recommendedForYou && shoppingFeed.recommendedForYou.length > 0 && (
+              <section style={sectionStyles}>
+                <div style={sectionHeaderStyles}>
+                  <div style={sectionTitleWrapperStyles}>
+                    <Sparkles size={22} color="var(--primary)" />
+                    <h2 style={sectionTitleStyles}>Recommended For You</h2>
+                  </div>
+                  <Link to="/catalog" style={viewAllLinkStyles}>View All</Link>
+                </div>
+                <div className="product-grid">
+                  {shoppingFeed.recommendedForYou.map((product) => (
+                    <ProductCard key={product._id} product={product} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* 2. Deals You May Like */}
+            {shoppingFeed?.dealsYouMayLike && shoppingFeed.dealsYouMayLike.length > 0 && (
+              <section style={sectionStyles}>
+                <div style={sectionHeaderStyles}>
+                  <div style={sectionTitleWrapperStyles}>
+                    <Percent size={22} color="#ef4444" />
+                    <h2 style={sectionTitleStyles}>Deals You May Like</h2>
+                  </div>
+                  <Link to="/catalog?sort=lowToHigh" style={viewAllLinkStyles}>View More Deals</Link>
+                </div>
+                <div className="product-grid">
+                  {shoppingFeed.dealsYouMayLike.map((product) => (
+                    <ProductCard key={product._id} product={product} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* 3. Trending Products */}
+            {shoppingFeed?.trendingProducts && shoppingFeed.trendingProducts.length > 0 && (
+              <section style={sectionStyles}>
+                <div style={sectionHeaderStyles}>
+                  <div style={sectionTitleWrapperStyles}>
+                    <Flame size={22} color="#f59e0b" />
+                    <h2 style={sectionTitleStyles}>Trending Products</h2>
+                  </div>
+                  <Link to="/catalog?sort=popular" style={viewAllLinkStyles}>View Trending</Link>
+                </div>
+                <div className="product-grid">
+                  {shoppingFeed.trendingProducts.map((product) => (
+                    <ProductCard key={product._id} product={product} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* 4. Based On Your Shopping Style */}
+            {shoppingFeed?.basedOnShoppingStyle && shoppingFeed.basedOnShoppingStyle.length > 0 && (
+              <section style={{ ...sectionStyles, borderBottom: "none" }}>
+                <div style={sectionHeaderStyles}>
+                  <div style={sectionTitleWrapperStyles}>
+                    <HeartHandshake size={22} color="#10b981" />
+                    <h2 style={sectionTitleStyles}>Based On Your Shopping Style</h2>
+                  </div>
+                  <Link to="/catalog" style={viewAllLinkStyles}>Explore Style</Link>
+                </div>
+                <div className="product-grid">
+                  {shoppingFeed.basedOnShoppingStyle.map((product) => (
+                    <ProductCard key={product._id} product={product} />
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        )}
       </main>
     </div>
   );
+};
+
+// Sleek and modern layout properties for Storefront Page
+const heroSectionStyles: React.CSSProperties = {
+  background: "linear-gradient(135deg, #4f46e5 0%, #312e81 100%)",
+  padding: "5rem 2rem",
+  color: "white",
+  textAlign: "center",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+};
+
+const heroContentStyles: React.CSSProperties = {
+  maxWidth: "800px",
+  margin: "0 auto",
+};
+
+const heroSubtitleStyles: React.CSSProperties = {
+  fontSize: "0.85rem",
+  fontWeight: 700,
+  letterSpacing: "0.15em",
+  textTransform: "uppercase",
+  color: "#a5b4fc",
+  display: "block",
+  marginBottom: "1rem",
+};
+
+const heroTitleStyles: React.CSSProperties = {
+  fontSize: "3rem",
+  fontWeight: 800,
+  lineHeight: "1.2",
+  marginBottom: "1.5rem",
+  letterSpacing: "-0.02em",
+};
+
+const heroDescriptionStyles: React.CSSProperties = {
+  fontSize: "1.15rem",
+  color: "#e0e7ff",
+  lineHeight: "1.6",
+  marginBottom: "2.5rem",
+};
+
+const heroBtnStyles: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "0.5rem",
+  backgroundColor: "white",
+  color: "var(--primary)",
+  padding: "0.85rem 2rem",
+  borderRadius: "14px",
+  textDecoration: "none",
+  fontWeight: 700,
+  boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+  transition: "all 0.2s ease",
+  marginTop: 0,
+  width: "auto",
+};
+
+const spinnerContainerStyles: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  minHeight: "400px",
+};
+
+const spinnerStyles: React.CSSProperties = {
+  width: "40px",
+  height: "40px",
+  border: "4px solid #e2e8f0",
+  borderTopColor: "var(--primary)",
+  borderRadius: "50%",
+};
+
+const sectionsWrapperStyles: React.CSSProperties = {
+  maxWidth: "1200px",
+  margin: "0 auto",
+  padding: "3rem 2rem",
+  display: "flex",
+  flexDirection: "column",
+  gap: "4rem",
+};
+
+const sectionStyles: React.CSSProperties = {
+  paddingBottom: "3rem",
+  borderBottom: "1px solid var(--border)",
+};
+
+const sectionHeaderStyles: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: "2rem",
+};
+
+const sectionTitleWrapperStyles: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "0.75rem",
+};
+
+const sectionTitleStyles: React.CSSProperties = {
+  fontSize: "1.5rem",
+  fontWeight: 800,
+  color: "var(--text-main)",
+  letterSpacing: "-0.01em",
+  margin: 0,
+};
+
+const viewAllLinkStyles: React.CSSProperties = {
+  fontSize: "0.925rem",
+  fontWeight: 700,
+  color: "var(--primary)",
+  textDecoration: "none",
 };

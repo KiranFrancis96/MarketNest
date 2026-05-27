@@ -1,4 +1,5 @@
 import type { IUserRepository } from "@/domain/interface/user.repository.ts";
+import { OTP_CONFIG } from "@/config/otp.config.ts";
 import type { IUserForgotPasswordUseCase } from "@/application/IUseCases/user/IUserUseCases.ts";
 import type { UserForgotPasswordInputDTO } from "@/application/dtos/user/UserDtos.ts";
 import { generateOtp } from "@/utils/generateOtp.ts";
@@ -26,7 +27,7 @@ export class UserForgotPasswordUseCase implements IUserForgotPasswordUseCase {
     await this._userRepository.update(
       {
         otp,
-        otpExpires: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+        otpExpiresAt: new Date(Date.now() + OTP_CONFIG.EXPIRY_MS), // 10 minutes
       },
       email
     );

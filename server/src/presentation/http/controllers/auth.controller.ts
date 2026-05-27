@@ -119,9 +119,9 @@ export class AuthController {
       .json({ message: MSG_USER_LOGIN_SUCCESS, user: result.user });
   };
 
-  refresh = (req: Request, res: Response): void => {
+  refresh = async (req: Request, res: Response): Promise<void> => {
     const token = req.cookies.refreshToken;
-    const accessToken = this._refreshTokenUseCase.execute(token);
+    const accessToken = await this._refreshTokenUseCase.execute(token);
 
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
@@ -132,8 +132,10 @@ export class AuthController {
     res.json({ message: MSG_TOKEN_REFRESHED });
   };
 
-  logout = async (_: Request, res: Response): Promise<void> => {
-    await this._logoutUseCase.execute();
+  logout = async (req: Request, res: Response): Promise<void> => {
+    const accessToken = req.cookies.accessToken;
+    const refreshToken = req.cookies.refreshToken;
+    await this._logoutUseCase.execute({ accessToken, refreshToken });
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
     res.json({ message: MSG_USER_LOGOUT });

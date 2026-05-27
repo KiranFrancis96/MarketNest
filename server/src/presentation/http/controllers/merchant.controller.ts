@@ -137,8 +137,10 @@ export class MerchantController {
     res.json(profile);
   };
 
-  logout = async (_req: Request, res: Response): Promise<void> => {
-    await this._logoutUseCase.execute();
+  logout = async (req: Request, res: Response): Promise<void> => {
+    const accessToken = req.cookies.merchantAccessToken;
+    const refreshToken = req.cookies.merchantRefreshToken;
+    await this._logoutUseCase.execute({ accessToken, refreshToken });
     res.clearCookie("merchantAccessToken");
     res.clearCookie("merchantRefreshToken");
     res.json({ message: MSG_MERCHANT_LOGOUT });

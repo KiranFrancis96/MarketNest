@@ -1,4 +1,5 @@
 import type { IMerchantRepository } from "@/domain/interface/merchant.repository.ts";
+import { OTP_CONFIG } from "@/config/otp.config.ts";
 import type { IMerchantForgotPasswordUseCase } from "@/application/IUseCases/merchant/IMerchantUseCases.ts";
 import type { MerchantForgotPasswordInputDTO } from "@/application/dtos/merchant/MerchantDtos.ts";
 import { generateOtp } from "@/utils/generateOtp.ts";
@@ -26,7 +27,7 @@ export class ForgotMerchantPasswordUseCase implements IMerchantForgotPasswordUse
     await this._merchantRepository.update(
       {
         otp,
-        otpExpires: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+        otpExpiresAt: new Date(Date.now() + OTP_CONFIG.EXPIRY_MS), // 10 minutes
       },
       email
     );

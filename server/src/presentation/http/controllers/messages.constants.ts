@@ -38,3 +38,35 @@ export const MSG_MERCHANT_LOGIN_SUCCESS    = "Login successful";
 export const MSG_MERCHANT_LOGOUT           = "Logged out successfully";
 export const MSG_MERCHANT_FORGOT_PW_SENT   = "If an account exists, a password reset OTP was sent";
 export const MSG_MERCHANT_PASSWORD_RESET   = "Password reset successfully. You can now log in.";
+
+// ─── Products & Shopping ───────────────────────────────────────────────────────
+export const MSG_PRODUCT_NOT_FOUND         = "Product not found";
+export const MSG_PRODUCT_NOT_OWNED         = "Access denied. You do not own this product.";
+export const MSG_PRODUCT_SAVE_FAILED       = "Failed to save product";
+export const MSG_PRODUCT_CREATE_FAILED     = "Failed to create product";
+export const MSG_PRODUCT_UPDATE_FAILED     = "Failed to update product";
+export const MSG_PRODUCT_CORE_REQUIRED     = "All core fields are required";
+export const MSG_PRODUCT_ID_REQUIRED       = "Product ID is required";
+export const MSG_PRODUCT_ID_STRING         = "Product ID must be a string";
+export const MSG_PRODUCT_BLOCKED_REQUIRED  = "isBlocked field is required";
+
+export const MSG_CATEGORY_REQUIRED         = "Category name is required";
+export const MSG_CATEGORY_EXISTS           = "Category already exists";
+export const MSG_CATEGORY_CREATE_FAILED     = "Failed to create category";
+export const MSG_CAT_SUB_REQUIRED          = "Category name and subcategory name are required";
+export const MSG_CATEGORY_NOT_FOUND        = "Category not found";
+export const MSG_SUBCAT_ADD_FAILED         = "Failed to add subcategory";
+
+export const MSG_CART_INIT_FAILED          = "Failed to initialize cart";
+export const MSG_CART_NOT_FOUND            = "Cart not found";
+export const MSG_CART_ITEM_ACCESS_FAILED   = "Cart item access failed";
+export const MSG_CART_ITEM_NOT_FOUND       = "Item not found in cart";
+export const MSG_PRODUCT_UNAVAILABLE       = "Product not found or unavailable";
+export const MSG_QTY_MINIMUM               = "Quantity must be at least 1";
+export const MSG_PRODUCT_QTY_REQUIRED      = "Product ID and quantity are required";
+
+export const MSG_WISHLIST_REQ_FIELDS       = "User ID and Product ID are required";
+export const MSG_WISHLIST_ADD_FAILED       = "Failed to add to wishlist";
+
+export const MSG_INSUFFICIENT_STOCK        = "Insufficient stock. Only {stock} items left.";
+export const MSG_STOCK_LIMIT_EXCEEDED      = "Insufficient stock. Cannot add more items. Max available is {stock}";

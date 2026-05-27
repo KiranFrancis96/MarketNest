@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { OTP_CONFIG } from "@/config/otp.config.ts";
 
 const merchantSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
@@ -29,7 +30,13 @@ const merchantSchema = new mongoose.Schema({
   rejectionReason: { type: String },
   
   otp: String,
-  otpExpires: Date,
+  otpExpiresAt: {
+    type: Date,
+    default: () => new Date(Date.now() + OTP_CONFIG.EXPIRY_MS),
+    index: {
+      expires: 0
+    }
+  },
 }, { timestamps: true });
 
 export const MerchantModel = mongoose.model("Merchant", merchantSchema, "merchants");

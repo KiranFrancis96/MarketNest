@@ -1,4 +1,5 @@
 import type { IMerchantRepository } from "@/domain/interface/merchant.repository.ts";
+import { OTP_CONFIG } from "@/config/otp.config.ts";
 import type { IMerchantRegisterUseCase } from "@/application/IUseCases/merchant/IMerchantUseCases.ts";
 import type { MerchantRegisterInputDTO } from "@/application/dtos/merchant/MerchantDtos.ts";
 import bcrypt from "bcrypt";
@@ -44,7 +45,7 @@ export class RegisterMerchantUseCase implements IMerchantRegisterUseCase {
       isBlocked: false,
       status: "pending" as const,
       otp,
-      otpExpires: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
+      otpExpiresAt: new Date(Date.now() + OTP_CONFIG.EXPIRY_MS), // 10 minutes
     };
 
     if (existingEmail) {

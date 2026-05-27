@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { ApiError } from "@/utils/apiError.ts";
 import { UserModel } from "@/infrastructure/database/models/user.model.ts";
+import { tokenBlacklistService } from "@/infrastructure/services/tokenBlacklist.service.ts";
 import {
   MSG_AUTH_TOKEN_MISSING,
   MSG_AUTH_TOKEN_INVALID,
@@ -14,6 +15,12 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
   if (!token) {
     next(new ApiError(401, MSG_AUTH_TOKEN_MISSING));
+    return;
+  }
+
+  const isBlacklisted = await tokenBlacklistService.isTokenBlacklisted(token);
+  if (isBlacklisted) {
+    next(new ApiError(401, MSG_AUTH_TOKEN_INVALID));
     return;
   }
 

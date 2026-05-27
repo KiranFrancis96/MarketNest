@@ -5,15 +5,24 @@ import dotenv from 'dotenv'
 import authRoutes from "./presentation/http/routes/auth.routes.ts";
 import merchantRoutes from "./presentation/http/routes/merchant.routes.ts";
 import adminRoutes from "./presentation/http/routes/admin.routes.ts";
+import productRoutes from "./presentation/http/routes/product.routes.ts";
+import categoryRoutes from "./presentation/http/routes/category.routes.ts";
+import cartRoutes from "./presentation/http/routes/cart.routes.ts";
+import wishlistRoutes from "./presentation/http/routes/wishlist.routes.ts";
 import cors from "cors";
 import httpLogger from './middleware/middleware.ts'
 import logger from './utils/logger.ts'
 import { ApiError } from './utils/apiError.ts';
 import type { NextFunction, Request, Response } from 'express';
+import { seedCategories } from "./setup/seeder.ts";
 import {
   BASE_AUTH_ROUTE,
   BASE_MERCHANT_ROUTE,
   BASE_ADMIN_ROUTE,
+  BASE_PRODUCT_ROUTE,
+  BASE_CATEGORY_ROUTE,
+  BASE_CART_ROUTE,
+  BASE_WISHLIST_ROUTE,
 } from "./presentation/http/routes/routes.constants.ts";
 
 dotenv.config()
@@ -29,10 +38,15 @@ app.use(cors({
 app.use(express.json())
 app.use(cookieParser());
 app.use(httpLogger)
+app.use("/uploads", express.static("uploads"));
 
 app.use(BASE_AUTH_ROUTE, authRoutes);
 app.use(BASE_MERCHANT_ROUTE, merchantRoutes);
 app.use(BASE_ADMIN_ROUTE, adminRoutes);
+app.use(BASE_PRODUCT_ROUTE, productRoutes);
+app.use(BASE_CATEGORY_ROUTE, categoryRoutes);
+app.use(BASE_CART_ROUTE, cartRoutes);
+app.use(BASE_WISHLIST_ROUTE, wishlistRoutes);
 
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof ApiError) {
@@ -44,8 +58,9 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ message: "Internal server error" });
 });
 
-mongoose.connect(process.env.MONGO_URI!).then(() => {
+mongoose.connect(process.env.MONGO_URI!).then(async () => {
   logger.info("DB connected");
+  await seedCategories();
   app.listen(PORT, '0.0.0.0', () => {
     logger.info(`server started running at : http://localhost:${PORT}`)
   })

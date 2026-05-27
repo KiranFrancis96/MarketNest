@@ -3,7 +3,7 @@ import type { IUserVerifyOtpUseCase } from "@/application/IUseCases/user/IUserUs
 import type { UserVerifyOtpInputDTO, UserVerifyOtpOutputDTO } from "@/application/dtos/user/UserDtos.ts";
 import { generateAccessToken, generateRefreshToken } from "@/infrastructure/services/jwt.service.ts";
 import { ApiError } from "@/utils/apiError.ts";
-import { MSG_USER_NOT_FOUND, MSG_USER_INVALID_OTP } from "./messages.constants.ts";
+import { MSG_USER_NOT_FOUND, MSG_USER_INVALID_OTP, MSG_USER_OTP_EXPIRED } from "./messages.constants.ts";
 
 export class UserVerifyOtpUseCase implements IUserVerifyOtpUseCase {
   constructor(private _userRepository: IUserRepository) {}
@@ -12,12 +12,24 @@ export class UserVerifyOtpUseCase implements IUserVerifyOtpUseCase {
     const user = await this._userRepository.findByEmail(email);
     if (!user) throw new ApiError(404, MSG_USER_NOT_FOUND);
 
-    if (user.otp !== otp || new Date() > user.otpExpires!) {
+    if (!user.otp || !user.otpExpiresAt) {
+      throw new ApiError(400, MSG_USER_INVALID_OTP);
+    }
+
+    if (user.otpExpiresAt < new Date()) {
+      throw new ApiError(400, MSG_USER_OTP_EXPIRED);
+    }
+
+    if (user.otp !== otp) {
       throw new ApiError(400, MSG_USER_INVALID_OTP);
     }
 
     await this._userRepository.update(
-      { isVerified: true },
+      {
+        isVerified: true,
+        otp: undefined,
+        otpExpiresAt: undefined,
+      },
       email
     );
 

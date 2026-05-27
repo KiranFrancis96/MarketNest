@@ -1,16 +1,23 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { ApiError } from "@/utils/apiError.ts";
+import { tokenBlacklistService } from "@/infrastructure/services/tokenBlacklist.service.ts";
 import {
   MSG_ADMIN_TOKEN_MISSING,
   MSG_ADMIN_TOKEN_INVALID,
   MSG_ADMIN_ACCESS_DENIED,
 } from "./messages.constants.ts";
 
-export const adminAuth = (req: Request, res: Response, next: NextFunction) => {
+export const adminAuth = async (req: Request, res: Response, next: NextFunction) => {
   const token = req.cookies.adminAccessToken;
   if (!token) {
     next(new ApiError(401, MSG_ADMIN_TOKEN_MISSING));
+    return;
+  }
+
+  const isBlacklisted = await tokenBlacklistService.isTokenBlacklisted(token);
+  if (isBlacklisted) {
+    next(new ApiError(401, MSG_ADMIN_TOKEN_INVALID));
     return;
   }
 
