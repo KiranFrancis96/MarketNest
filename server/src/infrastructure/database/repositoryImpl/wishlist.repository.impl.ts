@@ -4,7 +4,7 @@ import type { Wishlist } from "@/domain/entities/wishlist.entity.ts";
 import { WishlistModel } from "../models/wishlist.model.ts";
 import { WishlistMapper } from "../mappers/WishlistMapper.ts";
 
-export class WishlistRepository extends BaseRepository<Wishlist, any> implements IWishlistRepository {
+export class WishlistRepository extends BaseRepository<Wishlist> implements IWishlistRepository {
   constructor() {
     super(WishlistModel, WishlistMapper);
   }

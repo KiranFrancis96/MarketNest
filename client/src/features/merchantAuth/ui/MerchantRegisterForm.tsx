@@ -1,7 +1,23 @@
 import { useState } from "react";
 
+export interface MerchantRegisterInput {
+  businessName: string;
+  ownerName: string;
+  email: string;
+  password: string;
+  phone: string;
+  gstNumber: string;
+  houseName: string;
+  street: string;
+  locality: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
+
 interface Props {
-  onSubmit: (e: React.FormEvent, data: any) => void;
+  onSubmit: (e: React.FormEvent, data: MerchantRegisterInput) => void;
   isLoading: boolean;
 }
 

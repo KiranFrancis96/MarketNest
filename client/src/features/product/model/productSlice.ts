@@ -5,6 +5,13 @@ import axios from "axios";
 const API_URL = "http://localhost:3000/api";
 axios.defaults.withCredentials = true;
 
+function getErrorMessage(err: unknown, defaultMessage: string): string {
+  if (axios.isAxiosError(err)) {
+    return err.response?.data?.message || defaultMessage;
+  }
+  return err instanceof Error ? err.message : defaultMessage;
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -72,8 +79,8 @@ export const fetchCategories = createAsyncThunk(
     try {
       const response = await axios.get(`${API_URL}/categories`);
       return response.data;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to fetch categories");
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, "Failed to fetch categories"));
     }
   }
 );
@@ -84,8 +91,8 @@ export const createCategory = createAsyncThunk(
     try {
       const response = await axios.post(`${API_URL}/categories`, data);
       return response.data.category;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to create category");
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, "Failed to create category"));
     }
   }
 );
@@ -96,8 +103,8 @@ export const addSubcategory = createAsyncThunk(
     try {
       const response = await axios.post(`${API_URL}/categories/subcategory`, data);
       return response.data.category;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to add subcategory");
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, "Failed to add subcategory"));
     }
   }
 );
@@ -108,8 +115,8 @@ export const fetchShoppingFeed = createAsyncThunk(
     try {
       const response = await axios.get(`${API_URL}/products/recommendations`);
       return response.data;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to fetch shopping recommendations");
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, "Failed to fetch shopping recommendations"));
     }
   }
 );
@@ -120,8 +127,8 @@ export const fetchCatalog = createAsyncThunk(
     try {
       const response = await axios.get(`${API_URL}/products`, { params });
       return response.data;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to fetch product catalog");
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, "Failed to fetch product catalog"));
     }
   }
 );
@@ -132,8 +139,8 @@ export const fetchProductById = createAsyncThunk(
     try {
       const response = await axios.get(`${API_URL}/products/${id}`);
       return response.data;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Product not found");
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, "Product not found"));
     }
   }
 );
@@ -144,8 +151,8 @@ export const fetchMerchantProducts = createAsyncThunk(
     try {
       const response = await axios.get(`${API_URL}/products/merchant/list`);
       return response.data;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to fetch merchant products");
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, "Failed to fetch merchant products"));
     }
   }
 );
@@ -158,8 +165,8 @@ export const addProduct = createAsyncThunk(
         headers: { "Content-Type": "multipart/form-data" },
       });
       return response.data.product;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to add product");
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, "Failed to add product"));
     }
   }
 );
@@ -172,8 +179,8 @@ export const editProduct = createAsyncThunk(
         headers: { "Content-Type": "multipart/form-data" },
       });
       return response.data.product;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to update product");
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, "Failed to update product"));
     }
   }
 );
@@ -184,8 +191,8 @@ export const deleteProduct = createAsyncThunk(
     try {
       await axios.delete(`${API_URL}/products/merchant/delete/${id}`);
       return id;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to delete product");
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, "Failed to delete product"));
     }
   }
 );
@@ -196,8 +203,8 @@ export const toggleBlockProduct = createAsyncThunk(
     try {
       const response = await axios.patch(`${API_URL}/products/admin/block/${id}`, { isBlocked });
       return response.data.product;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to toggle block status");
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, "Failed to toggle block status"));
     }
   }
 );
@@ -263,8 +270,17 @@ const productSlice = createSlice({
         state.error = action.payload as string;
       })
       // Fetch Product by ID
+      .addCase(fetchProductById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(fetchProductById.fulfilled, (state, action: PayloadAction<Product>) => {
+        state.loading = false;
         state.currentProduct = action.payload;
+      })
+      .addCase(fetchProductById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       })
       // Fetch Merchant Products
       .addCase(fetchMerchantProducts.pending, (state) => {

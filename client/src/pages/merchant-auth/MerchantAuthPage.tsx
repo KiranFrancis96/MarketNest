@@ -8,10 +8,22 @@ import { RoleSwitcher } from "@/shared/ui/RoleSwitcher";
 import { useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 import { useEffect } from "react";
+import type { RootState } from "@/app/store";
+
+interface GoogleWindow {
+  google?: {
+    accounts: {
+      id: {
+        initialize: (config: { client_id: string; callback: (response: { credential?: string }) => void }) => void;
+        renderButton: (element: HTMLElement | null, options: Record<string, unknown>) => void;
+      };
+    };
+  };
+}
 
 export const MerchantAuthPage = () => {
-  const isMerchantAuthenticated = useSelector((state: any) => state.merchant.isAuthenticated);
-  const isUserAuthenticated     = useSelector((state: any) => state.user.isAuthenticated);
+  const isMerchantAuthenticated = useSelector((state: RootState) => state.merchant.isAuthenticated);
+  const isUserAuthenticated     = useSelector((state: RootState) => state.user.isAuthenticated);
   const {
     step,
     setStep,
@@ -31,23 +43,25 @@ export const MerchantAuthPage = () => {
   useEffect(() => {
     if (step === "login") {
       const initializeGoogle = () => {
-        if ((window as any).google) {
-          (window as any).google.accounts.id.initialize({
+        const gWindow = window as unknown as GoogleWindow;
+        if (gWindow.google) {
+          gWindow.google.accounts.id.initialize({
             client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-            callback: (response: any) => {
+            callback: (response: { credential?: string }) => {
               if (response.credential) {
                 loginWithGoogle(response.credential);
               }
             },
           });
-          (window as any).google.accounts.id.renderButton(
+          gWindow.google.accounts.id.renderButton(
             document.getElementById("google-merchant-signin-btn"),
             { theme: "outline", size: "large", width: 384, text: "signin_with" }
           );
         }
       };
 
-      if (!(window as any).google) {
+      const gWindow = window as unknown as GoogleWindow;
+      if (!gWindow.google) {
         const script = document.createElement("script");
         script.src = "https://accounts.google.com/gsi/client";
         script.async = true;

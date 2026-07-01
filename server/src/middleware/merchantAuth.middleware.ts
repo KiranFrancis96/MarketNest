@@ -11,7 +11,7 @@ import {
 } from "./messages.constants.ts";
 
 export const authenticateMerchant = async (req: Request, res: Response, next: NextFunction) => {
-  const token = req.cookies.merchantAccessToken;
+  const token = req.cookies.accessToken;
 
   if (!token) {
     next(new ApiError(401, MSG_MERCHANT_TOKEN_MISSING));
@@ -25,7 +25,7 @@ export const authenticateMerchant = async (req: Request, res: Response, next: Ne
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string) as any;
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string) as jwt.JwtPayload;
 
     const merchant = await MerchantModel.findById(decoded.id);
     if (!merchant) {
@@ -34,8 +34,8 @@ export const authenticateMerchant = async (req: Request, res: Response, next: Ne
     }
 
     if (merchant.isBlocked) {
-      res.clearCookie("merchantAccessToken");
-      res.clearCookie("merchantRefreshToken");
+      res.clearCookie("accessToken");
+      res.clearCookie("refreshToken");
       next(new ApiError(403, MSG_MERCHANT_BLOCKED));
       return;
     }
@@ -43,7 +43,7 @@ export const authenticateMerchant = async (req: Request, res: Response, next: Ne
     // @ts-ignore
     req.user = decoded;
     next();
-  } catch (err) {
+  } catch (err: unknown) {
     next(new ApiError(401, MSG_MERCHANT_TOKEN_INVALID));
   }
 };

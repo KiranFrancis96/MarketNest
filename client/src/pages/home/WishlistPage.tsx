@@ -15,7 +15,6 @@ export const WishlistPage: React.FC = () => {
     dispatch(fetchWishlist());
   }, [dispatch]);
 
-  // Clean items list by filtering only valid populated products
   const validProducts = items
     .map((item) => item.product)
     .filter((prod): prod is NonNullable<typeof prod> => !!prod);
@@ -59,7 +58,6 @@ export const WishlistPage: React.FC = () => {
   );
 };
 
-// Premium visual wishlist dashboard layout styles
 const mainContentStyles: React.CSSProperties = {
   flex: 1,
   backgroundColor: "#f8fafc",

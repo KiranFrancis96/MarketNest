@@ -13,7 +13,6 @@ export const ProductCatalogPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Selected filters in local / search state
   const q = searchParams.get("q") || "";
   const category = searchParams.get("category") || "";
   const subcategory = searchParams.get("subcategory") || "";
@@ -29,7 +28,6 @@ export const ProductCatalogPage: React.FC = () => {
   const loading = useSelector((state: RootState) => state.product.loading);
 
   useEffect(() => {
-    // Dispatch catalog fetch with all current filters
     dispatch(
       fetchCatalog({
         q: q || undefined,
@@ -54,7 +52,16 @@ export const ProductCatalogPage: React.FC = () => {
     });
   };
 
-  const handleFilterChange = (newFilters: any) => {
+interface CatalogFilters {
+  category?: string;
+  subcategory?: string;
+  brand?: string;
+  minPrice?: number | string;
+  maxPrice?: number | string;
+  offerOnly?: boolean | string;
+}
+
+  const handleFilterChange = (newFilters: CatalogFilters) => {
     setSearchParams((prev) => {
       if (newFilters.category) prev.set("category", newFilters.category);
       else prev.delete("category");
@@ -95,7 +102,6 @@ export const ProductCatalogPage: React.FC = () => {
 
       <main style={mainContentStyles}>
         <div style={containerStyles}>
-          {/* Header Controls */}
           <div style={catalogHeaderStyles}>
             <div>
               <h1 style={{ fontSize: "2rem", fontWeight: 800, margin: 0 }}>Browse Shop Catalog</h1>
@@ -104,7 +110,6 @@ export const ProductCatalogPage: React.FC = () => {
               </p>
             </div>
 
-            {/* Filter Toggle Button */}
             <button
               onClick={() => setIsFilterOpen(true)}
               style={{
@@ -118,10 +123,8 @@ export const ProductCatalogPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Search bar section */}
           <SearchBar onSearch={handleSearch} initialValue={q} placeholder="Search product titles, brands, categories..." />
 
-          {/* Active Filter Tags */}
           {activeFiltersCount > 0 && (
             <div style={filterTagsWrapperStyles}>
               <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-muted)" }}>Active Filters:</span>
@@ -139,7 +142,6 @@ export const ProductCatalogPage: React.FC = () => {
             </div>
           )}
 
-          {/* Catalog grid */}
           {loading ? (
             <div style={spinnerContainerStyles}>
               <div className="animate-spin" style={spinnerStyles}></div>
@@ -163,7 +165,6 @@ export const ProductCatalogPage: React.FC = () => {
                 ))}
               </div>
 
-              {/* Pagination controls */}
               {catalogFeed.pages > 1 && (
                 <div style={paginationWrapperStyles}>
                   <button
@@ -200,7 +201,6 @@ export const ProductCatalogPage: React.FC = () => {
   );
 };
 
-// Premium Styles for Search and Filter Sidebar
 const mainContentStyles: React.CSSProperties = {
   flex: 1,
   backgroundColor: "#f8fafc",

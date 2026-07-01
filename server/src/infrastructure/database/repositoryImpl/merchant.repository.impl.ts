@@ -4,7 +4,7 @@ import type { Merchant } from "@/domain/entities/merchant.entity.ts";
 import { MerchantModel } from "../models/merchant.model.ts";
 import { MerchantMapper } from "../mappers/MerchantMapper.ts";
 
-export class MerchantRepository extends BaseRepository<Merchant, any> implements IMerchantRepository {
+export class MerchantRepository extends BaseRepository<Merchant> implements IMerchantRepository {
   constructor() {
     super(MerchantModel, MerchantMapper);
   }
@@ -21,8 +21,8 @@ export class MerchantRepository extends BaseRepository<Merchant, any> implements
 
   async update(merchantData: Partial<Merchant>, email: string): Promise<Merchant | null> {
     const docData = this.mapper.toDocument(merchantData as Merchant);
-    const $set: any = {};
-    const $unset: any = {};
+    const $set: Record<string, unknown> = {};
+    const $unset: Record<string, unknown> = {};
 
     Object.keys(docData).forEach((key) => {
       if (key in merchantData) {
@@ -34,7 +34,7 @@ export class MerchantRepository extends BaseRepository<Merchant, any> implements
       }
     });
 
-    const updateQuery: any = {};
+    const updateQuery: { $set?: Record<string, unknown>; $unset?: Record<string, unknown> } = {};
     if (Object.keys($set).length > 0) updateQuery.$set = $set;
     if (Object.keys($unset).length > 0) updateQuery.$unset = $unset;
 

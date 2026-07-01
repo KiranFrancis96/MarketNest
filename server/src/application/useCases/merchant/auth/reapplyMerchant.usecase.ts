@@ -3,6 +3,7 @@ import type { IMerchantReapplyUseCase } from "@/application/IUseCases/merchant/I
 import type { MerchantReapplyInputDTO } from "@/application/dtos/merchant/MerchantDtos.ts";
 import type { Merchant } from "@/domain/entities/merchant.entity.ts";
 import { ApiError } from "@/utils/apiError.ts";
+import { HttpStatus } from "@/utils/httpStatus.ts";
 import {
   MSG_MERCHANT_NOT_FOUND,
   MSG_MERCHANT_ONLY_REJECTED_CAN_REAPPLY,
@@ -14,10 +15,10 @@ export class ReapplyMerchantUseCase implements IMerchantReapplyUseCase {
 
   async execute(id: string, input: MerchantReapplyInputDTO): Promise<Merchant> {
     const merchant = await this._merchantRepository.findById(id);
-    if (!merchant) throw new ApiError(404, MSG_MERCHANT_NOT_FOUND);
+    if (!merchant) throw new ApiError(HttpStatus.NOT_FOUND, MSG_MERCHANT_NOT_FOUND);
 
     if (merchant.status !== "rejected") {
-      throw new ApiError(400, MSG_MERCHANT_ONLY_REJECTED_CAN_REAPPLY);
+      throw new ApiError(HttpStatus.BAD_REQUEST, MSG_MERCHANT_ONLY_REJECTED_CAN_REAPPLY);
     }
 
     const updated = await this._merchantRepository.updateById(id, {
@@ -28,7 +29,7 @@ export class ReapplyMerchantUseCase implements IMerchantReapplyUseCase {
     });
 
     if (!updated) {
-      throw new ApiError(500, MSG_MERCHANT_REAPPLY_FAILED);
+      throw new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, MSG_MERCHANT_REAPPLY_FAILED);
     }
 
     return updated;

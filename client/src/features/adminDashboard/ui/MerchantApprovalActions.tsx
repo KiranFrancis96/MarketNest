@@ -3,6 +3,7 @@ import { adminApi } from "@/entities/admin/api/adminApi";
 import { useDispatch } from "react-redux";
 import { updateMerchantStatus } from "@/entities/admin/model/adminSlice";
 import { Modal } from "@/shared/ui/Modal";
+import { CheckCircle, XCircle } from "lucide-react";
 
 interface MerchantApprovalActionsProps {
   merchantId: string;
@@ -48,20 +49,22 @@ export const MerchantApprovalActions: React.FC<MerchantApprovalActionsProps> = (
 
   return (
     <>
-      <div className="flex gap-3">
+      <div className="flex gap-2">
         <button
           onClick={() => setShowApproveModal(true)}
           disabled={loading}
-          className="px-4 py-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-lg text-xs font-bold transition-colors"
+          className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-100 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5"
         >
-          Approve
+          <CheckCircle size={14} />
+          <span>Approve</span>
         </button>
         <button
           onClick={() => setShowRejectModal(true)}
           disabled={loading}
-          className="px-4 py-1.5 bg-rose-100 text-rose-700 hover:bg-rose-200 rounded-lg text-xs font-bold transition-colors"
+          className="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-100 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5"
         >
-          Reject
+          <XCircle size={14} />
+          <span>Reject</span>
         </button>
       </div>
 

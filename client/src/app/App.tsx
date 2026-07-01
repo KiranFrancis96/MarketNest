@@ -5,10 +5,12 @@ import { useSelector } from "react-redux";
 import { userApi } from "@/entities/user/api/userApi";
 import { merchantApi } from "@/entities/merchant/api/merchantApi";
 
+import type { RootState } from "@/app/store";
+
 function AppContent() {
   const navigate = useNavigate();
-  const { isAuthenticated: isUserAuth } = useSelector((state: any) => state.user);
-  const { isAuthenticated: isMerchantAuth } = useSelector((state: any) => state.merchant);
+  const { isAuthenticated: isUserAuth } = useSelector((state: RootState) => state.user);
+  const { isAuthenticated: isMerchantAuth } = useSelector((state: RootState) => state.merchant);
 
   useEffect(() => {
     // Session Verification on Load
@@ -19,7 +21,7 @@ function AppContent() {
         } else if (isMerchantAuth) {
           await merchantApi.getProfile();
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         // If it's a 403 blocked error, the interceptor in baseApi 
         // will handle the logout and redirect automatically.
         console.error("Session verification failed", err);

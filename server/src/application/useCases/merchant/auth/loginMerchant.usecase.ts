@@ -4,6 +4,7 @@ import type { MerchantLoginInputDTO, MerchantVerifyOtpOutputDTO } from "@/applic
 import bcrypt from "bcrypt";
 import { generateAccessToken, generateRefreshToken } from "@/infrastructure/services/jwt.service.ts";
 import { ApiError } from "@/utils/apiError.ts";
+import { HttpStatus } from "@/utils/httpStatus.ts";
 import {
   MSG_MERCHANT_INVALID_CREDENTIALS,
   MSG_MERCHANT_NOT_VERIFIED,
@@ -16,26 +17,26 @@ export class LoginMerchantUseCase implements IMerchantLoginUseCase {
 
   async execute({ email, password }: MerchantLoginInputDTO): Promise<MerchantVerifyOtpOutputDTO> {
     if (!password) {
-      throw new ApiError(400, MSG_MERCHANT_PASSWORD_REQUIRED);
+      throw new ApiError(HttpStatus.BAD_REQUEST, MSG_MERCHANT_PASSWORD_REQUIRED);
     }
 
     const merchant = await this._merchantRepository.findByEmail(email);
 
     if (!merchant) {
-      throw new ApiError(401, MSG_MERCHANT_INVALID_CREDENTIALS);
+      throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_MERCHANT_INVALID_CREDENTIALS);
     }
 
     const isValid = await bcrypt.compare(password, merchant.password);
     if (!isValid) {
-      throw new ApiError(401, MSG_MERCHANT_INVALID_CREDENTIALS);
+      throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_MERCHANT_INVALID_CREDENTIALS);
     }
 
     if (!merchant.isEmailVerified) {
-      throw new ApiError(403, MSG_MERCHANT_NOT_VERIFIED);
+      throw new ApiError(HttpStatus.FORBIDDEN, MSG_MERCHANT_NOT_VERIFIED);
     }
 
     if (merchant.isBlocked) {
-      throw new ApiError(403, MSG_MERCHANT_BLOCKED);
+      throw new ApiError(HttpStatus.FORBIDDEN, MSG_MERCHANT_BLOCKED);
     }
 
     const accessToken = generateAccessToken({

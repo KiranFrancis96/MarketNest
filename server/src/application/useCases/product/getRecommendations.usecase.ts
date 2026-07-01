@@ -1,6 +1,7 @@
 import type { IProductRepository } from "@/domain/interface/product.repository.ts";
 import type { IUserRepository } from "@/domain/interface/user.repository.ts";
 import type { Product } from "@/domain/entities/product.entity.ts";
+import type { IGetRecommendationsUseCase } from "@/application/IUseCases/product/IProductUseCases.ts";
 import { recommendationService, type UserPreferences } from "@/infrastructure/services/RecommendationService.ts";
 
 export interface RecommendationsOutputDTO {
@@ -10,7 +11,7 @@ export interface RecommendationsOutputDTO {
   basedOnShoppingStyle: Product[];
 }
 
-export class GetRecommendationsUseCase {
+export class GetRecommendationsUseCase implements IGetRecommendationsUseCase {
   constructor(
     private _productRepository: IProductRepository,
     private _userRepository: IUserRepository
@@ -25,7 +26,7 @@ export class GetRecommendationsUseCase {
     };
 
     if (userId) {
-      const user: any = await this._userRepository.findById(userId);
+      const user = await this._userRepository.findById(userId);
       if (user && user.preferences) {
         preferences = {
           favoriteBrands: user.preferences.favoriteBrands || [],
@@ -39,7 +40,7 @@ export class GetRecommendationsUseCase {
       }
     }
 
-    const products = await this._productRepository.findMany({ isBlocked: false } as any);
+    const products = await this._productRepository.findMany({ isBlocked: false });
 
     const recommended = recommendationService.scoreAndSortProducts(products, preferences).slice(0, 8);
 

@@ -4,6 +4,7 @@ import type { UserLoginOutputDTO } from "@/application/dtos/user/UserDtos.ts";
 import { verifyGoogleToken } from "@/utils/google.ts";
 import { generateAccessToken, generateRefreshToken } from "@/infrastructure/services/jwt.service.ts";
 import { ApiError } from "@/utils/apiError.ts";
+import { HttpStatus } from "@/utils/httpStatus.ts";
 import bcrypt from "bcrypt";
 import {
   MSG_USER_CREATE_FAILED,
@@ -33,14 +34,14 @@ export class UserGoogleAuthUseCase implements IUserGoogleAuthUseCase {
         password: hashed,
         isVerified: true,
         isBlocked: false,
-      }) as any;
+      });
 
       if (!user) {
-        throw new ApiError(500, MSG_USER_CREATE_FAILED);
+        throw new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, MSG_USER_CREATE_FAILED);
       }
     } else {
       if (user.isBlocked) {
-        throw new ApiError(403, MSG_USER_BLOCKED);
+        throw new ApiError(HttpStatus.FORBIDDEN, MSG_USER_BLOCKED);
       }
 
       if (!user.isVerified) {

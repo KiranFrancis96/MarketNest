@@ -3,6 +3,7 @@ import { OTP_CONFIG } from "@/config/otp.config.ts";
 import type { IMerchantResendOtpUseCase } from "@/application/IUseCases/merchant/IMerchantUseCases.ts";
 import type { MerchantResendOtpInputDTO } from "@/application/dtos/merchant/MerchantDtos.ts";
 import { ApiError } from "@/utils/apiError.ts";
+import { HttpStatus } from "@/utils/httpStatus.ts";
 import { generateOtp } from "@/utils/generateOtp.ts";
 import { sendOtpEmail } from "@/infrastructure/services/otp.service.ts";
 import { MSG_MERCHANT_NOT_FOUND } from "./messages.constants.ts";
@@ -14,7 +15,7 @@ export class ResendMerchantOtpUseCase implements IMerchantResendOtpUseCase {
     const merchant = await this._merchantRepository.findByEmail(email);
 
     if (!merchant) {
-      throw new ApiError(404, MSG_MERCHANT_NOT_FOUND);
+      throw new ApiError(HttpStatus.NOT_FOUND, MSG_MERCHANT_NOT_FOUND);
     }
 
     const otp = generateOtp();

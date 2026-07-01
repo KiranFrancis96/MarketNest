@@ -11,3 +11,7 @@ export const MSG_MERCHANT_NOT_FOUND        = "Merchant not found";
 export const MSG_MERCHANT_ALREADY_APPROVED = "Merchant is already approved";
 export const MSG_MERCHANT_ALREADY_REJECTED = "Merchant is already rejected";
 export const MSG_MERCHANT_UPDATE_FAILED    = "Failed to update merchant status";
+
+// ─── Admin Security ──────────────────────────────────────────────────────────
+export const MSG_ADMIN_PASSWORD_REQUIRED   = "Password is required";
+

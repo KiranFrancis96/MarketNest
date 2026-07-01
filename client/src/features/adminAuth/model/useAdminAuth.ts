@@ -9,15 +9,16 @@ export const useAdminAuth = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<"forgot" | "reset" | "login">("login");
 
-  const login = async (credentials: any) => {
+  const login = async (credentials: Record<string, unknown>) => {
     dispatch(setLoading(true));
     dispatch(setError(null));
     try {
       const response = await adminApi.login(credentials);
       dispatch(setAdmin(response.data.user));
       navigate("/admin/dashboard", { replace: true });
-    } catch (err: any) {
-      dispatch(setError(err.response?.data?.message || "Login failed"));
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      dispatch(setError(error.response?.data?.message || "Login failed"));
     } finally {
       dispatch(setLoading(false));
     }
@@ -38,21 +39,23 @@ export const useAdminAuth = () => {
     try {
       await adminApi.forgotPassword(email);
       setStep("reset");
-    } catch (err: any) {
-      dispatch(setError(err.response?.data?.message || "Operation failed"));
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      dispatch(setError(error.response?.data?.message || "Operation failed"));
     } finally {
       dispatch(setLoading(false));
     }
   };
 
-  const resetPassword = async (data: any) => {
+  const resetPassword = async (data: Record<string, unknown>) => {
     dispatch(setLoading(true));
     try {
       await adminApi.resetPassword(data);
       setStep("login");
       dispatch(setError(null));
-    } catch (err: any) {
-      dispatch(setError(err.response?.data?.message || "Reset failed"));
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      dispatch(setError(error.response?.data?.message || "Reset failed"));
     } finally {
       dispatch(setLoading(false));
     }

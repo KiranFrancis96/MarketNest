@@ -4,9 +4,10 @@ import { fetchCart, updateCartQuantity, removeFromCart, clearCart } from "@/feat
 import { Header } from "@/shared/components/Header";
 import type { RootState, AppDispatch } from "@/app/store";
 import { Trash2, Plus, Minus, ArrowLeft, CreditCard, ShoppingCart } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export const CartPage: React.FC = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const cartState = useSelector((state: RootState) => state.cart);
   const { cart, loading } = cartState;
@@ -40,14 +41,11 @@ export const CartPage: React.FC = () => {
     }
   };
 
-  // Calculate order summary values
   const items = cart?.items || [];
   const itemCounts = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Subtotal calculations using priceSnapshot
   const subtotal = items.reduce((sum, item) => sum + item.priceSnapshot * item.quantity, 0);
   
-  // Total savings compared to original standard prices
   const totalOriginal = items.reduce((sum, item) => {
     const originalPrice = item.product?.price || item.priceSnapshot;
     return sum + originalPrice * item.quantity;
@@ -55,7 +53,7 @@ export const CartPage: React.FC = () => {
   const totalSavings = totalOriginal - subtotal;
 
   const handleCheckout = () => {
-    alert("Checkout functionality would proceed to payment gateway simulation.");
+    navigate("/checkout");
   };
 
   return (
@@ -86,7 +84,6 @@ export const CartPage: React.FC = () => {
             </div>
           ) : (
             <div style={cartLayoutStyles}>
-              {/* Left Side: Items list */}
               <div style={itemsListWrapperStyles}>
                 <div style={itemsHeaderStyles}>
                   <span>Cart Items ({itemCounts})</span>
@@ -120,7 +117,6 @@ export const CartPage: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Quantity controls with stock verification */}
                         <div style={qtyControlsStyles}>
                           <button
                             onClick={() => handleUpdateQuantity(item.productId, item.quantity, -1)}
@@ -137,7 +133,6 @@ export const CartPage: React.FC = () => {
                           </button>
                         </div>
 
-                        {/* Action details */}
                         <div style={rowActionsStyles}>
                           <span style={totalPriceStyles}>₹{(price * item.quantity).toFixed(2)}</span>
                           <button onClick={() => handleRemoveItem(item.productId)} style={deleteBtnStyles}>
@@ -154,7 +149,6 @@ export const CartPage: React.FC = () => {
                 </Link>
               </div>
 
-              {/* Right Side: Order summary */}
               <div style={summaryCardStyles}>
                 <h2 style={summaryTitleStyles}>Order Summary</h2>
                 
@@ -194,7 +188,6 @@ export const CartPage: React.FC = () => {
   );
 };
 
-// Premium checkout UX styling styles
 const mainContentStyles: React.CSSProperties = {
   flex: 1,
   backgroundColor: "#f8fafc",

@@ -7,6 +7,7 @@ import { UserTable } from "@/features/adminDashboard/ui/UserTable";
 import { MerchantTable } from "@/features/adminDashboard/ui/MerchantTable";
 import { useAdminAuth } from "@/features/adminAuth/model/useAdminAuth";
 import { ProductTable } from "@/shared/components/ProductTable";
+import { Modal } from "@/shared/ui/Modal";
 import {
   fetchCatalog,
   toggleBlockProduct,
@@ -20,9 +21,12 @@ const AdminDashboardPage: React.FC = () => {
   const { admin, users, merchants, isLoading } = useSelector((state: RootState) => state.admin);
   const { catalogFeed, categories } = useSelector((state: RootState) => state.product);
   const { logout } = useAdminAuth();
-  
+
   const [activeTab, setActiveTab] = useState<"users" | "merchants" | "products" | "categories">("users");
   const [merchantFilter, setMerchantFilter] = useState("all");
+
+  // State for blocking/unblocking confirmation modal
+  const [confirmBlock, setConfirmBlock] = useState<{ id: string; block: boolean } | null>(null);
 
   // Category manager states
   const [newCatName, setNewCatName] = useState("");
@@ -37,7 +41,7 @@ const AdminDashboardPage: React.FC = () => {
         try {
           const res = await adminApi.getUsers();
           dispatch(setUsers(res.data));
-        } catch (err) {
+        } catch (err: unknown) {
           console.error("Fetch users error", err);
         } finally {
           dispatch(setLoading(false));
@@ -47,7 +51,7 @@ const AdminDashboardPage: React.FC = () => {
         try {
           const res = await adminApi.getMerchants(merchantFilter);
           dispatch(setMerchants(res.data));
-        } catch (err) {
+        } catch (err: unknown) {
           console.error("Fetch merchants error", err);
         } finally {
           dispatch(setLoading(false));
@@ -64,8 +68,7 @@ const AdminDashboardPage: React.FC = () => {
   if (!admin) return null;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      {/* Sidebar/Nav */}
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
@@ -88,38 +91,34 @@ const AdminDashboardPage: React.FC = () => {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 flex flex-col">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4">
           <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-200 flex-wrap">
             <button
               onClick={() => setActiveTab("users")}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
-                activeTab === "users" ? "tab-active" : "tab-inactive"
-              }`}
+              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === "users" ? "tab-active" : "tab-inactive"
+                }`}
             >
               Users Listing
             </button>
             <button
               onClick={() => setActiveTab("merchants")}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
-                activeTab === "merchants" ? "tab-active" : "tab-inactive"
-              }`}
+              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === "merchants" ? "tab-active" : "tab-inactive"
+                }`}
             >
               Merchants Listing
             </button>
             <button
               onClick={() => setActiveTab("products")}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
-                activeTab === "products" ? "tab-active" : "tab-inactive"
-              }`}
+              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === "products" ? "tab-active" : "tab-inactive"
+                }`}
             >
               Products Moderation
             </button>
             <button
               onClick={() => setActiveTab("categories")}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
-                activeTab === "categories" ? "tab-active" : "tab-inactive"
-              }`}
+              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === "categories" ? "tab-active" : "tab-inactive"
+                }`}
             >
               Categories Management
             </button>
@@ -143,25 +142,23 @@ const AdminDashboardPage: React.FC = () => {
         </div>
 
         {isLoading && (activeTab === "users" || activeTab === "merchants") ? (
-          <div className="flex justify-center items-center py-40">
+          <div className="flex justify-center items-center py-40 flex-grow">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent"></div>
           </div>
         ) : (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex-grow flex flex-col">
             {activeTab === "users" && <UserTable users={users} />}
-            
+
             {activeTab === "merchants" && <MerchantTable merchants={merchants} />}
 
             {activeTab === "products" && (
               <div>
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Marketplace Products</h2>
-                <ProductTable 
-                  products={catalogFeed?.products || []} 
-                  mode="admin" 
+                <ProductTable
+                  products={catalogFeed?.products || []}
+                  mode="admin"
                   onToggleBlock={(id, block) => {
-                    if (window.confirm(`Are you sure you want to ${block ? "BLOCK" : "UNBLOCK"} this product?`)) {
-                      dispatch(toggleBlockProduct({ id, isBlocked: block }));
-                    }
+                    setConfirmBlock({ id, block });
                   }}
                 />
               </div>
@@ -169,9 +166,7 @@ const AdminDashboardPage: React.FC = () => {
 
             {activeTab === "categories" && (
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "2rem" }}>
-                {/* Forms Column */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-                  {/* Form 1: Add Category */}
                   <div style={{ background: "white", padding: "1.5rem", borderRadius: "16px", border: "1px solid var(--border)" }}>
                     <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>Create New Category</h3>
                     <form onSubmit={async (e) => {
@@ -183,8 +178,8 @@ const AdminDashboardPage: React.FC = () => {
                         setNewCatName("");
                         setNewSubcats("");
                         alert("Category created successfully!");
-                      } catch (err: any) {
-                        alert(err || "Failed to create category");
+                      } catch (err: unknown) {
+                        alert(typeof err === "string" ? err : (err instanceof Error ? err.message : "Failed to create category"));
                       }
                     }}>
                       <div className="form-group" style={{ marginBottom: "1rem" }}>
@@ -213,7 +208,6 @@ const AdminDashboardPage: React.FC = () => {
                     </form>
                   </div>
 
-                  {/* Form 2: Add Subcategory */}
                   <div style={{ background: "white", padding: "1.5rem", borderRadius: "16px", border: "1px solid var(--border)" }}>
                     <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>Add Subcategory</h3>
                     <form onSubmit={async (e) => {
@@ -223,8 +217,8 @@ const AdminDashboardPage: React.FC = () => {
                         await dispatch(addSubcategory({ name: selectedCat, subcategoryName: newSubName })).unwrap();
                         setNewSubName("");
                         alert("Subcategory added successfully!");
-                      } catch (err: any) {
-                        alert(err || "Failed to add subcategory");
+                      } catch (err: unknown) {
+                        alert(typeof err === "string" ? err : (err instanceof Error ? err.message : "Failed to add subcategory"));
                       }
                     }}>
                       <div className="form-group" style={{ marginBottom: "1rem" }}>
@@ -258,9 +252,8 @@ const AdminDashboardPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Categories List Column */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                  <h3 style={{ fontSize: "1.2rem", fontWeight: 700 }}>Store Classification Schema</h3>
+                  <h3 style={{ fontSize: "1.2rem", fontWeight: 700 }}>Store Classification</h3>
                   {categories.length === 0 ? (
                     <div style={{ padding: "3rem", background: "white", border: "1px dashed var(--border)", borderRadius: "16px", textAlign: "center", color: "var(--text-muted)" }}>
                       No categories created yet.
@@ -287,6 +280,42 @@ const AdminDashboardPage: React.FC = () => {
           </div>
         )}
       </main>
+
+      {confirmBlock && (
+        <Modal
+          isOpen={!!confirmBlock}
+          onClose={() => setConfirmBlock(null)}
+          title={confirmBlock.block ? "Block Product" : "Unblock Product"}
+          footer={
+            <div className="flex justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100">
+              <button
+                onClick={() => setConfirmBlock(null)}
+                className="px-4 py-2 border border-gray-200 text-sm font-bold text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  dispatch(toggleBlockProduct({ id: confirmBlock.id, isBlocked: confirmBlock.block }));
+                  setConfirmBlock(null);
+                }}
+                className={`px-4 py-2 text-sm font-bold text-white rounded-lg transition-colors ${
+                  confirmBlock.block ? "bg-rose-600 hover:bg-rose-700" : "bg-emerald-600 hover:bg-emerald-700"
+                }`}
+              >
+                Confirm
+              </button>
+            </div>
+          }
+        >
+          <div className="p-6">
+            <p className="text-gray-600 text-sm leading-relaxed">
+              Are you sure you want to <strong>{confirmBlock.block ? "BLOCK" : "UNBLOCK"}</strong> this product?
+              {confirmBlock.block && " Once blocked, it will not be shown to customers in the marketplace."}
+            </p>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };

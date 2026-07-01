@@ -1,4 +1,6 @@
 import type { Request, Response } from "express";
+import { COOKIE_CONFIG } from "@/config/cookie.config.ts";
+import { HttpStatus } from "@/utils/httpStatus.ts";
 import type {
   IMerchantRegisterUseCase,
   IMerchantVerifyOtpUseCase,
@@ -25,6 +27,9 @@ import {
   MSG_MERCHANT_LOGOUT,
   MSG_MERCHANT_FORGOT_PW_SENT,
   MSG_MERCHANT_PASSWORD_RESET,
+  MSG_CREDENTIAL_REQUIRED,
+  MSG_MERCHANT_ONBOARDING_SUCCESS,
+  MSG_REAPPLICATION_SUBMITTED_SUCCESS,
 } from "./messages.constants.ts";
 
 export class MerchantController {
@@ -45,14 +50,14 @@ export class MerchantController {
   googleAuth = async (req: Request, res: Response): Promise<void> => {
     const { credential } = req.body;
     if (!credential) {
-      res.status(400).json({ message: "Credential token is required" });
+      res.status(HttpStatus.BAD_REQUEST).json({ message: MSG_CREDENTIAL_REQUIRED });
       return;
     }
 
     const { merchant, accessToken, refreshToken, isProfileComplete } = await this._googleAuthUseCase.execute(credential);
 
-    res.cookie("merchantAccessToken", accessToken, { httpOnly: true, sameSite: "lax", maxAge: 15 * 60 * 1000 });
-    res.cookie("merchantRefreshToken", refreshToken, { httpOnly: true, sameSite: "lax", maxAge: 7 * 24 * 60 * 60 * 1000 });
+    res.cookie("accessToken", accessToken, { httpOnly: true, sameSite: "lax", maxAge: COOKIE_CONFIG.ACCESS_TOKEN_MAX_AGE });
+    res.cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "lax", maxAge: COOKIE_CONFIG.REFRESH_TOKEN_MAX_AGE });
 
     res.json({ message: MSG_MERCHANT_LOGIN_SUCCESS, merchant, isProfileComplete });
   };
@@ -61,30 +66,30 @@ export class MerchantController {
     // @ts-ignore
     const merchantId = req.user?.id;
     if (!merchantId) {
-      res.status(401).json({ message: MSG_UNAUTHORIZED });
+      res.status(HttpStatus.UNAUTHORIZED).json({ message: MSG_UNAUTHORIZED });
       return;
     }
 
     const updated = await this._completeProfileUseCase.execute(merchantId, req.body);
-    res.json({ message: "Merchant onboarding completed successfully", merchant: updated });
+    res.json({ message: MSG_MERCHANT_ONBOARDING_SUCCESS, merchant: updated });
   };
 
   register = async (req: Request, res: Response): Promise<void> => {
     await this._registerUseCase.execute(req.body);
-    res.status(201).json({ message: MSG_MERCHANT_REGISTER_SUCCESS });
+    res.status(HttpStatus.CREATED).json({ message: MSG_MERCHANT_REGISTER_SUCCESS });
   };
 
   verifyOtp = async (req: Request, res: Response): Promise<void> => {
     const { email, otp } = req.body;
     if (!email || !otp) {
-      res.status(400).json({ message: MSG_EMAIL_OTP_REQUIRED });
+      res.status(HttpStatus.BAD_REQUEST).json({ message: MSG_EMAIL_OTP_REQUIRED });
       return;
     }
 
     const { merchant, accessToken, refreshToken } = await this._verifyOtpUseCase.execute({ email, otp });
 
-    res.cookie("merchantAccessToken", accessToken, { httpOnly: true, sameSite: "lax", maxAge: 15 * 60 * 1000 });
-    res.cookie("merchantRefreshToken", refreshToken, { httpOnly: true, sameSite: "lax", maxAge: 7 * 24 * 60 * 60 * 1000 });
+    res.cookie("accessToken", accessToken, { httpOnly: true, sameSite: "lax", maxAge: COOKIE_CONFIG.ACCESS_TOKEN_MAX_AGE });
+    res.cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "lax", maxAge: COOKIE_CONFIG.REFRESH_TOKEN_MAX_AGE });
 
     res.json({ message: MSG_OTP_VERIFIED, merchant });
   };
@@ -92,14 +97,14 @@ export class MerchantController {
   login = async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
     if (!email || !password) {
-      res.status(400).json({ message: MSG_EMAIL_PASSWORD_REQUIRED });
+      res.status(HttpStatus.BAD_REQUEST).json({ message: MSG_EMAIL_PASSWORD_REQUIRED });
       return;
     }
 
     const { merchant, accessToken, refreshToken } = await this._loginUseCase.execute({ email, password });
 
-    res.cookie("merchantAccessToken", accessToken, { httpOnly: true, sameSite: "lax", maxAge: 15 * 60 * 1000 });
-    res.cookie("merchantRefreshToken", refreshToken, { httpOnly: true, sameSite: "lax", maxAge: 7 * 24 * 60 * 60 * 1000 });
+    res.cookie("accessToken", accessToken, { httpOnly: true, sameSite: "lax", maxAge: COOKIE_CONFIG.ACCESS_TOKEN_MAX_AGE });
+    res.cookie("refreshToken", refreshToken, { httpOnly: true, sameSite: "lax", maxAge: COOKIE_CONFIG.REFRESH_TOKEN_MAX_AGE });
 
     res.json({ message: MSG_MERCHANT_LOGIN_SUCCESS, merchant });
   };
@@ -107,7 +112,7 @@ export class MerchantController {
   forgotPassword = async (req: Request, res: Response): Promise<void> => {
     const { email } = req.body;
     if (!email) {
-      res.status(400).json({ message: MSG_EMAIL_REQUIRED });
+      res.status(HttpStatus.BAD_REQUEST).json({ message: MSG_EMAIL_REQUIRED });
       return;
     }
     await this._forgotPasswordUseCase.execute({ email });
@@ -117,7 +122,7 @@ export class MerchantController {
   resetPassword = async (req: Request, res: Response): Promise<void> => {
     const { email, otp, password } = req.body;
     if (!email || !otp || !password) {
-      res.status(400).json({ message: MSG_EMAIL_OTP_PW_REQUIRED });
+      res.status(HttpStatus.BAD_REQUEST).json({ message: MSG_EMAIL_OTP_PW_REQUIRED });
       return;
     }
     await this._resetPasswordUseCase.execute({ email, otp, password });
@@ -129,7 +134,7 @@ export class MerchantController {
     const merchantId = req.user?.id;
 
     if (!merchantId) {
-      res.status(401).json({ message: MSG_UNAUTHORIZED });
+      res.status(HttpStatus.UNAUTHORIZED).json({ message: MSG_UNAUTHORIZED });
       return;
     }
 
@@ -138,18 +143,18 @@ export class MerchantController {
   };
 
   logout = async (req: Request, res: Response): Promise<void> => {
-    const accessToken = req.cookies.merchantAccessToken;
-    const refreshToken = req.cookies.merchantRefreshToken;
+    const accessToken = req.cookies.accessToken;
+    const refreshToken = req.cookies.refreshToken;
     await this._logoutUseCase.execute({ accessToken, refreshToken });
-    res.clearCookie("merchantAccessToken");
-    res.clearCookie("merchantRefreshToken");
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
     res.json({ message: MSG_MERCHANT_LOGOUT });
   };
 
   resendOtp = async (req: Request, res: Response): Promise<void> => {
     const { email } = req.body;
     if (!email) {
-      res.status(400).json({ message: MSG_EMAIL_REQUIRED });
+      res.status(HttpStatus.BAD_REQUEST).json({ message: MSG_EMAIL_REQUIRED });
       return;
     }
     await this._resendOtpUseCase.execute({ email });
@@ -160,10 +165,10 @@ export class MerchantController {
     // @ts-ignore
     const merchantId = req.user?.id;
     if (!merchantId) {
-      res.status(401).json({ message: MSG_UNAUTHORIZED });
+      res.status(HttpStatus.UNAUTHORIZED).json({ message: MSG_UNAUTHORIZED });
       return;
     }
     const updated = await this._reapplyUseCase.execute(merchantId, req.body);
-    res.json({ message: "Reapplication submitted successfully", merchant: updated });
+    res.json({ message: MSG_REAPPLICATION_SUBMITTED_SUCCESS, merchant: updated });
   };
 }

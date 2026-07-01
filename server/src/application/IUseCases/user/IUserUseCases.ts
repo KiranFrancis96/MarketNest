@@ -49,3 +49,17 @@ export interface IGetUserProfileUseCase {
 export interface IUserGoogleAuthUseCase {
   execute(credential: string): Promise<UserLoginOutputDTO>;
 }
+
+import type { AddAddressInputDTO, UpdateAddressInputDTO } from "@/application/dtos/user/AddressDtos.ts";
+
+export interface IAddUserAddressUseCase {
+  execute(input: AddAddressInputDTO): Promise<User>;
+}
+
+export interface IUpdateUserAddressUseCase {
+  execute(input: UpdateAddressInputDTO): Promise<User>;
+}
+
+export interface IDeleteUserAddressUseCase {
+  execute(userId: string, addressId: string): Promise<User>;
+}

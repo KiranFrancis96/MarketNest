@@ -8,6 +8,7 @@ import type {
   MerchantResetPasswordInputDTO,
   MerchantResendOtpInputDTO,
   MerchantReapplyInputDTO,
+  MerchantCompleteProfileInputDTO,
 } from "@/application/dtos/merchant/MerchantDtos.ts";
 import type { Merchant } from "@/domain/entities/merchant.entity.ts";
 
@@ -52,5 +53,5 @@ export interface IMerchantGoogleAuthUseCase {
 }
 
 export interface ICompleteMerchantProfileUseCase {
-  execute(id: string, input: any): Promise<Merchant>;
+  execute(id: string, input: MerchantCompleteProfileInputDTO): Promise<Merchant>;
 }

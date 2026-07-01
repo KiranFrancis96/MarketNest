@@ -7,6 +7,7 @@ import { logout } from "@/entities/user/model/userSlice";
 import { userApi } from "@/entities/user/api/userApi";
 import { fetchCart } from "@/features/cart/model/cartSlice";
 import { fetchWishlist } from "@/features/wishlist/model/wishlistSlice";
+import { NotificationBell } from "@/features/notification/ui/NotificationBell";
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -39,13 +40,11 @@ export const Header: React.FC = () => {
   return (
     <header style={headerStyles}>
       <div style={headerContainerStyles}>
-        {/* Logo */}
         <Link to="/" style={logoStyles}>
           <Store size={26} color="var(--primary)" />
           <span>MarketNest</span>
         </Link>
 
-        {/* Navigation */}
         <nav style={navStyles}>
           <Link
             to="/"
@@ -67,11 +66,29 @@ export const Header: React.FC = () => {
           >
             Shop Catalog
           </Link>
+          <Link
+            to="/purchases"
+            style={{
+              ...navLinkStyles,
+              color: location.pathname === "/purchases" ? "var(--primary)" : "var(--text-muted)",
+              fontWeight: location.pathname === "/purchases" ? 700 : 500,
+            }}
+          >
+            My Purchases
+          </Link>
+          <Link
+            to="/profile"
+            style={{
+              ...navLinkStyles,
+              color: location.pathname === "/profile" ? "var(--primary)" : "var(--text-muted)",
+              fontWeight: location.pathname === "/profile" ? 700 : 500,
+            }}
+          >
+            My Profile
+          </Link>
         </nav>
 
-        {/* Right side items */}
         <div style={actionsContainerStyles}>
-          {/* Wishlist */}
           <Link to="/wishlist" style={iconBtnWrapperStyles} title="Wishlist">
             <Heart size={20} color="var(--text-main)" />
             {wishlistCount > 0 && (
@@ -79,7 +96,6 @@ export const Header: React.FC = () => {
             )}
           </Link>
 
-          {/* Cart */}
           <Link to="/cart" style={iconBtnWrapperStyles} title="Cart">
             <ShoppingCart size={20} color="var(--text-main)" />
             {cartCount > 0 && (
@@ -87,10 +103,10 @@ export const Header: React.FC = () => {
             )}
           </Link>
 
-          {/* User info */}
+          <NotificationBell />
+
           <span style={emailStyles}>{user?.email?.split("@")[0]}</span>
 
-          {/* Log out */}
           <button onClick={handleLogout} style={logoutBtnStyles} title="Sign Out">
             <LogOut size={18} />
           </button>
@@ -100,7 +116,6 @@ export const Header: React.FC = () => {
   );
 };
 
-// Premium visual styling matching dynamic design standards
 const headerStyles: React.CSSProperties = {
   position: "sticky",
   top: 0,

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Edit2, Trash2, ShieldAlert, ShieldCheck } from "lucide-react";
 import type { Product } from "@/features/product/model/productSlice";
 
@@ -17,6 +17,19 @@ export const ProductTable: React.FC<ProductTableProps> = ({
   onDelete,
   onToggleBlock,
 }) => {
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [products]);
+
+  const totalItems = products.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedProducts = products.slice(startIndex, endIndex);
   return (
     <div style={tableWrapperStyles}>
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -32,14 +45,14 @@ export const ProductTable: React.FC<ProductTableProps> = ({
           </tr>
         </thead>
         <tbody>
-          {products.length === 0 ? (
+          {paginatedProducts.length === 0 ? (
             <tr>
               <td colSpan={mode === "admin" ? 7 : 6} style={emptyCellStyles}>
                 No products found. Start by listing a product!
               </td>
             </tr>
           ) : (
-            products.map((product) => {
+            paginatedProducts.map((product) => {
               const image = product.images?.[0] || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100";
               const hasDiscount = product.offerPrice && product.offerPrice < product.price;
 
@@ -140,11 +153,80 @@ export const ProductTable: React.FC<ProductTableProps> = ({
           )}
         </tbody>
       </table>
+
+      {totalItems > 0 && (
+        <div style={paginationWrapperStyles}>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div style={paginationInfoStyles}>
+              Showing <span style={{ fontWeight: 700, color: "var(--text-main)" }}>{totalItems === 0 ? 0 : startIndex + 1}</span> to{" "}
+              <span style={{ fontWeight: 700, color: "var(--text-main)" }}>{endIndex}</span> of{" "}
+              <span style={{ fontWeight: 700, color: "var(--text-main)" }}>{totalItems}</span> products
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 500 }}>Show</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                style={{
+                  padding: "0.25rem 0.5rem",
+                  borderRadius: "8px",
+                  border: "1px solid var(--border)",
+                  backgroundColor: "#ffffff",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  color: "var(--text-main)",
+                  cursor: "pointer",
+                  outline: "none",
+                }}
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+          </div>
+          {totalPages > 1 && (
+            <div style={paginationControlsStyles}>
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                style={paginationBtnStyles(currentPage === 1)}
+              >
+                Previous
+              </button>
+              <div style={{ display: "flex", gap: "0.25rem" }}>
+                {Array.from({ length: totalPages }).map((_, i) => {
+                  const pageNum = i + 1;
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      style={pageNumBtnStyles(currentPage === pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                style={paginationBtnStyles(currentPage === totalPages)}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
-// Sleek and modern CSS-in-JS properties for fully isolated rendering
 const tableWrapperStyles: React.CSSProperties = {
   width: "100%",
   overflowX: "auto",
@@ -282,3 +364,54 @@ const emptyCellStyles: React.CSSProperties = {
   color: "var(--text-muted)",
   fontStyle: "italic",
 };
+
+const paginationWrapperStyles: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: "1rem 1.25rem",
+  backgroundColor: "#f9fafb",
+  borderTop: "1px solid var(--border)",
+};
+
+const paginationInfoStyles: React.CSSProperties = {
+  fontSize: "0.75rem",
+  fontWeight: 600,
+  color: "var(--text-muted)",
+};
+
+const paginationControlsStyles: React.CSSProperties = {
+  display: "flex",
+  gap: "0.5rem",
+  alignItems: "center",
+};
+
+const paginationBtnStyles = (disabled: boolean, active: boolean = false): React.CSSProperties => ({
+  padding: "0.4rem 0.8rem",
+  borderRadius: "8px",
+  border: active ? "none" : "1px solid var(--border)",
+  backgroundColor: active ? "var(--primary)" : (disabled ? "#f3f4f6" : "#ffffff"),
+  color: active ? "#ffffff" : (disabled ? "#9ca3af" : "var(--text-main)"),
+  fontSize: "0.75rem",
+  fontWeight: 600,
+  cursor: disabled ? "not-allowed" : "pointer",
+  transition: "all 0.2s ease",
+  outline: "none",
+});
+
+const pageNumBtnStyles = (active: boolean): React.CSSProperties => ({
+  minWidth: "32px",
+  height: "32px",
+  borderRadius: "8px",
+  border: active ? "none" : "1px solid var(--border)",
+  backgroundColor: active ? "var(--primary)" : "#ffffff",
+  color: active ? "#ffffff" : "var(--text-main)",
+  fontSize: "0.75rem",
+  fontWeight: 700,
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  transition: "all 0.2s ease",
+  outline: "none",
+});

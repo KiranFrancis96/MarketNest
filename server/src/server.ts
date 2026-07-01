@@ -9,12 +9,13 @@ import productRoutes from "./presentation/http/routes/product.routes.ts";
 import categoryRoutes from "./presentation/http/routes/category.routes.ts";
 import cartRoutes from "./presentation/http/routes/cart.routes.ts";
 import wishlistRoutes from "./presentation/http/routes/wishlist.routes.ts";
+import orderRoutes from "./presentation/http/routes/order.routes.ts";
+import notificationRoutes from "./presentation/http/routes/notification.routes.ts";
 import cors from "cors";
 import httpLogger from './middleware/middleware.ts'
 import logger from './utils/logger.ts'
-import { ApiError } from './utils/apiError.ts';
-import type { NextFunction, Request, Response } from 'express';
-import { seedCategories } from "./setup/seeder.ts";
+import { errorHandler } from "./middleware/errorHandler.middleware.ts";
+import { seedCategories, seedUsers } from "./setup/seeder.ts";
 import {
   BASE_AUTH_ROUTE,
   BASE_MERCHANT_ROUTE,
@@ -23,6 +24,8 @@ import {
   BASE_CATEGORY_ROUTE,
   BASE_CART_ROUTE,
   BASE_WISHLIST_ROUTE,
+  BASE_ORDER_ROUTE,
+  BASE_NOTIFICATION_ROUTE,
 } from "./presentation/http/routes/routes.constants.ts";
 
 dotenv.config()
@@ -47,20 +50,16 @@ app.use(BASE_PRODUCT_ROUTE, productRoutes);
 app.use(BASE_CATEGORY_ROUTE, categoryRoutes);
 app.use(BASE_CART_ROUTE, cartRoutes);
 app.use(BASE_WISHLIST_ROUTE, wishlistRoutes);
+app.use(BASE_ORDER_ROUTE, orderRoutes);
+app.use(BASE_NOTIFICATION_ROUTE, notificationRoutes);
 
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  if (err instanceof ApiError) {
-    res.status(err.statusCode).json({ message: err.message });
-    return;
-  }
+app.use(errorHandler);
 
-  logger.error(err, "Unhandled API error");
-  res.status(500).json({ message: "Internal server error" });
-});
-
+// Connect to MongoDB and start the server
 mongoose.connect(process.env.MONGO_URI!).then(async () => {
   logger.info("DB connected");
   await seedCategories();
+  await seedUsers();
   app.listen(PORT, '0.0.0.0', () => {
     logger.info(`server started running at : http://localhost:${PORT}`)
   })

@@ -1,28 +1,49 @@
 import type { Product } from "@/domain/entities/product.entity.ts";
+import mongoose from "mongoose";
+
+interface IProductDoc {
+  _id?: mongoose.Types.ObjectId | string;
+  id?: string;
+  name?: string;
+  description?: string;
+  category?: string;
+  subcategory?: string;
+  brand?: string;
+  tags?: string[];
+  price?: number;
+  offerPrice?: number | null;
+  stock?: number;
+  images?: string[];
+  merchantId?: mongoose.Types.ObjectId | string;
+  isBlocked?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 export class ProductMapper {
-  static toEntity(doc: any): Product | null {
+  static toEntity(doc: unknown): Product | null {
     if (!doc) return null;
+    const d = doc as IProductDoc;
     return {
-      _id: doc._id ? doc._id.toString() : doc.id,
-      name: doc.name,
-      description: doc.description,
-      category: doc.category,
-      subcategory: doc.subcategory,
-      brand: doc.brand,
-      tags: doc.tags || [],
-      price: doc.price,
-      offerPrice: doc.offerPrice ?? undefined,
-      stock: doc.stock,
-      images: doc.images || [],
-      merchantId: doc.merchantId ? doc.merchantId.toString() : doc.merchantId,
-      isBlocked: doc.isBlocked ?? false,
-      createdAt: doc.createdAt,
-      updatedAt: doc.updatedAt,
+      _id: d._id ? d._id.toString() : d.id,
+      name: d.name || "",
+      description: d.description || "",
+      category: d.category || "",
+      subcategory: d.subcategory || "",
+      brand: d.brand || "",
+      tags: d.tags || [],
+      price: d.price || 0,
+      offerPrice: d.offerPrice ?? undefined,
+      stock: d.stock || 0,
+      images: d.images || [],
+      merchantId: d.merchantId ? d.merchantId.toString() : "",
+      isBlocked: d.isBlocked ?? false,
+      createdAt: d.createdAt,
+      updatedAt: d.updatedAt,
     };
   }
 
-  static toDocument(entity: Product): any {
+  static toDocument(entity: Product): Record<string, unknown> {
     return {
       name: entity.name,
       description: entity.description,

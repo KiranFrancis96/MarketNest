@@ -1,15 +1,17 @@
 import type { IProductRepository } from "@/domain/interface/product.repository.ts";
 import type { Product } from "@/domain/entities/product.entity.ts";
+import type { IAddProductUseCase } from "@/application/IUseCases/product/IProductUseCases.ts";
 import { cloudinaryService } from "@/infrastructure/services/cloudinary.service.ts";
 import { ApiError } from "@/utils/apiError.ts";
+import { HttpStatus } from "@/utils/httpStatus.ts";
 import { MSG_PRODUCT_CORE_REQUIRED, MSG_PRODUCT_CREATE_FAILED } from "@/presentation/http/controllers/messages.constants.ts";
 
-export class AddProductUseCase {
+export class AddProductUseCase implements IAddProductUseCase {
   constructor(private _productRepository: IProductRepository) {}
 
   async execute(data: Partial<Product>, files: Express.Multer.File[]): Promise<Product> {
     if (!data.name || !data.category || !data.brand || data.price === undefined || data.stock === undefined || !data.merchantId) {
-      throw new ApiError(400, MSG_PRODUCT_CORE_REQUIRED);
+      throw new ApiError(HttpStatus.BAD_REQUEST, MSG_PRODUCT_CORE_REQUIRED);
     }
 
     let imageUrls: string[] = [];
@@ -31,13 +33,13 @@ export class AddProductUseCase {
       isBlocked: false
     };
 
-    if (data.offerPrice !== undefined && data.offerPrice !== null && (data.offerPrice as any) !== "") {
+    if (data.offerPrice !== undefined && data.offerPrice !== null && (data.offerPrice as unknown as string) !== "") {
       productData.offerPrice = Number(data.offerPrice);
     }
 
     const created = await this._productRepository.create(productData);
     if (!created) {
-      throw new ApiError(500, MSG_PRODUCT_CREATE_FAILED);
+      throw new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, MSG_PRODUCT_CREATE_FAILED);
     }
     return created;
   }

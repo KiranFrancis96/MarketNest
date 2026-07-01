@@ -4,12 +4,12 @@ let isRefreshing = false;
 
 type QueueItem = {
   resolve: () => void;
-  reject: (error: any) => void;
+  reject: (error: unknown) => void;
 };
 
 let failedQueue: QueueItem[] = [];
 
-const processQueue = (error: any) => {
+const processQueue = (error: unknown) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);

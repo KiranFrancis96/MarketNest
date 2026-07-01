@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { tokenBlacklistService } from "@/infrastructure/services/tokenBlacklist.service.ts";
+import { COOKIE_CONFIG } from "@/config/cookie.config.ts";
 import type {
   IAdminLoginUseCase,
   IApproveMerchantUseCase,
@@ -15,6 +16,8 @@ import type {
   IUnblockMerchantUseCase,
   IUnblockUserUseCase,
 } from "@/application/IUseCases/admin/IAdminUseCases.ts";
+import { ApiError } from "@/utils/apiError.ts";
+import { HttpStatus } from "@/utils/httpStatus.ts";
 import {
   MSG_ADMIN_LOGIN_SUCCESS,
   MSG_ADMIN_LOGOUT,
@@ -51,18 +54,18 @@ export class AdminController {
     const { email, password } = req.body;
     const result = await this._adminLoginUseCase.execute({ email, password });
 
-    res.cookie("adminAccessToken", result.accessToken, {
+    res.cookie("AccessToken", result.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 15 * 60 * 1000,
+      maxAge: COOKIE_CONFIG.ACCESS_TOKEN_MAX_AGE,
     });
 
-    res.cookie("adminRefreshToken", result.refreshToken, {
+    res.cookie("RefreshToken", result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: COOKIE_CONFIG.REFRESH_TOKEN_MAX_AGE,
     });
 
     res.json({
@@ -78,8 +81,8 @@ export class AdminController {
   };
 
   logout = async (req: Request, res: Response): Promise<void> => {
-    const accessToken = req.cookies.adminAccessToken;
-    const refreshToken = req.cookies.adminRefreshToken;
+    const accessToken = req.cookies.AccessToken;
+    const refreshToken = req.cookies.RefreshToken;
 
     if (accessToken) await tokenBlacklistService.blacklistToken(accessToken);
     if (refreshToken) await tokenBlacklistService.blacklistToken(refreshToken);
@@ -90,10 +93,10 @@ export class AdminController {
       sameSite: "lax" as const,
     };
 
-    res.clearCookie("adminAccessToken", cookieOptions);
-    res.clearCookie("adminRefreshToken", cookieOptions);
+    res.clearCookie("AccessToken", cookieOptions);
+    res.clearCookie("RefreshToken", cookieOptions);
 
-    res.status(200).json({ message: MSG_ADMIN_LOGOUT });
+    res.status(HttpStatus.OK).json({ message: MSG_ADMIN_LOGOUT });
   };
 
   forgotPassword = async (req: Request, res: Response): Promise<void> => {
@@ -128,7 +131,7 @@ export class AdminController {
     const { id } = req.params;
     const { rejectionReason } = req.body;
     if (!rejectionReason) {
-      res.status(400).json({ message: MSG_ADMIN_REJECTION_REQUIRED });
+      res.status(HttpStatus.BAD_REQUEST).json({ message: MSG_ADMIN_REJECTION_REQUIRED });
       return;
     }
     const merchant = await this._rejectMerchantUseCase.execute({ id: id as string, reason: rejectionReason });
@@ -138,7 +141,7 @@ export class AdminController {
   resendOtp = async (req: Request, res: Response): Promise<void> => {
     const { email } = req.body;
     if (!email) {
-      res.status(400).json({ message: MSG_ADMIN_OTP_SENT });
+      res.status(HttpStatus.BAD_REQUEST).json({ message: MSG_ADMIN_OTP_SENT });
       return;
     }
     await this._resendAdminOtpUseCase.execute({ email });

@@ -20,4 +20,7 @@ export const userApi = {
   getProfile: () => baseApi.get("/auth/profile"),
   logout: () => baseApi.post("/auth/logout"),
   googleLogin: (credential: string) => baseApi.post("/auth/google", { credential }),
+  addAddress: (data: any) => baseApi.post("/auth/profile/addresses", data),
+  updateAddress: (addressId: string, data: any) => baseApi.put(`/auth/profile/addresses/${addressId}`, data),
+  deleteAddress: (addressId: string) => baseApi.delete(`/auth/profile/addresses/${addressId}`),
 };

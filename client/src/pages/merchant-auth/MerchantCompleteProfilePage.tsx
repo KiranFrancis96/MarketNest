@@ -5,22 +5,22 @@ import { setMerchant } from "@/entities/merchant/model/merchantSlice";
 import { useNavigate, Navigate } from "react-router-dom";
 import axios from "axios";
 
+import type { RootState } from "@/app/store";
+
 export const MerchantCompleteProfilePage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const merchant = useSelector((state: any) => state.merchant.merchant);
-  const isMerchantAuthenticated = useSelector((state: any) => state.merchant.isAuthenticated);
+  const merchant = useSelector((state: RootState) => state.merchant.merchant);
+  const isMerchantAuthenticated = useSelector((state: RootState) => state.merchant.isAuthenticated);
 
   const [error, setError] = useState("");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
-  // If not authenticated, redirect to merchant auth
   if (!isMerchantAuthenticated || !merchant) {
     return <Navigate to="/merchant/auth" replace />;
   }
 
-  // If already complete, go to dashboard
   if (merchant.isProfileComplete && !merchant.gstNumber?.startsWith("PENDING-")) {
     return <Navigate to="/merchant/dashboard" replace />;
   }
@@ -43,7 +43,6 @@ export const MerchantCompleteProfilePage = () => {
       data[key] = value.toString().trim();
     });
 
-    // Validation
     const newErrors: Record<string, string> = {};
     if (!data.businessName) newErrors.businessName = "Business name is required";
     

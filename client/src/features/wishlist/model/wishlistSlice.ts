@@ -31,8 +31,11 @@ export const fetchWishlist = createAsyncThunk(
     try {
       const response = await axios.get(`${API_URL}/wishlist`);
       return response.data;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to fetch wishlist");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        return rejectWithValue(err.response?.data?.message || "Failed to fetch wishlist");
+      }
+      return rejectWithValue("Failed to fetch wishlist");
     }
   }
 );
@@ -43,8 +46,11 @@ export const addToWishlist = createAsyncThunk(
     try {
       const response = await axios.post(`${API_URL}/wishlist`, { productId });
       return response.data.wishlist;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to add to wishlist");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        return rejectWithValue(err.response?.data?.message || "Failed to add to wishlist");
+      }
+      return rejectWithValue("Failed to add to wishlist");
     }
   }
 );
@@ -55,8 +61,11 @@ export const removeFromWishlist = createAsyncThunk(
     try {
       await axios.delete(`${API_URL}/wishlist/${productId}`);
       return productId;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to remove from wishlist");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        return rejectWithValue(err.response?.data?.message || "Failed to remove from wishlist");
+      }
+      return rejectWithValue("Failed to remove from wishlist");
     }
   }
 );

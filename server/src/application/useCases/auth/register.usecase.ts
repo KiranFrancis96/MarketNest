@@ -7,6 +7,7 @@ import { generateOtp } from "@/utils/generateOtp.ts";
 import { sendOtpEmail } from "@/infrastructure/services/otp.service.ts";
 import logger from "@/utils/logger.ts";
 import { ApiError } from "@/utils/apiError.ts";
+import { HttpStatus } from "@/utils/httpStatus.ts";
 import {
   MSG_USER_ALREADY_EXISTS,
   MSG_OTP_EMAIL_FAILED,
@@ -19,11 +20,11 @@ export class UserRegisterUseCase implements IUserRegisterUseCase {
 
   async execute({ firstName, lastName, email, password }: UserRegisterInputDTO): Promise<void> {
     if (!password) {
-      throw new ApiError(400, MSG_USER_PASSWORD_REQUIRED);
+      throw new ApiError(HttpStatus.BAD_REQUEST, MSG_USER_PASSWORD_REQUIRED);
     }
 
     const existing = await this._userRepository.findByEmail(email);
-    if (existing?.isVerified) throw new ApiError(409, MSG_USER_ALREADY_EXISTS);
+    if (existing?.isVerified) throw new ApiError(HttpStatus.CONFLICT, MSG_USER_ALREADY_EXISTS);
 
     const hashed = await bcrypt.hash(password, 10);
     const otp = generateOtp();
@@ -48,9 +49,10 @@ export class UserRegisterUseCase implements IUserRegisterUseCase {
 
     try {
       await sendOtpEmail(email, otp);
-    } catch (error) {
-      logger.error(error, LOG_OTP_EMAIL_FAILED);
-      throw new ApiError(502, MSG_OTP_EMAIL_FAILED);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error(err, LOG_OTP_EMAIL_FAILED);
+      throw new ApiError(HttpStatus.BAD_GATEWAY, MSG_OTP_EMAIL_FAILED);
     }
   }
 }

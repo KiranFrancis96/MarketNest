@@ -4,6 +4,7 @@ import type { UserLoginInputDTO, UserLoginOutputDTO } from "@/application/dtos/u
 import bcrypt from "bcrypt";
 import { generateAccessToken, generateRefreshToken } from "@/infrastructure/services/jwt.service.ts";
 import { ApiError } from "@/utils/apiError.ts";
+import { HttpStatus } from "@/utils/httpStatus.ts";
 import {
   MSG_USER_INVALID_CREDENTIALS,
   MSG_USER_NOT_VERIFIED,
@@ -16,27 +17,27 @@ export class UserLoginUseCase implements IUserLoginUseCase {
 
   async execute({ email, password }: UserLoginInputDTO): Promise<UserLoginOutputDTO> {
     if (!password) {
-      throw new ApiError(400, MSG_USER_PASSWORD_REQUIRED);
+      throw new ApiError(HttpStatus.BAD_REQUEST, MSG_USER_PASSWORD_REQUIRED);
     }
 
     const user = await this._userRepository.findByEmail(email);
 
     if (!user) {
-      throw new ApiError(401, MSG_USER_INVALID_CREDENTIALS);
+      throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_USER_INVALID_CREDENTIALS);
     }
 
     if (!user.isVerified) {
-      throw new ApiError(403, MSG_USER_NOT_VERIFIED);
+      throw new ApiError(HttpStatus.FORBIDDEN, MSG_USER_NOT_VERIFIED);
     }
 
     if (user.isBlocked) {
-      throw new ApiError(403, MSG_USER_BLOCKED);
+      throw new ApiError(HttpStatus.FORBIDDEN, MSG_USER_BLOCKED);
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      throw new ApiError(401, MSG_USER_INVALID_CREDENTIALS);
+      throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_USER_INVALID_CREDENTIALS);
     }
 
     const payload = { id: user._id, email: user.email };

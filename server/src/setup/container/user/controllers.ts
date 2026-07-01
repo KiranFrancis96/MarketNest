@@ -11,5 +11,8 @@ export const authController = new AuthController(
   useCases.userLogoutUseCase,
   useCases.userRefreshTokenUseCase,
   useCases.getUserProfileUseCase,
-  useCases.userGoogleAuthUseCase
+  useCases.userGoogleAuthUseCase,
+  useCases.addUserAddressUseCase,
+  useCases.updateUserAddressUseCase,
+  useCases.deleteUserAddressUseCase
 );

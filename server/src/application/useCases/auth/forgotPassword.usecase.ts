@@ -5,6 +5,7 @@ import type { UserForgotPasswordInputDTO } from "@/application/dtos/user/UserDto
 import { generateOtp } from "@/utils/generateOtp.ts";
 import { sendOtpEmail } from "@/infrastructure/services/otp.service.ts";
 import { ApiError } from "@/utils/apiError.ts";
+import { HttpStatus } from "@/utils/httpStatus.ts";
 import logger from "@/utils/logger.ts";
 import {
   MSG_USER_NOT_FOUND,
@@ -18,7 +19,7 @@ export class UserForgotPasswordUseCase implements IUserForgotPasswordUseCase {
   async execute({ email }: UserForgotPasswordInputDTO): Promise<void> {
     const user = await this._userRepository.findByEmail(email);
     if (!user) {
-      throw new ApiError(404, MSG_USER_NOT_FOUND);
+      throw new ApiError(HttpStatus.NOT_FOUND, MSG_USER_NOT_FOUND);
     }
 
     const otp = generateOtp();
@@ -34,9 +35,10 @@ export class UserForgotPasswordUseCase implements IUserForgotPasswordUseCase {
 
     try {
       await sendOtpEmail(email, otp);
-    } catch (error) {
-      logger.error(error, LOG_OTP_EMAIL_FAILED_RESET);
-      throw new ApiError(502, MSG_OTP_EMAIL_FAILED_RESET);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error(err, LOG_OTP_EMAIL_FAILED_RESET);
+      throw new ApiError(HttpStatus.BAD_GATEWAY, MSG_OTP_EMAIL_FAILED_RESET);
     }
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 
 interface SearchBarProps {
@@ -13,6 +13,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   initialValue = "",
 }) => {
   const [query, setQuery] = useState(initialValue);
+
+  useEffect(() => {
+    setQuery(initialValue);
+  }, [initialValue]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +42,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   );
 };
 
-// Sleek Inline Styles for Modern Glassmorphic Look
 const searchBarContainerStyles: React.CSSProperties = {
   display: "flex",
   gap: "0.75rem",

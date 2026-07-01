@@ -16,3 +16,7 @@ export const MSG_OTP_EMAIL_FAILED_RESET      = "Could not send OTP email. Please
 // ─── Logger ───────────────────────────────────────────────────────────────────
 export const LOG_OTP_EMAIL_FAILED            = "Failed to send OTP email";
 export const LOG_OTP_EMAIL_FAILED_RESET      = "Failed to send OTP email for password reset";
+
+// ─── Token Blacklist ──────────────────────────────────────────────────────────
+export const MSG_TOKEN_BLACKLISTED         = "Token is blacklisted";
+

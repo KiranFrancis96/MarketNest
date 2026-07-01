@@ -1,38 +1,69 @@
 import type { Merchant } from "@/domain/entities/merchant.entity.ts";
+import mongoose from "mongoose";
+
+interface IMerchantDoc {
+  _id?: mongoose.Types.ObjectId | string;
+  id?: string;
+  email?: string;
+  password?: string;
+  businessName?: string;
+  phone?: string;
+  gstNumber?: string;
+  houseName?: string;
+  street?: string;
+  locality?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+  ownerName?: string;
+  documentUrl?: string | null;
+  isEmailVerified?: boolean;
+  isProfileComplete?: boolean;
+  isAdminVerified?: boolean;
+  isBlocked?: boolean;
+  status?: Merchant["status"];
+  rejectionReason?: string | null;
+  otp?: string | null;
+  otpExpiresAt?: Date | null;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 export class MerchantMapper {
-  static toEntity(doc: any): Merchant | null {
+  static toEntity(doc: unknown): Merchant | null {
     if (!doc) return null;
+    const d = doc as IMerchantDoc;
     return {
-      _id: doc._id ? doc._id.toString() : doc.id,
-      email: doc.email,
-      password: doc.password,
-      businessName: doc.businessName,
-      phone: doc.phone,
-      gstNumber: doc.gstNumber,
-      houseName: doc.houseName,
-      street: doc.street,
-      locality: doc.locality,
-      city: doc.city,
-      state: doc.state,
-      zipCode: doc.zipCode,
-      country: doc.country,
-      ownerName: doc.ownerName,
-      documentUrl: doc.documentUrl ?? undefined,
-      isEmailVerified: doc.isEmailVerified,
-      isProfileComplete: doc.isProfileComplete,
-      isAdminVerified: doc.isAdminVerified,
-      isBlocked: doc.isBlocked,
-      status: doc.status,
-      rejectionReason: doc.rejectionReason ?? undefined,
-      otp: doc.otp ?? undefined,
-      otpExpiresAt: doc.otpExpiresAt ?? undefined,
-      createdAt: doc.createdAt ?? undefined,
-      updatedAt: doc.updatedAt ?? undefined,
+      _id: d._id ? d._id.toString() : d.id,
+      email: d.email || "",
+      password: d.password || "",
+      businessName: d.businessName || "",
+      phone: d.phone || "",
+      gstNumber: d.gstNumber || "",
+      houseName: d.houseName || "",
+      street: d.street || "",
+      locality: d.locality || "",
+      city: d.city || "",
+      state: d.state || "",
+      zipCode: d.zipCode || "",
+      country: d.country || "",
+      ownerName: d.ownerName || "",
+      documentUrl: d.documentUrl ?? undefined,
+      isEmailVerified: !!d.isEmailVerified,
+      isProfileComplete: d.isProfileComplete !== false,
+      isAdminVerified: !!d.isAdminVerified,
+      isBlocked: !!d.isBlocked,
+      status: d.status || "pending",
+      rejectionReason: d.rejectionReason ?? undefined,
+      otp: d.otp ?? undefined,
+      otpExpiresAt: d.otpExpiresAt ?? undefined,
+      createdAt: d.createdAt ?? undefined,
+      updatedAt: d.updatedAt ?? undefined,
     };
   }
 
-  static toDocument(entity: Merchant): any {
+  static toDocument(entity: Merchant): Record<string, unknown> {
     return {
       email: entity.email,
       password: entity.password,

@@ -21,4 +21,12 @@ export const userRefreshTokenUseCase = new UserRefreshTokenUseCase();
 export const getUserProfileUseCase = new GetUserProfileUseCase(userRepository);
 export const userGoogleAuthUseCase = new UserGoogleAuthUseCase(userRepository);
 
+import { AddUserAddressUseCase } from "@/application/useCases/user/addUserAddress.usecase.ts";
+import { UpdateUserAddressUseCase } from "@/application/useCases/user/updateAddress.usecase.ts";
+import { DeleteUserAddressUseCase } from "@/application/useCases/user/deleteAddress.usecase.ts";
+
+export const addUserAddressUseCase = new AddUserAddressUseCase(userRepository);
+export const updateUserAddressUseCase = new UpdateUserAddressUseCase(userRepository);
+export const deleteUserAddressUseCase = new DeleteUserAddressUseCase(userRepository);
+
 

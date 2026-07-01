@@ -5,6 +5,7 @@ import type { MerchantForgotPasswordInputDTO } from "@/application/dtos/merchant
 import { generateOtp } from "@/utils/generateOtp.ts";
 import { sendOtpEmail } from "@/infrastructure/services/otp.service.ts";
 import { ApiError } from "@/utils/apiError.ts";
+import { HttpStatus } from "@/utils/httpStatus.ts";
 import logger from "@/utils/logger.ts";
 import {
   MSG_MERCHANT_NOT_FOUND,
@@ -18,7 +19,7 @@ export class ForgotMerchantPasswordUseCase implements IMerchantForgotPasswordUse
   async execute({ email }: MerchantForgotPasswordInputDTO): Promise<void> {
     const merchant = await this._merchantRepository.findByEmail(email);
     if (!merchant) {
-      throw new ApiError(404, MSG_MERCHANT_NOT_FOUND);
+      throw new ApiError(HttpStatus.NOT_FOUND, MSG_MERCHANT_NOT_FOUND);
     }
 
     const otp = generateOtp();
@@ -34,9 +35,10 @@ export class ForgotMerchantPasswordUseCase implements IMerchantForgotPasswordUse
 
     try {
       await sendOtpEmail(email, otp);
-    } catch (error) {
-      logger.error(error, LOG_OTP_EMAIL_FAILED_RESET);
-      throw new ApiError(502, MSG_OTP_EMAIL_FAILED_RESET);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error(err, LOG_OTP_EMAIL_FAILED_RESET);
+      throw new ApiError(HttpStatus.BAD_GATEWAY, MSG_OTP_EMAIL_FAILED_RESET);
     }
   }
 }

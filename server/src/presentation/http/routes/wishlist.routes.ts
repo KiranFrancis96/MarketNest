@@ -1,5 +1,5 @@
 import express from "express";
-import { wishlistController } from "@/setup/container/shopping.container.ts";
+import { wishlistController } from "@/setup/container/wishlist/controllers.ts";
 import { authenticate } from "@/middleware/auth.middleware.ts";
 import { ROUTE_BASE, ROUTE_PRODUCT_ID_PARAM } from "./routes.constants.ts";
 

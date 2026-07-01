@@ -24,7 +24,6 @@ export const HomePage: React.FC = () => {
       <Header />
 
       <main style={{ flex: 1, backgroundColor: "#f8fafc" }}>
-        {/* Banner Section */}
         <section style={heroSectionStyles}>
           <div style={heroContentStyles}>
             <span style={heroSubtitleStyles}>MarketNest Premium Experience</span>
@@ -48,7 +47,6 @@ export const HomePage: React.FC = () => {
           </div>
         ) : (
           <div style={sectionsWrapperStyles}>
-            {/* 1. Recommended For You */}
             {shoppingFeed?.recommendedForYou && shoppingFeed.recommendedForYou.length > 0 && (
               <section style={sectionStyles}>
                 <div style={sectionHeaderStyles}>
@@ -66,7 +64,6 @@ export const HomePage: React.FC = () => {
               </section>
             )}
 
-            {/* 2. Deals You May Like */}
             {shoppingFeed?.dealsYouMayLike && shoppingFeed.dealsYouMayLike.length > 0 && (
               <section style={sectionStyles}>
                 <div style={sectionHeaderStyles}>
@@ -84,7 +81,6 @@ export const HomePage: React.FC = () => {
               </section>
             )}
 
-            {/* 3. Trending Products */}
             {shoppingFeed?.trendingProducts && shoppingFeed.trendingProducts.length > 0 && (
               <section style={sectionStyles}>
                 <div style={sectionHeaderStyles}>
@@ -102,7 +98,6 @@ export const HomePage: React.FC = () => {
               </section>
             )}
 
-            {/* 4. Based On Your Shopping Style */}
             {shoppingFeed?.basedOnShoppingStyle && shoppingFeed.basedOnShoppingStyle.length > 0 && (
               <section style={{ ...sectionStyles, borderBottom: "none" }}>
                 <div style={sectionHeaderStyles}>
@@ -126,7 +121,6 @@ export const HomePage: React.FC = () => {
   );
 };
 
-// Sleek and modern layout properties for Storefront Page
 const heroSectionStyles: React.CSSProperties = {
   background: "linear-gradient(135deg, #4f46e5 0%, #312e81 100%)",
   padding: "5rem 2rem",

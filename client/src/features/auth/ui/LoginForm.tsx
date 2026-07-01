@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 interface LoginFormProps {
-  onSubmit: (data: any) => void;
+  onSubmit: (data: Record<string, unknown>) => void;
   isLoading: boolean;
   onClearError?: () => void;
 }

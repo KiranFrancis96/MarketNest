@@ -65,3 +65,17 @@ export interface MerchantReapplyInputDTO {
   country?: string;
   ownerName?: string;
 }
+
+export interface MerchantCompleteProfileInputDTO {
+  businessName: string;
+  phone: string;
+  gstNumber: string;
+  houseName: string;
+  street: string;
+  locality: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  ownerName: string;
+}

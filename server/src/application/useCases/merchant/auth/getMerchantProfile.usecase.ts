@@ -2,6 +2,7 @@ import type { IMerchantRepository } from "@/domain/interface/merchant.repository
 import type { IGetMerchantProfileUseCase } from "@/application/IUseCases/merchant/IMerchantUseCases.ts";
 import type { Merchant } from "@/domain/entities/merchant.entity.ts";
 import { ApiError } from "@/utils/apiError.ts";
+import { HttpStatus } from "@/utils/httpStatus.ts";
 import { MSG_MERCHANT_NOT_FOUND } from "./messages.constants.ts";
 
 export class GetMerchantProfileUseCase implements IGetMerchantProfileUseCase {
@@ -11,7 +12,7 @@ export class GetMerchantProfileUseCase implements IGetMerchantProfileUseCase {
     const merchant = await this._merchantRepository.findById(id);
 
     if (!merchant) {
-      throw new ApiError(404, MSG_MERCHANT_NOT_FOUND);
+      throw new ApiError(HttpStatus.NOT_FOUND, MSG_MERCHANT_NOT_FOUND);
     }
 
     return {

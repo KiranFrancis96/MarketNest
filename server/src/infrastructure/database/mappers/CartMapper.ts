@@ -1,30 +1,51 @@
 import type { Cart, CartItem } from "@/domain/entities/cart.entity.ts";
 import { ProductMapper } from "./ProductMapper.ts";
+import mongoose from "mongoose";
+
+interface ICartItemDoc {
+  productId?: unknown; // Can be populating object or string ObjectId
+  quantity?: number;
+  priceSnapshot?: number;
+}
+
+interface ICartDoc {
+  _id?: mongoose.Types.ObjectId | string;
+  id?: string;
+  userId?: mongoose.Types.ObjectId | string;
+  items?: ICartItemDoc[];
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 export class CartMapper {
-  static toEntity(doc: any): Cart | null {
+  static toEntity(doc: unknown): Cart | null {
     if (!doc) return null;
+    const d = doc as ICartDoc;
     return {
-      _id: doc._id ? doc._id.toString() : doc.id,
-      userId: doc.userId ? doc.userId.toString() : doc.userId,
-      items: (doc.items || []).map((item: any) => {
+      _id: d._id ? d._id.toString() : d.id,
+      userId: d.userId ? d.userId.toString() : "",
+      items: (d.items || []).map((item) => {
+        const productIdRaw = item.productId;
+        const isPopulatedProduct = productIdRaw && typeof productIdRaw === "object" && "_id" in productIdRaw;
+        const populatedProduct = isPopulatedProduct ? productIdRaw : null;
+
         return {
-          productId: item.productId && item.productId._id 
-            ? item.productId._id.toString() 
-            : (item.productId ? item.productId.toString() : item.productId),
-          quantity: item.quantity,
-          priceSnapshot: item.priceSnapshot,
-          product: item.productId && item.productId.name 
-            ? (ProductMapper.toEntity(item.productId) || undefined) 
+          productId: populatedProduct && populatedProduct._id 
+            ? populatedProduct._id.toString() 
+            : (productIdRaw ? productIdRaw.toString() : ""),
+          quantity: item.quantity || 0,
+          priceSnapshot: item.priceSnapshot || 0,
+          product: populatedProduct && populatedProduct.name 
+            ? (ProductMapper.toEntity(populatedProduct) || undefined) 
             : undefined,
         };
       }),
-      createdAt: doc.createdAt,
-      updatedAt: doc.updatedAt,
+      createdAt: d.createdAt,
+      updatedAt: d.updatedAt,
     };
   }
 
-  static toDocument(entity: Cart): any {
+  static toDocument(entity: Cart): Record<string, unknown> {
     return {
       userId: entity.userId,
       items: (entity.items || []).map((item) => ({

@@ -1,5 +1,5 @@
 import express from "express";
-import { categoryController } from "@/setup/container/shopping.container.ts";
+import { categoryController } from "@/setup/container/category/controllers.ts";
 import { adminOrMerchantAuth } from "@/middleware/adminOrMerchantAuth.middleware.ts";
 import { ROUTE_BASE, ROUTE_SUBCATEGORY } from "./routes.constants.ts";
 

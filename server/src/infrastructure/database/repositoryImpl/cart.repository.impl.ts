@@ -4,7 +4,7 @@ import type { Cart } from "@/domain/entities/cart.entity.ts";
 import { CartModel } from "../models/cart.model.ts";
 import { CartMapper } from "../mappers/CartMapper.ts";
 
-export class CartRepository extends BaseRepository<Cart, any> implements ICartRepository {
+export class CartRepository extends BaseRepository<Cart> implements ICartRepository {
   constructor() {
     super(CartModel, CartMapper);
   }

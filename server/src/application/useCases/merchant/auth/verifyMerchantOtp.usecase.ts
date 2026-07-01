@@ -3,6 +3,7 @@ import type { IMerchantVerifyOtpUseCase } from "@/application/IUseCases/merchant
 import type { MerchantVerifyOtpInputDTO, MerchantVerifyOtpOutputDTO } from "@/application/dtos/merchant/MerchantDtos.ts";
 import { generateAccessToken, generateRefreshToken } from "@/infrastructure/services/jwt.service.ts";
 import { ApiError } from "@/utils/apiError.ts";
+import { HttpStatus } from "@/utils/httpStatus.ts";
 import {
   MSG_MERCHANT_NOT_FOUND,
   MSG_MERCHANT_ALREADY_VERIFIED,
@@ -18,23 +19,23 @@ export class VerifyMerchantOtpUseCase implements IMerchantVerifyOtpUseCase {
     const merchant = await this._merchantRepository.findByEmail(email);
 
     if (!merchant) {
-      throw new ApiError(404, MSG_MERCHANT_NOT_FOUND);
+      throw new ApiError(HttpStatus.NOT_FOUND, MSG_MERCHANT_NOT_FOUND);
     }
 
     if (merchant.isEmailVerified) {
-      throw new ApiError(400, MSG_MERCHANT_ALREADY_VERIFIED);
+      throw new ApiError(HttpStatus.BAD_REQUEST, MSG_MERCHANT_ALREADY_VERIFIED);
     }
 
     if (!merchant.otp || !merchant.otpExpiresAt) {
-      throw new ApiError(400, MSG_MERCHANT_INVALID_OTP);
+      throw new ApiError(HttpStatus.BAD_REQUEST, MSG_MERCHANT_INVALID_OTP);
     }
 
     if (merchant.otpExpiresAt < new Date()) {
-      throw new ApiError(400, MSG_MERCHANT_OTP_EXPIRED);
+      throw new ApiError(HttpStatus.BAD_REQUEST, MSG_MERCHANT_OTP_EXPIRED);
     }
 
     if (merchant.otp !== otp) {
-      throw new ApiError(400, MSG_MERCHANT_INVALID_OTP);
+      throw new ApiError(HttpStatus.BAD_REQUEST, MSG_MERCHANT_INVALID_OTP);
     }
 
     await this._merchantRepository.update(
@@ -49,7 +50,7 @@ export class VerifyMerchantOtpUseCase implements IMerchantVerifyOtpUseCase {
     
     const updatedMerchant = await this._merchantRepository.findByEmail(email);
     if (!updatedMerchant) {
-      throw new ApiError(500, MSG_MERCHANT_FETCH_FAILED_AFTER_VERIFY);
+      throw new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, MSG_MERCHANT_FETCH_FAILED_AFTER_VERIFY);
     }
 
     const accessToken = generateAccessToken({

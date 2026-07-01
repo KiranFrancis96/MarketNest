@@ -36,11 +36,15 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [isCustomSubcategory, setIsCustomSubcategory] = useState(false);
 
+  // Custom validation errors state
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   useEffect(() => {
     dispatch(fetchCategories());
   }, [dispatch]);
 
   useEffect(() => {
+    setErrors({});
     if (productToEdit) {
       setName(productToEdit.name);
       setDescription(productToEdit.description);
@@ -89,6 +93,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         return;
       }
       setNewImageFiles((prev) => [...prev, ...filesArray]);
+      if (errors.images) setErrors((prev) => ({ ...prev, images: "" }));
     }
   };
 
@@ -100,26 +105,77 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     setRemainingImageUrls((prev) => prev.filter((url) => url !== urlToRemove));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !category || !brand || !price || !stock) {
-      alert("Please fill in all core fields");
-      return;
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!name.trim()) {
+      newErrors.name = "Product name is required.";
+    }
+    if (!category.trim()) {
+      newErrors.category = "Category is required.";
+    }
+    if (!brand.trim()) {
+      newErrors.brand = "Brand is required.";
+    }
+
+    if (!price.trim()) {
+      newErrors.price = "Price is required.";
+    } else {
+      const numPrice = Number(price);
+      if (isNaN(numPrice)) {
+        newErrors.price = "Price must be a valid number.";
+      } else if (numPrice < 0) {
+        newErrors.price = "Price must be greater than or equal to 0.";
+      }
+    }
+
+    if (offerPrice.trim()) {
+      const numOfferPrice = Number(offerPrice);
+      if (isNaN(numOfferPrice)) {
+        newErrors.offerPrice = "Offer price must be a valid number.";
+      } else if (numOfferPrice < 0) {
+        newErrors.offerPrice = "Offer price must be greater than or equal to 0.";
+      } else {
+        const numPrice = Number(price);
+        if (!isNaN(numPrice) && numOfferPrice >= numPrice) {
+          newErrors.offerPrice = "Offer price must be less than the regular price.";
+        }
+      }
+    }
+
+    if (!stock.trim()) {
+      newErrors.stock = "Stock quantity is required.";
+    } else {
+      const numStock = Number(stock);
+      if (isNaN(numStock) || !Number.isInteger(numStock)) {
+        newErrors.stock = "Stock must be a valid integer.";
+      } else if (numStock < 0) {
+        newErrors.stock = "Stock must be greater than or equal to 0.";
+      }
     }
 
     if (remainingImageUrls.length + newImageFiles.length === 0) {
-      alert("Please upload at least one image");
+      newErrors.images = "At least one product image is required.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) {
       return;
     }
 
     setLoading(true);
 
     const formData = new FormData();
-    formData.append("name", name);
-    formData.append("description", description);
-    formData.append("category", category);
-    formData.append("subcategory", subcategory);
-    formData.append("brand", brand);
+    formData.append("name", name.trim());
+    formData.append("description", description.trim());
+    formData.append("category", category.trim());
+    formData.append("subcategory", subcategory.trim());
+    formData.append("brand", brand.trim());
     
     // Tags parsed
     const tagsArray = tags
@@ -147,10 +203,10 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         if (!categoryExists) {
           try {
             await dispatch(createCategory({
-              name: category,
-              subcategories: subcategory ? [subcategory] : []
+              name: category.trim(),
+              subcategories: subcategory ? [subcategory.trim()] : []
             })).unwrap();
-          } catch (err) {}
+          } catch (err: unknown) {}
         } else if (subcategory) {
           const existingCat = categoriesList.find(
             (c) => c.name.toLowerCase() === category.toLowerCase()
@@ -159,9 +215,9 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
             try {
               await dispatch(addSubcategory({
                 name: existingCat.name,
-                subcategoryName: subcategory
+                subcategoryName: subcategory.trim()
               })).unwrap();
-            } catch (err) {}
+            } catch (err: unknown) {}
           }
         }
       } else if (!isCustomCategory && category && isCustomSubcategory && subcategory) {
@@ -172,9 +228,9 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           try {
             await dispatch(addSubcategory({
               name: existingCat.name,
-              subcategoryName: subcategory
+              subcategoryName: subcategory.trim()
             })).unwrap();
-          } catch (err) {}
+          } catch (err: unknown) {}
         }
       }
 
@@ -185,8 +241,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         await dispatch(addProduct(formData)).unwrap();
       }
       onClose();
-    } catch (err: any) {
-      alert(err || "Failed to save product. Please check form constraints.");
+    } catch (err: unknown) {
+      alert(typeof err === "string" ? err : (err instanceof Error ? err.message : "Failed to save product. Please check form constraints."));
     } finally {
       setLoading(false);
     }
@@ -207,17 +263,20 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="modal-body" style={{ maxHeight: "70vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: "1.2rem" }}>
             <div className="form-group">
               <label className="form-label">Product Name *</label>
               <input
                 type="text"
-                className="form-input"
+                className={`form-input ${errors.name ? "input-error" : ""}`}
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (errors.name) setErrors((prev) => ({ ...prev, name: "" }));
+                }}
               />
+              {errors.name && <span className="error-text">{errors.name}</span>}
             </div>
 
             <div className="form-group">
@@ -246,6 +305,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                       } else {
                         setIsCustomSubcategory(false);
                       }
+                      setErrors((prev) => ({ ...prev, category: "" }));
                     }}
                     style={customToggleStyles}
                   >
@@ -255,22 +315,24 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 {isCustomCategory ? (
                   <input
                     type="text"
-                    className="form-input"
+                    className={`form-input ${errors.category ? "input-error" : ""}`}
                     placeholder="Enter custom category..."
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setCategory(e.target.value);
+                      if (errors.category) setErrors((prev) => ({ ...prev, category: "" }));
+                    }}
                   />
                 ) : (
                   <select
-                    className="form-input"
+                    className={`form-input ${errors.category ? "input-error" : ""}`}
                     value={category}
                     onChange={(e) => {
                       setCategory(e.target.value);
                       setSubcategory("");
                       setIsCustomSubcategory(false);
+                      if (errors.category) setErrors((prev) => ({ ...prev, category: "" }));
                     }}
-                    required
                   >
                     <option value="">Select Category</option>
                     {categoriesList.map((cat) => (
@@ -280,6 +342,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                     ))}
                   </select>
                 )}
+                {errors.category && <span className="error-text">{errors.category}</span>}
               </div>
 
               <div className="form-group">
@@ -332,11 +395,14 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                 <label className="form-label">Brand *</label>
                 <input
                   type="text"
-                  className="form-input"
+                  className={`form-input ${errors.brand ? "input-error" : ""}`}
                   value={brand}
-                  onChange={(e) => setBrand(e.target.value)}
-                  required
+                  onChange={(e) => {
+                    setBrand(e.target.value);
+                    if (errors.brand) setErrors((prev) => ({ ...prev, brand: "" }));
+                  }}
                 />
+                {errors.brand && <span className="error-text">{errors.brand}</span>}
               </div>
 
               <div className="form-group">
@@ -355,36 +421,46 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               <div className="form-group">
                 <label className="form-label">Price (₹) *</label>
                 <input
-                  type="number"
-                  className="form-input"
-                  step="0.01"
+                  type="text"
+                  className={`form-input ${errors.price ? "input-error" : ""}`}
+                  placeholder="0.00"
                   value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  required
+                  onChange={(e) => {
+                    setPrice(e.target.value);
+                    if (errors.price) setErrors((prev) => ({ ...prev, price: "" }));
+                  }}
                 />
+                {errors.price && <span className="error-text">{errors.price}</span>}
               </div>
 
               <div className="form-group">
                 <label className="form-label">Offer Price (₹)</label>
                 <input
-                  type="number"
-                  className="form-input"
-                  step="0.01"
+                  type="text"
+                  className={`form-input ${errors.offerPrice ? "input-error" : ""}`}
                   placeholder="Optional discount price"
                   value={offerPrice}
-                  onChange={(e) => setOfferPrice(e.target.value)}
+                  onChange={(e) => {
+                    setOfferPrice(e.target.value);
+                    if (errors.offerPrice) setErrors((prev) => ({ ...prev, offerPrice: "" }));
+                  }}
                 />
+                {errors.offerPrice && <span className="error-text">{errors.offerPrice}</span>}
               </div>
 
               <div className="form-group">
                 <label className="form-label">Stock Quantity *</label>
                 <input
-                  type="number"
-                  className="form-input"
+                  type="text"
+                  className={`form-input ${errors.stock ? "input-error" : ""}`}
+                  placeholder="0"
                   value={stock}
-                  onChange={(e) => setStock(e.target.value)}
-                  required
+                  onChange={(e) => {
+                    setStock(e.target.value);
+                    if (errors.stock) setErrors((prev) => ({ ...prev, stock: "" }));
+                  }}
                 />
+                {errors.stock && <span className="error-text">{errors.stock}</span>}
               </div>
             </div>
 
@@ -405,6 +481,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
                   style={fileInputHiddenStyles}
                 />
               </div>
+              {errors.images && <span className="error-text" style={{ marginTop: "0.5rem" }}>{errors.images}</span>}
 
               {/* Display existing images to delete */}
               {remainingImageUrls.length > 0 && (

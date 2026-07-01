@@ -1,5 +1,6 @@
 import type { IProductRepository } from "@/domain/interface/product.repository.ts";
 import type { Product } from "@/domain/entities/product.entity.ts";
+import type { ISearchProductsUseCase } from "@/application/IUseCases/product/IProductUseCases.ts";
 
 export interface SearchProductsInputDTO {
   query: string;
@@ -15,7 +16,7 @@ export interface SearchProductsOutputDTO {
   totalPages: number;
 }
 
-export class SearchProductsUseCase {
+export class SearchProductsUseCase implements ISearchProductsUseCase {
   constructor(private _productRepository: IProductRepository) {}
 
   async execute(input: SearchProductsInputDTO): Promise<SearchProductsOutputDTO> {

@@ -1,5 +1,5 @@
 import express from "express";
-import { productController } from "@/setup/container/shopping.container.ts";
+import { productController } from "@/setup/container/product/controllers.ts";
 import { authenticate } from "@/middleware/auth.middleware.ts";
 import { authenticateMerchant } from "@/middleware/merchantAuth.middleware.ts";
 import { adminAuth } from "@/middleware/adminAuth.middleware.ts";

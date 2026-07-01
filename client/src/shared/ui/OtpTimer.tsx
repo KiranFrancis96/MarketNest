@@ -11,7 +11,7 @@ export const OtpTimer: React.FC<OtpTimerProps> = ({ onResend, initialSeconds = 6
   const [isResending, setIsResending] = useState(false);
 
   useEffect(() => {
-    let timer: any;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     if (seconds > 0) {
       timer = setTimeout(() => setSeconds(seconds - 1), 1000);
     } else {

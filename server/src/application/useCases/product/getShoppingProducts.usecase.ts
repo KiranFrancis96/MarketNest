@@ -1,5 +1,6 @@
 import type { IProductRepository } from "@/domain/interface/product.repository.ts";
 import type { Product } from "@/domain/entities/product.entity.ts";
+import type { IGetShoppingProductsUseCase } from "@/application/IUseCases/product/IProductUseCases.ts";
 
 export interface GetShoppingProductsInputDTO {
   category?: string;
@@ -12,6 +13,7 @@ export interface GetShoppingProductsInputDTO {
   page?: number;
   limit?: number;
   merchantId?: string;
+  q?: string;
 }
 
 export interface GetShoppingProductsOutputDTO {
@@ -22,7 +24,7 @@ export interface GetShoppingProductsOutputDTO {
   totalPages: number;
 }
 
-export class GetShoppingProductsUseCase {
+export class GetShoppingProductsUseCase implements IGetShoppingProductsUseCase {
   constructor(private _productRepository: IProductRepository) {}
 
   async execute(input: GetShoppingProductsInputDTO): Promise<GetShoppingProductsOutputDTO> {
@@ -38,6 +40,7 @@ export class GetShoppingProductsUseCase {
       max: input.max,
       offerOnly: input.offerOnly,
       merchantId: input.merchantId,
+      q: input.q,
     };
 
     const sortOption = input.sort || "newest";

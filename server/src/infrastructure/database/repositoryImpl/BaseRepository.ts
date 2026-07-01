@@ -1,12 +1,12 @@
 import type { IBaseRepository } from "@/domain/interface/IBaseRepository.ts";
 import mongoose from "mongoose";
 
-export abstract class BaseRepository<T, D> implements IBaseRepository<T> {
+export abstract class BaseRepository<T, D = mongoose.AnyObject> implements IBaseRepository<T> {
   constructor(
     protected model: mongoose.Model<D>,
     protected mapper: {
-      toEntity(doc: any): T | null;
-      toDocument(entity: T): any;
+      toEntity(doc: unknown): T | null;
+      toDocument(entity: T): Record<string, unknown>;
     }
   ) {}
 
@@ -16,7 +16,7 @@ export abstract class BaseRepository<T, D> implements IBaseRepository<T> {
   }
 
   async findOne(filter: Partial<T>): Promise<T | null> {
-    const doc = await this.model.findOne(filter as any).lean();
+    const doc = await this.model.findOne(filter as mongoose.FilterQuery<D>).lean();
     return doc ? (this.mapper.toEntity(doc) as T) : null;
   }
 
@@ -28,7 +28,7 @@ export abstract class BaseRepository<T, D> implements IBaseRepository<T> {
         delete docData[key];
       }
     });
-    const created = await this.model.create(docData);
+    const created = await this.model.create(docData as mongoose.AnyKeys<D>);
     return created ? (this.mapper.toEntity(created.toObject()) as T) : null;
   }
 
@@ -41,7 +41,7 @@ export abstract class BaseRepository<T, D> implements IBaseRepository<T> {
     });
     const updated = await this.model.findByIdAndUpdate(
       id,
-      { $set: docData },
+      { $set: docData as mongoose.UpdateQuery<D> },
       { new: true }
     ).lean();
     return updated ? (this.mapper.toEntity(updated) as T) : null;
@@ -60,24 +60,24 @@ export abstract class BaseRepository<T, D> implements IBaseRepository<T> {
       }
     });
     const updated = await this.model.findOneAndUpdate(
-      filter as any,
-      { $set: docData },
+      filter as mongoose.FilterQuery<D>,
+      { $set: docData as mongoose.UpdateQuery<D> },
       { new: true }
     ).lean();
     return updated ? (this.mapper.toEntity(updated) as T) : null;
   }
 
   async findByIds(ids: string[]): Promise<T[]> {
-    const docs = await this.model.find({ _id: { $in: ids } } as any).lean();
+    const docs = await this.model.find({ _id: { $in: ids } } as mongoose.FilterQuery<D>).lean();
     return docs.map((doc) => this.mapper.toEntity(doc) as T);
   }
 
   async findMany(filter: Partial<T>): Promise<T[]> {
-    const docs = await this.model.find(filter as any).lean();
+    const docs = await this.model.find(filter as mongoose.FilterQuery<D>).lean();
     return docs.map((doc) => this.mapper.toEntity(doc) as T);
   }
 
   async getCount(filter: Partial<T>): Promise<number> {
-    return await this.model.countDocuments(filter as any);
+    return await this.model.countDocuments(filter as mongoose.FilterQuery<D>);
   }
 }

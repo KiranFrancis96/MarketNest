@@ -9,7 +9,7 @@ import {
 } from "./messages.constants.ts";
 
 export const adminAuth = async (req: Request, res: Response, next: NextFunction) => {
-  const token = req.cookies.adminAccessToken;
+  const token = req.cookies.AccessToken;
   if (!token) {
     next(new ApiError(401, MSG_ADMIN_TOKEN_MISSING));
     return;
@@ -22,7 +22,7 @@ export const adminAuth = async (req: Request, res: Response, next: NextFunction)
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string) as any;
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string) as jwt.JwtPayload;
 
     if (!decoded.isAdmin) {
       next(new ApiError(403, MSG_ADMIN_ACCESS_DENIED));
@@ -32,7 +32,7 @@ export const adminAuth = async (req: Request, res: Response, next: NextFunction)
     // @ts-ignore
     req.user = decoded;
     next();
-  } catch (err) {
+  } catch (err: unknown) {
     next(new ApiError(401, MSG_ADMIN_TOKEN_INVALID));
   }
 };

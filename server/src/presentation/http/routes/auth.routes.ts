@@ -12,6 +12,8 @@ import {
   ROUTE_REFRESH,
   ROUTE_PROFILE,
   ROUTE_GOOGLE,
+  ROUTE_ADDRESSES,
+  ROUTE_ADDRESS_BY_ID,
 } from "./routes.constants.ts";
 
 const router = express.Router();
@@ -26,5 +28,10 @@ router.post(ROUTE_FORGOT_PW, authController.forgotPassword);
 router.post(ROUTE_RESET_PW, authController.resetPassword);
 router.post(ROUTE_RESEND_OTP, authController.resendOtp);
 router.post(ROUTE_GOOGLE, authController.googleAuth);
+
+// Address Management
+router.post(ROUTE_ADDRESSES, authenticate, authController.addAddress);
+router.put(ROUTE_ADDRESS_BY_ID, authenticate, authController.updateAddress);
+router.delete(ROUTE_ADDRESS_BY_ID, authenticate, authController.deleteAddress);
 
 export default router;

@@ -1,19 +1,32 @@
 import type { Wishlist } from "@/domain/entities/wishlist.entity.ts";
 import { ProductMapper } from "./ProductMapper.ts";
+import mongoose from "mongoose";
+
+interface IWishlistDoc {
+  _id?: mongoose.Types.ObjectId | string;
+  id?: string;
+  userId?: mongoose.Types.ObjectId | string;
+  productId?: unknown; // Can be populated product object or string ObjectId
+}
 
 export class WishlistMapper {
-  static toEntity(doc: any): Wishlist | null {
+  static toEntity(doc: unknown): Wishlist | null {
     if (!doc) return null;
+    const d = doc as IWishlistDoc;
+    const productIdRaw = d.productId;
+    const isPopulatedProduct = productIdRaw && typeof productIdRaw === "object" && "_id" in productIdRaw;
+    const populatedProduct = isPopulatedProduct ? productIdRaw : null;
+
     const entity: Wishlist = {
-      _id: doc._id ? doc._id.toString() : doc.id,
-      userId: doc.userId ? doc.userId.toString() : doc.userId,
-      productId: doc.productId && doc.productId._id 
-        ? doc.productId._id.toString() 
-        : (doc.productId ? doc.productId.toString() : doc.productId),
+      _id: d._id ? d._id.toString() : d.id,
+      userId: d.userId ? d.userId.toString() : "",
+      productId: populatedProduct && populatedProduct._id 
+        ? populatedProduct._id.toString() 
+        : (productIdRaw ? productIdRaw.toString() : ""),
     };
 
-    if (doc.productId && doc.productId.name) {
-      const productEntity = ProductMapper.toEntity(doc.productId);
+    if (populatedProduct && populatedProduct.name) {
+      const productEntity = ProductMapper.toEntity(populatedProduct);
       if (productEntity) {
         entity.product = productEntity;
       }
@@ -22,7 +35,7 @@ export class WishlistMapper {
     return entity;
   }
 
-  static toDocument(entity: Wishlist): any {
+  static toDocument(entity: Wishlist): Record<string, unknown> {
     return {
       userId: entity.userId,
       productId: entity.productId,

@@ -2,10 +2,10 @@ import { baseApi } from "@/shared/api/baseApi";
 import type { User, Merchant } from "../model/types";
 
 export const adminApi = {
-  login: (credentials: any) => baseApi.post("/admin/login", credentials),
+  login: (credentials: Record<string, unknown>) => baseApi.post("/admin/login", credentials),
   logout: () => baseApi.post("/admin/logout"),
   forgotPassword: (email: string) => baseApi.post("/admin/forgot-password", { email }),
-  resetPassword: (data: any) => baseApi.post("/admin/reset-password", data),
+  resetPassword: (data: Record<string, unknown>) => baseApi.post("/admin/reset-password", data),
   
   getUsers: () => baseApi.get<User[]>("/admin/users"),
   getMerchants: (status?: string) => baseApi.get<Merchant[]>("/admin/merchants", { params: { status } }),

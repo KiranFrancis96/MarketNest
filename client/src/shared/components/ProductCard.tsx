@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { Heart, ShoppingBag } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "@/app/store";
@@ -19,7 +20,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const cartItem = cartItems.find((item) => item.productId === product._id);
   const quantityInCart = cartItem?.quantity || 0;
 
-  // Calculate discount percentage
   let discountPercent = 0;
   if (product.offerPrice && product.offerPrice < product.price) {
     discountPercent = Math.round(((product.price - product.offerPrice) / product.price) * 100);
@@ -45,7 +45,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     dispatch(addToCart({ productId: product._id, quantity: 1 }));
   };
 
-  // Cloudinary fallback image
   const displayImage = product.images?.[0] || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60";
 
   return (
@@ -64,13 +63,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         >
           <Heart size={18} fill={isWishlisted ? "#ef4444" : "none"} />
         </button>
-        <img src={displayImage} alt={product.name} />
+        <Link to={`/product/${product._id}`} style={{ display: "block", width: "100%", height: "100%" }}>
+          <img src={displayImage} alt={product.name} />
+        </Link>
       </div>
 
       <div className="product-info">
-        <span style={brandStyles}>{product.brand}</span>
-        <h3 className="product-title" style={titleStyles}>{product.name}</h3>
-        <p style={descStyles}>{product.description}</p>
+        <Link to={`/product/${product._id}`} style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column" }}>
+          <span style={brandStyles}>{product.brand}</span>
+          <h3 className="product-title" style={titleStyles}>{product.name}</h3>
+          <p style={descStyles}>{product.description}</p>
+        </Link>
         
         <div style={priceStockContainerStyles}>
           <div style={pricesWrapperStyles}>
@@ -108,7 +111,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   );
 };
 
-// Elegant Inline styles for custom properties
 const imageContainerStyles: React.CSSProperties = {
   position: "relative",
   overflow: "hidden",

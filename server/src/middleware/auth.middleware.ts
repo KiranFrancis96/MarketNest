@@ -25,7 +25,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string) as any;
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string) as jwt.JwtPayload;
 
     const user = await UserModel.findById(decoded.id);
     if (!user) {
@@ -43,7 +43,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     // @ts-ignore
     req.user = decoded;
     next();
-  } catch (err) {
+  } catch (err: unknown) {
     next(new ApiError(401, MSG_AUTH_TOKEN_INVALID));
   }
 };

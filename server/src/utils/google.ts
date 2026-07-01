@@ -14,15 +14,16 @@ export async function verifyGoogleToken(idToken: string): Promise<GooglePayload>
     if (!response.ok) {
       throw new ApiError(401, "Invalid Google ID token");
     }
-    const data: any = await response.json();
+    const data = (await response.json()) as Record<string, unknown>;
     if (!data.email) {
       throw new ApiError(401, "Google ID token does not contain email");
     }
-    return data as GooglePayload;
-  } catch (error: any) {
+    return data as unknown as GooglePayload;
+  } catch (error: unknown) {
     if (error instanceof ApiError) {
       throw error;
     }
-    throw new ApiError(401, error.message || "Failed to verify Google token");
+    const message = error instanceof Error ? error.message : "Failed to verify Google token";
+    throw new ApiError(401, message);
   }
 }

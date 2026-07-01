@@ -4,6 +4,7 @@ import { merchantApi } from "@/entities/merchant/api/merchantApi";
 import { setMerchant } from "@/entities/merchant/model/merchantSlice";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
+import type { MerchantRegisterInput } from "@/features/merchantAuth/ui/MerchantRegisterForm";
 
 type AuthStep = "login" | "register" | "otp" | "forgotPassword" | "resetPassword";
 
@@ -52,7 +53,7 @@ export const useMerchantAuth = () => {
     }
   };
 
-  const register = async (e: React.FormEvent, data: any) => {
+  const register = async (e: React.FormEvent, data: MerchantRegisterInput) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);

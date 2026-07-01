@@ -44,7 +44,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
     const newFilters = {
       ...localFilters,
       category: isSelected ? "" : categoryName,
-      subcategory: "", // reset subcategory on category change
+      subcategory: "",
     };
     setLocalFilters(newFilters);
     onFilterChange(newFilters);
@@ -82,11 +82,9 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
     onFilterChange(defaultFilters);
   };
 
-  // Get active subcategories list based on selected category
   const activeCategory = categoriesList.find((c) => c.name === localFilters.category);
   const subcategoriesToDisplay = activeCategory ? activeCategory.subcategories : [];
 
-  // Extract unique brands for filtering (Hardcoded common brands as fallback or options)
   const brandsList = ["Nike", "Adidas", "Apple", "Samsung", "Sony", "Dell", "Bose", "Puma"];
 
   if (!isOpen) return null;
@@ -107,7 +105,6 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
         </div>
 
         <div style={scrollContainerStyles}>
-          {/* Sorting */}
           <div style={sectionStyles}>
             <h3 style={sectionTitleStyles}>Sort By</h3>
             <select
@@ -122,7 +119,6 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             </select>
           </div>
 
-          {/* Categories */}
           <div style={sectionStyles}>
             <h3 style={sectionTitleStyles}>Categories</h3>
             <div style={listStyles}>
@@ -140,7 +136,6 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             </div>
           </div>
 
-          {/* Subcategories (Visible only when category is selected) */}
           {localFilters.category && subcategoriesToDisplay.length > 0 && (
             <div style={sectionStyles}>
               <h3 style={sectionTitleStyles}>Subcategories</h3>
@@ -160,7 +155,6 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             </div>
           )}
 
-          {/* Brands */}
           <div style={sectionStyles}>
             <h3 style={sectionTitleStyles}>Popular Brands</h3>
             <div style={listStyles}>
@@ -178,7 +172,6 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
             </div>
           </div>
 
-          {/* Price Range */}
           <div style={sectionStyles}>
             <h3 style={sectionTitleStyles}>Price Range</h3>
             <div style={priceInputsWrapperStyles}>
@@ -214,7 +207,6 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({
   );
 };
 
-// Glassmorphic side panel styling
 const overlayStyles: React.CSSProperties = {
   position: "fixed",
   top: 0,

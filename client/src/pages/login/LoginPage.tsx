@@ -4,28 +4,41 @@ import { RoleSwitcher } from "@/shared/ui/RoleSwitcher";
 import { LoginForm } from "@/features/auth/ui/LoginForm";
 import { useEffect } from "react";
 
+interface GoogleWindow {
+  google?: {
+    accounts: {
+      id: {
+        initialize: (config: { client_id: string; callback: (response: { credential?: string }) => void }) => void;
+        renderButton: (element: HTMLElement | null, options: Record<string, unknown>) => void;
+      };
+    };
+  };
+}
+
 export const LoginPage = () => {
   const { error, setError, isLoading, login, loginWithGoogle } = useLogin();
 
   useEffect(() => {
     const initializeGoogle = () => {
-      if ((window as any).google) {
-        (window as any).google.accounts.id.initialize({
+      const gWindow = window as unknown as GoogleWindow;
+      if (gWindow.google) {
+        gWindow.google.accounts.id.initialize({
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-          callback: (response: any) => {
+          callback: (response: { credential?: string }) => {
             if (response.credential) {
               loginWithGoogle(response.credential);
             }
           },
         });
-        (window as any).google.accounts.id.renderButton(
+        gWindow.google.accounts.id.renderButton(
           document.getElementById("google-signin-btn"),
           { theme: "outline", size: "large", width: 384, text: "signin_with" }
         );
       }
     };
 
-    if (!(window as any).google) {
+    const gWindow = window as unknown as GoogleWindow;
+    if (!gWindow.google) {
       const script = document.createElement("script");
       script.src = "https://accounts.google.com/gsi/client";
       script.async = true;

@@ -9,8 +9,8 @@ import {
 } from "./messages.constants.ts";
 
 export const adminOrMerchantAuth = async (req: Request, res: Response, next: NextFunction) => {
-  const adminToken = req.cookies.adminAccessToken;
-  const merchantToken = req.cookies.merchantAccessToken;
+  const adminToken = req.cookies.AccessToken;
+  const merchantToken = req.cookies.accessToken;
 
   if (!adminToken && !merchantToken) {
     next(new ApiError(401, "Access token missing"));
@@ -21,14 +21,14 @@ export const adminOrMerchantAuth = async (req: Request, res: Response, next: Nex
     const isBlacklisted = await tokenBlacklistService.isTokenBlacklisted(adminToken);
     if (!isBlacklisted) {
       try {
-        const decoded = jwt.verify(adminToken, process.env.ACCESS_TOKEN_SECRET as string) as any;
+        const decoded = jwt.verify(adminToken, process.env.ACCESS_TOKEN_SECRET as string) as jwt.JwtPayload;
         if (decoded.isAdmin) {
           // @ts-ignore
           req.user = decoded;
           next();
           return;
         }
-      } catch (err) {
+      } catch (err: unknown) {
       }
     }
   }
@@ -41,7 +41,7 @@ export const adminOrMerchantAuth = async (req: Request, res: Response, next: Nex
     }
 
     try {
-      const decoded = jwt.verify(merchantToken, process.env.ACCESS_TOKEN_SECRET as string) as any;
+      const decoded = jwt.verify(merchantToken, process.env.ACCESS_TOKEN_SECRET as string) as jwt.JwtPayload;
       const merchant = await MerchantModel.findById(decoded.id);
       if (!merchant) {
         next(new ApiError(401, MSG_MERCHANT_TOKEN_INVALID));
@@ -49,8 +49,8 @@ export const adminOrMerchantAuth = async (req: Request, res: Response, next: Nex
       }
 
       if (merchant.isBlocked) {
-        res.clearCookie("merchantAccessToken");
-        res.clearCookie("merchantRefreshToken");
+        res.clearCookie("accessToken");
+        res.clearCookie("refreshToken");
         next(new ApiError(403, MSG_MERCHANT_BLOCKED));
         return;
       }
@@ -59,7 +59,7 @@ export const adminOrMerchantAuth = async (req: Request, res: Response, next: Nex
       req.user = decoded;
       next();
       return;
-    } catch (err) {
+     } catch (err: unknown) {
       next(new ApiError(401, MSG_MERCHANT_TOKEN_INVALID));
       return;
     }

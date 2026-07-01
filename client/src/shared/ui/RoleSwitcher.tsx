@@ -13,8 +13,6 @@ export const RoleSwitcher = ({ activeRole }: Props) => {
         className={`role-option ${activeRole === "user" ? "active" : ""}`}
         onClick={() => {
           if (activeRole === "merchant") {
-            // Check current path or state to decide where to go back
-            // Since we're using query params now, we can check those
             const params = new URLSearchParams(window.location.search);
             const step = params.get("step");
             if (step === "register") {
@@ -23,7 +21,6 @@ export const RoleSwitcher = ({ activeRole }: Props) => {
               navigate("/login");
             }
           } else {
-            // Already user, just ensure we're on the right sub-page (though switch is usually hidden if active)
             navigate(window.location.pathname.includes("register") ? "/register" : "/login");
           }
         }}

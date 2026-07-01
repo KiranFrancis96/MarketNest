@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsx watch src/server.ts"
+    "dev": "tsx watch src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "author": "",
   "license": "ISC",
@@ -43,6 +46,7 @@
     "nodemailer": "^8.0.7",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
+    "razorpay": "^2.9.5",
     "zod": "^4.4.3"
   }
 }

@@ -2,12 +2,12 @@ import { baseApi } from "@/shared/api/baseApi";
 import type { Merchant } from "../model/types";
 
 export const merchantApi = {
-  register: (data: any) => baseApi.post("/merchant/register", data),
+  register: (data: Record<string, unknown>) => baseApi.post("/merchant/register", data),
 
   verifyOtp: (data: { email: string; otp: string }) =>
     baseApi.post("/merchant/verify-otp", data),
 
-  login: (data: any) => baseApi.post("/merchant/login", data),
+  login: (data: Record<string, unknown>) => baseApi.post("/merchant/login", data),
 
   forgotPassword: (data: { email: string }) =>
     baseApi.post("/merchant/forgot-password", data),
@@ -27,3 +27,6 @@ export const merchantApi = {
 
   completeProfile: (data: Record<string, unknown>) => baseApi.post("/merchant/complete-profile", data),
 };
+
+
+

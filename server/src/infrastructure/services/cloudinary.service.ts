@@ -2,6 +2,7 @@ import { v2 as cloudinary } from "cloudinary";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
+import logger from "../../utils/logger.ts";
 
 dotenv.config();
 
@@ -35,7 +36,10 @@ export class CloudinaryService {
           });
         });
         return await Promise.all(uploadPromises);
-      } catch (err) {
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          logger.error(err, "Cloudinary upload failed");
+        }
       }
     }
 
@@ -66,7 +70,10 @@ export class CloudinaryService {
             fs.unlinkSync(filePath);
           }
         }
-      } catch (err) {
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          logger.error(err, "Failed to delete local image file");
+        }
       }
       return;
     }
@@ -86,7 +93,10 @@ export class CloudinaryService {
       
       const publicId = [...publicIdParts, filename.split(".")[0]].join("/");
       await cloudinary.uploader.destroy(publicId);
-    } catch (error) {
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        logger.error(error, "Failed to delete image from Cloudinary");
+      }
     }
   }
 }

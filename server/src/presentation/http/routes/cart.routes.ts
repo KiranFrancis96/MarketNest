@@ -1,5 +1,5 @@
 import express from "express";
-import { cartController } from "@/setup/container/shopping.container.ts";
+import { cartController } from "@/setup/container/cart/controllers.ts";
 import { authenticate } from "@/middleware/auth.middleware.ts";
 import { ROUTE_BASE, ROUTE_PRODUCT_ID_PARAM } from "./routes.constants.ts";
 

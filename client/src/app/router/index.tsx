@@ -6,6 +6,12 @@ import { HomePage } from "@/pages/home/HomePage";
 import { ProductCatalogPage } from "@/pages/home/Catalog";
 import { CartPage } from "@/pages/home/CartPage";
 import { WishlistPage } from "@/pages/home/WishlistPage";
+import { ProductDetailsPage } from "@/pages/home/ProductDetailsPage";
+import { CheckoutPage } from "@/pages/home/CheckoutPage";
+import { OrderSuccessPage } from "@/pages/home/OrderSuccessPage";
+import { UserOrdersPage } from "@/pages/home/UserOrdersPage";
+import { OrderDetailPage } from "@/pages/home/OrderDetailPage";
+import { ProfilePage } from "@/pages/profile/ProfilePage";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { GuestRoute } from "./GuestRoute";
 import { MerchantAuthPage } from "@/pages/merchant-auth/MerchantAuthPage";
@@ -27,6 +33,10 @@ export const AppRouter = () => {
         <ProtectedRoute>
           <ProductCatalogPage />
         </ProtectedRoute>} />
+      <Route path="/product/:id" element={
+        <ProtectedRoute>
+          <ProductDetailsPage />
+        </ProtectedRoute>} />
       <Route path="/cart" element={
         <ProtectedRoute>
           <CartPage />
@@ -34,6 +44,26 @@ export const AppRouter = () => {
       <Route path="/wishlist" element={
         <ProtectedRoute>
           <WishlistPage />
+        </ProtectedRoute>} />
+      <Route path="/checkout" element={
+        <ProtectedRoute>
+          <CheckoutPage />
+        </ProtectedRoute>} />
+      <Route path="/order-success/:id" element={
+        <ProtectedRoute>
+          <OrderSuccessPage />
+        </ProtectedRoute>} />
+      <Route path="/purchases" element={
+        <ProtectedRoute>
+          <UserOrdersPage />
+        </ProtectedRoute>} />
+      <Route path="/purchases/:id" element={
+        <ProtectedRoute>
+          <OrderDetailPage />
+        </ProtectedRoute>} />
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <ProfilePage />
         </ProtectedRoute>} />
 
       {/* Guest-only user routes */}

@@ -1,3 +1,25 @@
+export interface UserPreferences {
+  favoriteBrands?: string[];
+  interestedCategories?: string[];
+  priceRange?: {
+    min?: number;
+    max?: number;
+  };
+  offerSensitive?: boolean;
+}
+
+export interface Address {
+  _id?: string;
+  fullName: string;
+  phone: string;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  isDefault: boolean;
+}
+
 export interface User {
   _id?: string;
   firstName: string;
@@ -8,4 +30,6 @@ export interface User {
   otp?: string | undefined;
   otpExpiresAt?: Date | undefined;
   isBlocked: boolean;
+  preferences?: UserPreferences;
+  addresses?: Address[];
 }

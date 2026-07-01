@@ -4,7 +4,7 @@ import type { User } from "@/domain/entities/user.entity.ts";
 import { UserModel } from "../models/user.model.ts";
 import { UserMapper } from "../mappers/UserMapper.ts";
 
-export class UserRepository extends BaseRepository<User, any> implements IUserRepository {
+export class UserRepository extends BaseRepository<User> implements IUserRepository {
   constructor() {
     super(UserModel, UserMapper);
   }
@@ -16,8 +16,8 @@ export class UserRepository extends BaseRepository<User, any> implements IUserRe
 
   async update(user: Partial<User>, email: string): Promise<void> {
     const docData = this.mapper.toDocument(user as User);
-    const $set: any = {};
-    const $unset: any = {};
+    const $set: Record<string, unknown> = {};
+    const $unset: Record<string, unknown> = {};
 
     Object.keys(docData).forEach((key) => {
       if (key in user) {
@@ -29,7 +29,7 @@ export class UserRepository extends BaseRepository<User, any> implements IUserRe
       }
     });
 
-    const updateQuery: any = {};
+    const updateQuery: { $set?: Record<string, unknown>; $unset?: Record<string, unknown> } = {};
     if (Object.keys($set).length > 0) updateQuery.$set = $set;
     if (Object.keys($unset).length > 0) updateQuery.$unset = $unset;
 

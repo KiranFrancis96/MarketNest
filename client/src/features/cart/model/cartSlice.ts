@@ -5,6 +5,13 @@ import type { Product } from "@/features/product/model/productSlice";
 const API_URL = "http://localhost:3000/api";
 axios.defaults.withCredentials = true;
 
+function getErrorMessage(err: unknown, defaultMessage: string): string {
+  if (axios.isAxiosError(err)) {
+    return err.response?.data?.message || defaultMessage;
+  }
+  return err instanceof Error ? err.message : defaultMessage;
+}
+
 export interface CartItem {
   productId: string;
   quantity: number;
@@ -39,8 +46,8 @@ export const fetchCart = createAsyncThunk(
     try {
       const response = await axios.get(`${API_URL}/cart`);
       return response.data;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to fetch cart");
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, "Failed to fetch cart"));
     }
   }
 );
@@ -51,8 +58,8 @@ export const addToCart = createAsyncThunk(
     try {
       const response = await axios.post(`${API_URL}/cart`, { productId, quantity });
       return response.data.cart;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to add to cart");
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, "Failed to add to cart"));
     }
   }
 );
@@ -63,8 +70,8 @@ export const updateCartQuantity = createAsyncThunk(
     try {
       const response = await axios.put(`${API_URL}/cart`, { productId, quantity });
       return response.data.cart;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to update quantity");
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, "Failed to update quantity"));
     }
   }
 );
@@ -75,8 +82,8 @@ export const removeFromCart = createAsyncThunk(
     try {
       const response = await axios.delete(`${API_URL}/cart/${productId}`);
       return response.data.cart;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to remove item");
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, "Failed to remove item"));
     }
   }
 );
@@ -87,8 +94,8 @@ export const clearCart = createAsyncThunk(
     try {
       const response = await axios.delete(`${API_URL}/cart`);
       return response.data.cart;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to clear cart");
+    } catch (err: unknown) {
+      return rejectWithValue(getErrorMessage(err, "Failed to clear cart"));
     }
   }
 );
