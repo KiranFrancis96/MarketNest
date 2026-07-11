@@ -15,6 +15,7 @@ export interface User {
   isVerified: boolean;
   isBlocked: boolean;
   createdAt: string;
+  profilePic?: string;
 }
 
 export interface Merchant {

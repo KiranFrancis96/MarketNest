@@ -14,22 +14,17 @@ export class NotificationService {
     private _pushProvider: IPushNotificationProvider
   ) {}
 
-  /**
-   * Helper to check if current hour is within user's allowed active hours.
-   */
+  
   private _isWithinActiveHours(currentHour: number, start: number, end: number): boolean {
-    if (start === end) return true; // All day allowed
+    if (start === end) return true; 
     if (start < end) {
       return currentHour >= start && currentHour < end;
     } else {
-      // Overnight range, e.g., 22:00 to 06:00
       return currentHour >= start || currentHour < end;
     }
   }
 
-  /**
-   * Helper to check if a specific notification type is enabled by user preferences.
-   */
+
   private _isNotificationTypeEnabled(type: string, preferences: NotificationPreference): boolean {
     switch (type) {
       case "CHATBOT_PROMPT":
@@ -43,13 +38,11 @@ export class NotificationService {
       case "SYSTEM":
       case "ADMIN":
       default:
-        return true; // Enabled by default
+        return true; 
     }
   }
 
-  /**
-   * Main send notification method (called by orders, chatbot, merchants etc.)
-   */
+  
   async send(
     userId: string,
     title: string,
@@ -57,7 +50,7 @@ export class NotificationService {
     type: string,
     data?: Record<string, unknown>
   ): Promise<Notification | null> {
-    // 1. Create and Save Notification in Database
+    
     const notification = await this._notificationRepository.create({
       userId,
       title,
@@ -74,10 +67,10 @@ export class NotificationService {
 
     logger.info(`[NotificationService] Saved notification: ${notification._id} for user: ${userId}`);
 
-    // 2. Fetch User Notification Preferences
+    
     let preferences = await this._preferenceRepository.getPreferences(userId);
     if (!preferences) {
-      // Create defaults if they don't exist
+      
       preferences = await this._preferenceRepository.updatePreferences(userId, {
         pushEnabled: true,
         chatbotEnabled: true,
@@ -94,7 +87,7 @@ export class NotificationService {
       return notification;
     }
 
-    // 3. Evaluate Preference Restrictions
+    
     if (!preferences.pushEnabled) {
       logger.info(`[NotificationService] Push disabled for user: ${userId}. Saved to DB only.`);
       return notification;
@@ -105,7 +98,7 @@ export class NotificationService {
       return notification;
     }
 
-    // 4. Evaluate Quiet Hour Active Window
+    
     const currentHour = new Date().getHours();
     if (!this._isWithinActiveHours(currentHour, preferences.startHour, preferences.endHour)) {
       logger.info(
@@ -114,14 +107,14 @@ export class NotificationService {
       return notification;
     }
 
-    // 5. Retrieve Registered Device Tokens
+    
     const devices = await this._deviceRepository.findByUser(userId);
     if (devices.length === 0) {
       logger.info(`[NotificationService] No registered devices found for user: ${userId}. Saved to DB only.`);
       return notification;
     }
 
-    // 6. Send Push Notifications via FCM Provider
+    
     const payload = {
       title,
       body: message,
@@ -136,9 +129,12 @@ export class NotificationService {
     return notification;
   }
 
-  /**
-   * Send notification to multiple users
-   */
+
+
+
+  
+
+  
   async sendBulk(
     userIds: string[],
     title: string,
@@ -151,7 +147,7 @@ export class NotificationService {
     await Promise.all(promises);
   }
 
-  // Repository Delegators
+  
   async getNotifications(userId: string): Promise<Notification[]> {
     return this._notificationRepository.findByUser(userId);
   }

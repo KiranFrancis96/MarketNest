@@ -31,6 +31,7 @@ export const ROUTE_MERCHANT_BLOCK          = "/merchants/:id/block";
 export const ROUTE_MERCHANT_UNBLOCK        = "/merchants/:id/unblock";
 export const ROUTE_USER_BLOCK              = "/users/:id/block";
 export const ROUTE_USER_UNBLOCK            = "/users/:id/unblock";
+export const ROUTE_USER_UPDATE             = "/users/:id";
 
 // ─── Merchant Routes ──────────────────────────────────────────────────────────
 export const ROUTE_MERCHANT_ME             = "/me";

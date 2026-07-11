@@ -14,6 +14,7 @@ export const adminApi = {
   rejectMerchant: (id: string, reason: string) => baseApi.patch(`/admin/merchants/${id}/reject`, { rejectionReason: reason }),
   blockUser: (id: string) => baseApi.patch(`/admin/users/${id}/block`),
   unblockUser: (id: string) => baseApi.patch(`/admin/users/${id}/unblock`),
+  updateUser: (id: string, data: Partial<User>) => baseApi.patch<User>(`/admin/users/${id}`, data),
   blockMerchant: (id: string) => baseApi.patch(`/admin/merchants/${id}/block`),
   unblockMerchant: (id: string) => baseApi.patch(`/admin/merchants/${id}/unblock`),
   resendOtp: (email: string) => baseApi.post("/admin/resend-otp", { email }),

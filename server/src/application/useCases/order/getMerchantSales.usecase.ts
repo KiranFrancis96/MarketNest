@@ -10,7 +10,7 @@ export class GetMerchantSalesUseCase implements IGetMerchantSalesUseCase {
   ) {}
 
   async execute(merchantId: string): Promise<MerchantSale[]> {
-    // 1. Get all products owned by this merchant
+    
     const merchantProducts = await this._productRepository.findMany({ merchantId });
     if (merchantProducts.length === 0) {
       return [];
@@ -18,15 +18,15 @@ export class GetMerchantSalesUseCase implements IGetMerchantSalesUseCase {
 
     const productIds = merchantProducts.map((p) => p._id!.toString());
 
-    // 2. Find all paid orders that contain any of these product IDs
+    
     const orders = await this._orderRepository.findMany({
       "items.productId": { $in: productIds },
       status: "paid"
     } as Record<string, unknown>);
 
-    // 3. Map orders to return sales transactions specific to this merchant
+    
     const sales = orders.map((order) => {
-      // Filter out items not belonging to this merchant and map to include product details
+      
       const merchantItems = order.items
         .filter((item) => productIds.includes(item.productId.toString()))
         .map((item) => {
@@ -37,7 +37,7 @@ export class GetMerchantSalesUseCase implements IGetMerchantSalesUseCase {
           };
         });
 
-      // Compute subtotal for this merchant
+      
       const subtotal = merchantItems.reduce(
         (sum, item) => sum + item.priceSnapshot * item.quantity,
         0

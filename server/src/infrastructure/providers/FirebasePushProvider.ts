@@ -17,7 +17,7 @@ export class FirebasePushProvider implements IPushNotificationProvider {
     }
 
     try {
-      // Dynamic import to avoid runtime crashes if firebase-admin package is not installed
+      
       const admin = await import("firebase-admin");
       if (admin.apps.length === 0) {
         admin.initializeApp({

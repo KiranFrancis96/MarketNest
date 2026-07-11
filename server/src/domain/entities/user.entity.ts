@@ -30,6 +30,7 @@ export interface User {
   otp?: string | undefined;
   otpExpiresAt?: Date | undefined;
   isBlocked: boolean;
+  profilePic?: string;
   preferences?: UserPreferences;
   addresses?: Address[];
 }

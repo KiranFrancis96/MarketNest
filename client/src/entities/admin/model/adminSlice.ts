@@ -7,6 +7,7 @@ interface AdminState {
   merchants: Merchant[];
   isLoading: boolean;
   error: string | null;
+  step: "login" | "forgot" | "reset";
 }
 
 const initialState: AdminState = {
@@ -15,6 +16,7 @@ const initialState: AdminState = {
   merchants: [],
   isLoading: false,
   error: null,
+  step: "login",
 };
 
 const adminSlice = createSlice({
@@ -28,6 +30,9 @@ const adminSlice = createSlice({
       } else {
         localStorage.removeItem("admin");
       }
+    },
+    setAdminAuthStep: (state, action: PayloadAction<"login" | "forgot" | "reset">) => {
+      state.step = action.payload;
     },
     setUsers: (state, action: PayloadAction<User[]>) => {
       state.users = action.payload;
@@ -60,17 +65,48 @@ const adminSlice = createSlice({
         merchant.isBlocked = action.payload.isBlocked;
       }
     },
+    updateUserAction: (state, action: PayloadAction<User>) => {
+      const index = state.users.findIndex((u) => u._id === action.payload._id);
+      if (index !== -1) {
+        state.users[index] = action.payload;
+      }
+    },
+    deleteUserAction: (state, action: PayloadAction<string>) => {
+      state.users = state.users.filter((u) => u._id !== action.payload);
+    },
+    addUserAction: (state, action: PayloadAction<User>) => {
+      state.users.unshift(action.payload);
+    },
+    updateMerchantAction: (state, action: PayloadAction<Merchant>) => {
+      const index = state.merchants.findIndex((m) => m._id === action.payload._id);
+      if (index !== -1) {
+        state.merchants[index] = action.payload;
+      }
+    },
+    deleteMerchantAction: (state, action: PayloadAction<string>) => {
+      state.merchants = state.merchants.filter((m) => m._id !== action.payload);
+    },
+    addMerchantAction: (state, action: PayloadAction<Merchant>) => {
+      state.merchants.unshift(action.payload);
+    },
   },
 });
 
 export const { 
   setAdmin, 
+  setAdminAuthStep,
   setUsers, 
   setMerchants, 
   setLoading, 
   setError, 
   updateMerchantStatus,
   updateUserBlockStatus,
-  updateMerchantBlockStatus 
+  updateMerchantBlockStatus,
+  updateUserAction,
+  deleteUserAction,
+  addUserAction,
+  updateMerchantAction,
+  deleteMerchantAction,
+  addMerchantAction
 } = adminSlice.actions;
 export default adminSlice.reducer;

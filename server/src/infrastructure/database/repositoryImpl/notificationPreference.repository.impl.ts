@@ -17,7 +17,7 @@ export class NotificationPreferenceRepository extends BaseRepository<Notificatio
   async updatePreferences(userId: string, data: Partial<NotificationPreference>): Promise<NotificationPreference | null> {
     const docData = this.mapper.toDocument(data as NotificationPreference);
     
-    // Remove undefined fields
+    
     Object.keys(docData).forEach((key) => {
       if (docData[key] === undefined) {
         delete docData[key];

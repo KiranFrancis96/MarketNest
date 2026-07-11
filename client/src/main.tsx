@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { store } from './app/store/index.ts'
 import { Provider } from 'react-redux'
+import { AlertModalProvider } from './shared/ui/AlertModalContext.tsx'
 import './index.css'
 
 import App from './app/App.tsx'
@@ -11,7 +12,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
       <BrowserRouter>
-       <App />
+        <AlertModalProvider>
+          <App />
+        </AlertModalProvider>
       </BrowserRouter>
     </Provider>
     

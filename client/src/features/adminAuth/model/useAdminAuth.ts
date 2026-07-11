@@ -1,13 +1,18 @@
-import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { adminApi } from "@/entities/admin/api/adminApi";
-import { setAdmin, setLoading, setError } from "@/entities/admin/model/adminSlice";
+import { setAdmin, setLoading, setError, setAdminAuthStep } from "@/entities/admin/model/adminSlice";
+import type { RootState } from "@/app/store";
 
 export const useAdminAuth = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [step, setStep] = useState<"forgot" | "reset" | "login">("login");
+  const step = useSelector((state: RootState) => state.admin.step);
+
+  const setStep = (nextStep: "forgot" | "reset" | "login") => {
+    dispatch(setError(null)); // Clear error when switching forms
+    dispatch(setAdminAuthStep(nextStep));
+  };
 
   const login = async (credentials: Record<string, unknown>) => {
     dispatch(setLoading(true));

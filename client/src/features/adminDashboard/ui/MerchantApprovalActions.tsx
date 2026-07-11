@@ -3,6 +3,7 @@ import { adminApi } from "@/entities/admin/api/adminApi";
 import { useDispatch } from "react-redux";
 import { updateMerchantStatus } from "@/entities/admin/model/adminSlice";
 import { Modal } from "@/shared/ui/Modal";
+import { useAlertModal } from "@/shared/ui/AlertModalContext";
 import { CheckCircle, XCircle } from "lucide-react";
 
 interface MerchantApprovalActionsProps {
@@ -11,6 +12,7 @@ interface MerchantApprovalActionsProps {
 
 export const MerchantApprovalActions: React.FC<MerchantApprovalActionsProps> = ({ merchantId }) => {
   const dispatch = useDispatch();
+  const { showAlert } = useAlertModal();
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [reason, setReason] = useState("");
@@ -23,7 +25,7 @@ export const MerchantApprovalActions: React.FC<MerchantApprovalActionsProps> = (
       dispatch(updateMerchantStatus({ id: merchantId, status: "approved", isAdminVerified: true }));
       setShowApproveModal(false);
     } catch (err) {
-      alert("Failed to approve merchant");
+      showAlert("Failed to approve merchant", "error");
     } finally {
       setLoading(false);
     }
@@ -31,7 +33,7 @@ export const MerchantApprovalActions: React.FC<MerchantApprovalActionsProps> = (
 
   const handleReject = async () => {
     if (!reason.trim()) {
-      alert("Please provide a rejection reason");
+      showAlert("Please provide a rejection reason", "warning");
       return;
     }
     setLoading(true);
@@ -41,7 +43,7 @@ export const MerchantApprovalActions: React.FC<MerchantApprovalActionsProps> = (
       setShowRejectModal(false);
       setReason("");
     } catch (err) {
-      alert("Failed to reject merchant");
+      showAlert("Failed to reject merchant", "error");
     } finally {
       setLoading(false);
     }

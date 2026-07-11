@@ -12,6 +12,7 @@ interface IUserDoc {
   otp?: string | null;
   otpExpiresAt?: Date | null;
   isBlocked?: boolean;
+  profilePic?: string;
   addresses?: any[];
 }
 
@@ -29,6 +30,7 @@ export class UserMapper {
       otp: d.otp ?? undefined,
       otpExpiresAt: d.otpExpiresAt ?? undefined,
       isBlocked: !!d.isBlocked,
+      profilePic: d.profilePic,
       addresses: (d.addresses || []).map((addr: any) => ({
         _id: addr._id ? addr._id.toString() : addr.id,
         fullName: addr.fullName || "",
@@ -53,6 +55,7 @@ export class UserMapper {
       otp: entity.otp,
       otpExpiresAt: entity.otpExpiresAt,
       isBlocked: entity.isBlocked,
+      profilePic: entity.profilePic,
     };
     if (entity.addresses !== undefined) {
       doc.addresses = entity.addresses.map((addr) => ({

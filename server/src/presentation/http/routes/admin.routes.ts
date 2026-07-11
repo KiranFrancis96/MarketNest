@@ -15,6 +15,7 @@ import {
   ROUTE_MERCHANT_UNBLOCK,
   ROUTE_USER_BLOCK,
   ROUTE_USER_UNBLOCK,
+  ROUTE_USER_UPDATE,
 } from "./routes.constants.ts";
 
 const router = express.Router();
@@ -37,5 +38,6 @@ router.patch(ROUTE_MERCHANT_BLOCK, adminController.blockMerchant);
 router.patch(ROUTE_MERCHANT_UNBLOCK, adminController.unblockMerchant);
 router.patch(ROUTE_USER_BLOCK, adminController.blockUser);
 router.patch(ROUTE_USER_UNBLOCK, adminController.unblockUser);
+router.patch(ROUTE_USER_UPDATE, adminController.updateUser);
 
 export default router;

@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { tokenBlacklistService } from "@/infrastructure/services/tokenBlacklist.service.ts";
 import { COOKIE_CONFIG } from "@/config/cookie.config.ts";
+import { UserModel } from "@/infrastructure/database/models/user.model.ts";
 import type {
   IAdminLoginUseCase,
   IApproveMerchantUseCase,
@@ -117,7 +118,13 @@ export class AdminController {
   };
 
   getMerchants = async (req: Request, res: Response): Promise<void> => {
-    const merchants = await this._getMerchantsUseCase.execute();
+    const { status } = req.query;
+    let merchants;
+    if (status === "pending") {
+      merchants = await this._getPendingMerchantsUseCase.execute();
+    } else {
+      merchants = await this._getMerchantsUseCase.execute();
+    }
     res.json(merchants);
   };
 
@@ -158,6 +165,17 @@ export class AdminController {
     const { id } = req.params;
     await this._unblockUserUseCase.execute({ id: id as string });
     res.json({ message: MSG_USER_UNBLOCKED });
+  };
+
+  updateUser = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const { firstName, lastName, email, profilePic } = req.body;
+    const updated = await UserModel.findByIdAndUpdate(
+      id,
+      { $set: { firstName, lastName, email, profilePic } },
+      { new: true }
+    );
+    res.json(updated);
   };
 
   blockMerchant = async (req: Request, res: Response): Promise<void> => {

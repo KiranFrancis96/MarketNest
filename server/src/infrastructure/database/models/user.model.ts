@@ -28,6 +28,7 @@ const userSchema = new mongoose.Schema({
     }
   },
   isBlocked: { type: Boolean, default: false },
+  profilePic: { type: String },
   addresses: [addressSchema]
 });
 

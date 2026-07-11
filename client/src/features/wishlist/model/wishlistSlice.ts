@@ -24,7 +24,7 @@ const initialState: WishlistState = {
   error: null,
 };
 
-// Async Thunks
+
 export const fetchWishlist = createAsyncThunk(
   "wishlist/fetchWishlist",
   async (_, { rejectWithValue }) => {

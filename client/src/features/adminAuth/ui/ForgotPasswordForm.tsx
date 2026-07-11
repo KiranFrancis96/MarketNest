@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAdminAuth } from "../model/useAdminAuth";
 import { useSelector } from "react-redux";
+import { Mail, ShieldAlert, ArrowRight } from "lucide-react";
 import type { RootState } from "@/app/store";
 
 export const ForgotPasswordForm: React.FC = () => {
@@ -10,51 +11,75 @@ export const ForgotPasswordForm: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    forgotPassword(email);
+    if (email) {
+      forgotPassword(email);
+    }
   };
 
   return (
-    <div className="max-w-md w-full p-8 bg-white rounded-2xl shadow-xl border border-gray-100">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Recover Access</h2>
-        <p className="text-gray-500 mt-2">Enter your admin email to receive an OTP</p>
-      </div>
-
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Admin Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none"
-            required
-          />
+    <>
+      <div className="admin-card-inner">
+        <div className="admin-card-header">
+          <h2 className="admin-card-title">Recover Access</h2>
+          <p className="admin-card-subtitle">Enter your admin email to receive an OTP</p>
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg"
-        >
-          {isLoading ? "Sending OTP..." : "Send Verification Code"}
-        </button>
-      </form>
+        {error && (
+          <div className="admin-alert-banner" role="alert">
+            <ShieldAlert size={20} className="admin-alert-banner-icon" />
+            <span>{error}</span>
+          </div>
+        )}
 
-      <div className="mt-8 text-center">
-        <button
-          onClick={() => setStep("login")}
-          className="text-gray-500 hover:text-gray-700 font-medium text-sm transition-colors"
-        >
-          Back to Login
-        </button>
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="admin-form-group">
+            <div className="admin-label-row">
+              <label className="admin-field-label">Admin Email</label>
+            </div>
+            <div className="admin-input-wrapper">
+              <span className="admin-input-icon">
+                <Mail size={20} />
+              </span>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="admin-input-field"
+                placeholder="admin@marketnest.com"
+                required
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="admin-submit-btn"
+            style={{ marginTop: "2rem" }}
+          >
+            <span>{isLoading ? "Sending OTP..." : "Send Verification Code"}</span>
+            {!isLoading && <ArrowRight size={18} strokeWidth={2.5} />}
+          </button>
+        </form>
+
+        <div style={{ marginTop: "1.5rem", textAlign: "center" }}>
+          <button
+            type="button"
+            onClick={() => setStep("login")}
+            className="admin-forgot-link"
+          >
+            Back to Login
+          </button>
+        </div>
       </div>
-    </div>
+
+      {/* Restricted Warning Footer Banner */}
+      <div className="admin-restricted-banner">
+        <ShieldAlert size={16} className="admin-restricted-banner-icon" />
+        <span className="admin-restricted-banner-text">
+          This portal is restricted to authorized administrators
+        </span>
+      </div>
+    </>
   );
 };

@@ -17,7 +17,7 @@ import {
 
 const router = express.Router();
 
-// Device registration
+
 router.post(
   ROUTE_NOTIFICATIONS_REGISTER,
   authenticate,
@@ -25,13 +25,13 @@ router.post(
   notificationController.registerDevice
 );
 
-// Notifications list & status
+
 router.get(ROUTE_NOTIFICATIONS, authenticate, notificationController.getNotifications);
 router.get(ROUTE_NOTIFICATIONS_UNREAD, authenticate, notificationController.getUnreadNotifications);
 router.patch(ROUTE_NOTIFICATIONS_READ, authenticate, notificationController.markAsRead);
 router.delete(ROUTE_NOTIFICATIONS_DELETE, authenticate, notificationController.delete);
 
-// Preferences
+
 router.get(ROUTE_NOTIFICATION_PREFS, authenticate, notificationController.getPreferences);
 router.put(
   ROUTE_NOTIFICATION_PREFS,
