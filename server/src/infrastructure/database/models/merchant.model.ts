@@ -16,6 +16,7 @@ const merchantSchema = new mongoose.Schema({
   country: { type: String, required: true },
   ownerName: { type: String, required: true },
   documentUrl: { type: String }, 
+  profilePic: { type: String },
   
   isEmailVerified: { type: Boolean, default: false },
   isProfileComplete: { type: Boolean, default: true },

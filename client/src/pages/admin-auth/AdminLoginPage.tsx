@@ -28,10 +28,10 @@ const AdminLoginPage: React.FC = () => {
             MarketNest<span>Admin</span>
           </div>
         </a>
-        <a 
-          href="https://marketnest.com/support" 
-          target="_blank" 
-          rel="noopener noreferrer" 
+        <a
+          href="https://marketnest.com/support"
+          target="_blank"
+          rel="noopener noreferrer"
           className="admin-header-support"
         >
           <HelpCircle size={18} />

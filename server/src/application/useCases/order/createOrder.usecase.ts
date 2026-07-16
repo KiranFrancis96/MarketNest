@@ -95,7 +95,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
       totalAmount,
       shippingAddress,
       razorpayOrderId: rzOrder.id,
-      status: "pending"
+      status: "pending",
     });
 
     if (!order) {

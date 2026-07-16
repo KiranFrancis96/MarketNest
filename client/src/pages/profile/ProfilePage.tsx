@@ -1,16 +1,48 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Plus, MapPin, Trash2, Edit3, ShieldAlert, User as UserIcon, Mail } from "lucide-react";
+import { Plus, MapPin, Trash2, Edit3, ShieldAlert, ShieldCheck, User as UserIcon, Mail, Wallet as WalletIcon } from "lucide-react";
 import type { RootState, AppDispatch } from "@/app/store";
 import { setUser } from "@/entities/user/model/userSlice";
 import { userApi } from "@/entities/user/api/userApi";
+import { orderApi } from "@/entities/order/api/orderApi";
 import type { Address } from "@/entities/user/model/types";
 import { Header } from "@/shared/components/Header";
+import { setProfile, setError, setLoading } from "@/entities/userProfile/model/userProfileSlice";
+import { userProfileApi } from "@/entities/userProfile/api/userProfileApi";
+import { PersonalizationOverviewCard } from "@/features/userProfile";
+import { HttpStatus } from "@/shared/api/httpStatus";
+import { MSG_FAILED_LOAD_PERSONALIZATION, MSG_FAILED_SAVE_ADDRESS } from "@/shared/constants/messages";
 
 export const ProfilePage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.user.user);
-  
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [isAddFundsModalOpen, setIsAddFundsModalOpen] = useState(false);
+  const [fundsAmount, setFundsAmount] = useState("1000");
+  const [fundsError, setFundsError] = useState("");
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [successModalAmount, setSuccessModalAmount] = useState(0);
+
+  const handleAddWalletFunds = async (amount: number) => {
+    try {
+      setWalletLoading(true);
+      await orderApi.addWalletFunds(amount);
+      
+      const profileRes = await userApi.getProfile();
+      dispatch(setUser(profileRes.data));
+      
+      setIsAddFundsModalOpen(false);
+      setFundsError("");
+      setSuccessModalAmount(amount);
+      setIsSuccessModalOpen(true);
+    } catch (err: any) {
+      console.error("Wallet fund error:", err);
+      setFundsError(err.response?.data?.message || err.message);
+    } finally {
+      setWalletLoading(false);
+    }
+  };
+
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
@@ -26,6 +58,42 @@ export const ProfilePage: React.FC = () => {
   const [country, setCountry] = useState("");
   const [isDefault, setIsDefault] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  const [autoOpenPersonalizationModal, setAutoOpenPersonalizationModal] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("startOnboarding") === "true") {
+      setAutoOpenPersonalizationModal(true);
+    }
+  }, []);
+
+  const handlePersonalizationModalClose = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("startOnboarding");
+    window.history.replaceState({}, "", url.toString());
+    setAutoOpenPersonalizationModal(false);
+  };
+
+  useEffect(() => {
+    const fetchPersonalizationProfile = async () => {
+      dispatch(setLoading(true));
+      try {
+        const res = await userProfileApi.getUserPersonalizationProfile();
+        dispatch(setProfile(res.data.profile));
+      } catch (err: any) {
+        if (err.response?.status === HttpStatus.NOT_FOUND) {
+          dispatch(setProfile(null));
+        } else {
+          dispatch(setError(err.response?.data?.message || MSG_FAILED_LOAD_PERSONALIZATION));
+        }
+      } finally {
+        dispatch(setLoading(false));
+      }
+    };
+
+    fetchPersonalizationProfile();
+  }, [dispatch]);
 
   useEffect(() => {
     if (user && user.addresses) {
@@ -77,11 +145,11 @@ export const ProfilePage: React.FC = () => {
       } else {
         res = await userApi.addAddress(payload);
       }
-      
+
       dispatch(setUser(res.data.user));
       setIsModalOpen(false);
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.message || "Failed to save address.");
+      setErrorMsg(err.response?.data?.message || MSG_FAILED_SAVE_ADDRESS);
     }
   };
 
@@ -102,18 +170,49 @@ export const ProfilePage: React.FC = () => {
       <main style={mainContentStyles}>
         {/* Profile Info Header */}
         <section style={profileHeaderCardStyles}>
-          <div style={avatarCircleStyles}>
-            <UserIcon size={36} color="var(--primary)" />
-          </div>
-          <div>
-            <h1 style={profileNameStyles}>
-              {user?.firstName ? `${user.firstName} ${user.lastName}` : "User Profile"}
-            </h1>
-            <div style={profileDetailRowStyles}>
-              <Mail size={16} color="var(--text-muted)" />
-              <span style={profileEmailStyles}>{user?.email}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+            <div style={avatarCircleStyles}>
+              <UserIcon size={36} color="var(--primary)" />
+            </div>
+            <div>
+              <h1 style={profileNameStyles}>
+                {user?.firstName ? `${user.firstName} ${user.lastName}` : "User Profile"}
+              </h1>
+              <div style={profileDetailRowStyles}>
+                <Mail size={16} color="var(--text-muted)" />
+                <span style={profileEmailStyles}>{user?.email}</span>
+              </div>
             </div>
           </div>
+
+          {/* Wallet Balance Widget */}
+          <div style={walletWidgetStyles}>
+            <div style={walletIconWrapperStyles}>
+              <WalletIcon size={22} color="var(--primary)" />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={walletLabelStyles}>MARKETNEST WALLET</span>
+              <span style={walletBalanceStyles}>₹{(user?.walletBalance || 0).toFixed(2)}</span>
+            </div>
+            <button 
+              onClick={() => {
+                setFundsAmount("1000");
+                setFundsError("");
+                setIsAddFundsModalOpen(true);
+              }}
+              style={walletAddBtnStyles}
+            >
+              + Add Funds
+            </button>
+          </div>
+        </section>
+
+        {/* AI Personalization Section */}
+        <section style={{ marginTop: "2rem" }}>
+          <PersonalizationOverviewCard
+            autoOpenOnboardingModal={autoOpenPersonalizationModal}
+            onModalCloseAction={handlePersonalizationModalClose}
+          />
         </section>
 
         {/* Address Book Section */}
@@ -311,11 +410,11 @@ export const ProfilePage: React.FC = () => {
               <div style={deleteWarningIconContainerStyles}>
                 <Trash2 width="28" height="28" style={{ color: "#dc2626" }} />
               </div>
-              
+
               <h3 style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text-main)", marginTop: "1rem", marginBottom: "0.5rem" }}>
                 Remove Saved Address?
               </h3>
-              
+
               <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", lineHeight: 1.5, margin: "0 0 1.5rem 0" }}>
                 Are you sure you want to remove this address from your saved address book?
               </p>
@@ -347,6 +446,116 @@ export const ProfilePage: React.FC = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Wallet Funds Modal */}
+      {isAddFundsModalOpen && (
+        <div className="modal-overlay animate-fadeIn">
+          <div className="modal-container" style={{ maxWidth: "400px", width: "90%", borderRadius: "24px", padding: "2rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+              <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0 }}>Add Funds to Wallet</h3>
+              <button 
+                onClick={() => setIsAddFundsModalOpen(false)} 
+                style={{ border: "none", background: "none", fontSize: "1.5rem", cursor: "pointer", color: "var(--text-muted)" }}
+              >
+                &times;
+              </button>
+            </div>
+
+            {fundsError && (
+              <div style={{ padding: "0.75rem 1rem", borderRadius: "12px", backgroundColor: "#fef2f2", border: "1px solid #fee2e2", color: "#dc2626", fontSize: "0.875rem", fontWeight: 600, display: "flex", alignItems: "center", marginBottom: "1rem" }}>
+                <ShieldAlert size={18} style={{ marginRight: "0.5rem", flexShrink: 0 }} />
+                <span>{fundsError}</span>
+              </div>
+            )}
+
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                const amt = parseFloat(fundsAmount);
+                if (isNaN(amt) || amt <= 0) {
+                  setFundsError("Please enter a valid positive amount.");
+                  return;
+                }
+                handleAddWalletFunds(amt);
+              }}
+              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+            >
+              <div className="form-group">
+                <label className="form-label">Enter Amount (₹)</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  min="1"
+                  step="any"
+                  placeholder="e.g. 500"
+                  value={fundsAmount}
+                  onChange={(e) => setFundsAmount(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
+                <button
+                  type="button"
+                  onClick={() => setIsAddFundsModalOpen(false)}
+                  className="btn-secondary"
+                  style={{ flex: 1, padding: "0.75rem", borderRadius: "12px", width: "auto" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={walletLoading}
+                  style={{ flex: 1, padding: "0.75rem", borderRadius: "12px", width: "auto", marginTop: 0 }}
+                >
+                  {walletLoading ? "Processing..." : "Confirm Add"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Success Confirmation Modal */}
+      {isSuccessModalOpen && (
+        <div className="modal-overlay animate-fadeIn">
+          <div className="modal-container" style={{ maxWidth: "420px", width: "90%", padding: "2rem", borderRadius: "24px", textAlign: "center" }}>
+            <div style={{
+              width: "64px",
+              height: "64px",
+              borderRadius: "50%",
+              backgroundColor: "#ecfdf5",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 1.5rem auto",
+              border: "2px solid #a7f3d0"
+            }}>
+              <ShieldCheck size={36} color="#10b981" />
+            </div>
+
+            <h3 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.5rem" }}>
+              Funds Added!
+            </h3>
+
+            <p style={{ fontSize: "0.95rem", color: "var(--text-muted)", lineHeight: 1.6, margin: "0 0 1.75rem 0" }}>
+              Successfully added <strong style={{ color: "var(--text-main)" }}>₹{successModalAmount.toLocaleString()}</strong> to your MarketNest Wallet.
+              <br />
+              New Balance: <strong style={{ color: "var(--primary)" }}>₹{(user?.walletBalance || 0).toLocaleString()}</strong>
+            </p>
+
+            <button
+              onClick={() => setIsSuccessModalOpen(false)}
+              className="btn-primary"
+              style={{ width: "100%", padding: "0.75rem", borderRadius: "12px", fontSize: "0.95rem", fontWeight: 700, marginTop: 0 }}
+            >
+              Awesome
+            </button>
           </div>
         </div>
       )}
@@ -541,4 +750,50 @@ const deleteWarningIconContainerStyles: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
+};
+
+const walletWidgetStyles: React.CSSProperties = {
+  marginLeft: "auto",
+  display: "flex",
+  alignItems: "center",
+  gap: "1rem",
+  padding: "0.75rem 1.25rem",
+  borderRadius: "16px",
+  backgroundColor: "#f8fafc",
+  border: "1px solid var(--border)",
+};
+
+const walletIconWrapperStyles: React.CSSProperties = {
+  width: "40px",
+  height: "40px",
+  borderRadius: "10px",
+  backgroundColor: "#e0e7ff",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const walletLabelStyles: React.CSSProperties = {
+  fontSize: "0.65rem",
+  fontWeight: 800,
+  color: "var(--text-muted)",
+  letterSpacing: "0.05em",
+};
+
+const walletBalanceStyles: React.CSSProperties = {
+  fontSize: "1.15rem",
+  fontWeight: 800,
+  color: "var(--text-main)",
+};
+
+const walletAddBtnStyles: React.CSSProperties = {
+  marginLeft: "0.5rem",
+  padding: "0.5rem 1rem",
+  borderRadius: "10px",
+  border: "none",
+  backgroundColor: "var(--primary)",
+  color: "white",
+  fontWeight: 700,
+  fontSize: "0.8rem",
+  cursor: "pointer",
 };

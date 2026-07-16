@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Calendar, MapPin, CreditCard, ShieldCheck, ShieldAlert, Package, AlertTriangle } from "lucide-react";
 import { orderApi } from "@/entities/order/api/orderApi";
 import { Header } from "@/shared/components/Header";
+import { MSG_FAILED_LOAD_ORDER_DETAILS } from "@/shared/constants/messages";
 
 interface OrderItem {
   productId: string;
@@ -20,6 +21,7 @@ interface Order {
   createdAt: string;
   totalAmount: number;
   status: string;
+  orderNumber?: string;
   items: OrderItem[];
   shippingAddress: {
     fullName: string;
@@ -49,7 +51,7 @@ export const OrderDetailPage: React.FC = () => {
       const res = await orderApi.getById(id);
       setOrder(res.data);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to load order details.");
+      setError(err.response?.data?.message || MSG_FAILED_LOAD_ORDER_DETAILS);
     } finally {
       setLoading(false);
     }
@@ -157,8 +159,8 @@ export const OrderDetailPage: React.FC = () => {
               </p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-              <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 700 }}>ORDER ID</span>
-              <span style={{ fontSize: "1rem", color: "var(--text-main)", fontWeight: 800 }}>#{order._id}</span>
+              <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: 700 }}>ORDER NUMBER</span>
+              <span style={{ fontSize: "1rem", color: "var(--text-main)", fontWeight: 800 }}>{order.orderNumber || "N/A"}</span>
             </div>
           </div>
 
@@ -176,7 +178,7 @@ export const OrderDetailPage: React.FC = () => {
                     const subtotal = item.priceSnapshot * item.quantity;
                     const itemStatus = item.status || "pending";
                     const isPendingOrProcessing = itemStatus === "pending" || itemStatus === "processing";
-                    const isCompleted = itemStatus === "completed";
+                    const isShippedOrCompleted = itemStatus === "shipped" || itemStatus === "completed";
 
                     return (
                       <div key={item.productId} style={{ display: "flex", gap: "1.25rem", alignItems: "flex-start", borderBottom: "1px solid #f1f5f9", paddingBottom: "1.5rem" }}>
@@ -219,7 +221,7 @@ export const OrderDetailPage: React.FC = () => {
                                   Cancel Item
                                 </button>
                               )}
-                              {isCompleted && (
+                              {isShippedOrCompleted && (
                                 <button
                                   onClick={() => setActionItem({
                                     productId: item.productId,

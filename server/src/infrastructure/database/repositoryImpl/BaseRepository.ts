@@ -1,7 +1,7 @@
 import type { IBaseRepository } from "@/domain/interface/IBaseRepository.ts";
 import mongoose from "mongoose";
 
-export abstract class BaseRepository<T, D = mongoose.AnyObject> implements IBaseRepository<T> {
+export abstract class BaseRepository<T, D = any> implements IBaseRepository<T> {
   constructor(
     protected model: mongoose.Model<D>,
     protected mapper: {

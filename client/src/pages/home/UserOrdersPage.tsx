@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ShoppingBag, ArrowLeft, Calendar, MapPin, CheckCircle, Package } from "lucide-react";
 import { orderApi } from "@/entities/order/api/orderApi";
 import { Header } from "@/shared/components/Header";
+import { MSG_FAILED_LOAD_PURCHASES } from "@/shared/constants/messages";
 
 interface ClientProduct {
   images?: string[];
@@ -20,6 +21,7 @@ interface ClientOrder {
   createdAt: string;
   totalAmount: number;
   status: string;
+  orderNumber?: string;
   items: ClientOrderItem[];
   shippingAddress: {
     fullName: string;
@@ -33,25 +35,30 @@ interface ClientOrder {
 
 export const UserOrdersPage: React.FC = () => {
   const [orders, setOrders] = useState<ClientOrder[]>([]);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 2;
 
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const res = await orderApi.getUserHistory();
-        setOrders(res.data);
+        setLoading(true);
+        const res = await orderApi.getUserHistory(currentPage, itemsPerPage);
+        setOrders(res.data.orders);
+        setTotalOrders(res.data.total);
+        setTotalPages(res.data.totalPages);
       } catch (err: unknown) {
         const error = err as { response?: { data?: { message?: string } }; message?: string };
-        setError(error.response?.data?.message || "Failed to load purchase history.");
+        setError(error.response?.data?.message || MSG_FAILED_LOAD_PURCHASES);
       } finally {
         setLoading(false);
       }
     };
     fetchHistory();
-  }, []);
+  }, [currentPage]);
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -93,7 +100,7 @@ export const UserOrdersPage: React.FC = () => {
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-              {orders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((order) => {
+              {orders.map((order) => {
                 const dateStr = order.createdAt ? new Date(order.createdAt).toLocaleDateString("en-IN", {
                   year: "numeric",
                   month: "long",
@@ -118,8 +125,8 @@ export const UserOrdersPage: React.FC = () => {
                       </div>
 
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", alignItems: "flex-end" }}>
-                        <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700 }}>ORDER ID</span>
-                        <span style={{ fontSize: "0.85rem", color: "var(--text-main)", fontWeight: 700 }}>#{order._id}</span>
+                        <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700 }}>ORDER NUMBER</span>
+                        <span style={{ fontSize: "0.85rem", color: "var(--text-main)", fontWeight: 700 }}>{order.orderNumber || "N/A"}</span>
                         <Link to={`/purchases/${order._id}`} style={{ fontSize: "0.8rem", color: "var(--primary)", fontWeight: 700, textDecoration: "none", marginTop: "0.25rem" }}>
                           Track / Manage Order →
                         </Link>
@@ -171,39 +178,67 @@ export const UserOrdersPage: React.FC = () => {
               })}
 
               {/* Pagination controls */}
-              {Math.ceil(orders.length / itemsPerPage) > 1 && (
-                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem", marginTop: "1rem" }}>
+              {totalPages > 1 && (
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem", marginTop: "2rem" }}>
                   <button
                     onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
                     style={{
                       padding: "0.5rem 1rem",
-                      borderRadius: "8px",
+                      borderRadius: "10px",
                       border: "1px solid var(--border)",
                       backgroundColor: currentPage === 1 ? "#f1f5f9" : "white",
                       color: currentPage === 1 ? "var(--text-muted)" : "var(--text-main)",
                       cursor: currentPage === 1 ? "not-allowed" : "pointer",
-                      fontWeight: 600,
-                      fontSize: "0.85rem"
+                      fontWeight: 700,
+                      fontSize: "0.85rem",
+                      transition: "all 0.2s"
                     }}
                   >
                     Previous
                   </button>
-                  <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--text-muted)", margin: "0 0.5rem" }}>
-                    Page {currentPage} of {Math.ceil(orders.length / itemsPerPage)}
-                  </span>
+                  
+                  {Array.from({ length: totalPages }, (_, idx) => {
+                    const pageNum = idx + 1;
+                    const isActive = pageNum === currentPage;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        style={{
+                          width: "36px",
+                          height: "36px",
+                          borderRadius: "10px",
+                          border: isActive ? "none" : "1px solid var(--border)",
+                          backgroundColor: isActive ? "var(--primary)" : "white",
+                          color: isActive ? "white" : "var(--text-main)",
+                          fontWeight: 700,
+                          fontSize: "0.85rem",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  
                   <button
-                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(orders.length / itemsPerPage)))}
-                    disabled={currentPage === Math.ceil(orders.length / itemsPerPage)}
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
                     style={{
                       padding: "0.5rem 1rem",
-                      borderRadius: "8px",
+                      borderRadius: "10px",
                       border: "1px solid var(--border)",
-                      backgroundColor: currentPage === Math.ceil(orders.length / itemsPerPage) ? "#f1f5f9" : "white",
-                      color: currentPage === Math.ceil(orders.length / itemsPerPage) ? "var(--text-muted)" : "var(--text-main)",
-                      cursor: currentPage === Math.ceil(orders.length / itemsPerPage) ? "not-allowed" : "pointer",
-                      fontWeight: 600,
-                      fontSize: "0.85rem"
+                      backgroundColor: currentPage === totalPages ? "#f1f5f9" : "white",
+                      color: currentPage === totalPages ? "var(--text-muted)" : "var(--text-main)",
+                      cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                      fontWeight: 700,
+                      fontSize: "0.85rem",
+                      transition: "all 0.2s"
                     }}
                   >
                     Next

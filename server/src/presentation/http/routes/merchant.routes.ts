@@ -13,6 +13,7 @@ import {
   ROUTE_MERCHANT_REAPPLY,
   ROUTE_GOOGLE,
   ROUTE_MERCHANT_COMPLETE_PROFILE,
+  ROUTE_MERCHANT_UPDATE_PROFILE,
 } from "./routes.constants.ts";
 
 const router = express.Router();
@@ -30,5 +31,6 @@ router.post(ROUTE_GOOGLE, merchantController.googleAuth);
 router.get(ROUTE_MERCHANT_ME, authenticateMerchant, merchantController.getProfile);
 router.patch(ROUTE_MERCHANT_REAPPLY, authenticateMerchant, merchantController.reapply);
 router.post(ROUTE_MERCHANT_COMPLETE_PROFILE, authenticateMerchant, merchantController.completeProfile);
+router.patch(ROUTE_MERCHANT_UPDATE_PROFILE, authenticateMerchant, merchantController.updateProfile);
 
 export default router;

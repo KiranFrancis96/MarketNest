@@ -7,6 +7,7 @@ import { Modal } from "@/shared/ui/Modal";
 import { useAlertModal } from "@/shared/ui/AlertModalContext";
 import { MerchantApprovalActions } from "./MerchantApprovalActions";
 import { orderApi } from "@/entities/order/api/orderApi";
+import { MSG_FAILED_LOAD_MERCHANT_SALES } from "@/shared/constants/messages";
 import { 
   ShieldAlert, 
   ShieldCheck, 
@@ -177,9 +178,8 @@ export const MerchantTable: React.FC<MerchantTableProps> = ({ merchants, onViewM
     try {
       const res = await orderApi.getAdminMerchantHistory(merchant._id);
       setMerchantSales(res.data);
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
-      setSalesError(error.response?.data?.message || "Failed to load merchant sales history.");
+    } catch (err: any) {
+      setSalesError(err.response?.data?.message || MSG_FAILED_LOAD_MERCHANT_SALES);
     } finally {
       setSalesLoading(false);
     }

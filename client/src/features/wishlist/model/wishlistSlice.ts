@@ -1,6 +1,11 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import type { Product } from "@/features/product/model/productSlice";
+import {
+  MSG_FAILED_FETCH_WISHLIST,
+  MSG_FAILED_ADD_WISHLIST,
+  MSG_FAILED_REMOVE_WISHLIST,
+} from "@/shared/constants/messages";
 
 const API_URL = "http://localhost:3000/api";
 axios.defaults.withCredentials = true;
@@ -33,9 +38,9 @@ export const fetchWishlist = createAsyncThunk(
       return response.data;
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        return rejectWithValue(err.response?.data?.message || "Failed to fetch wishlist");
+        return rejectWithValue(err.response?.data?.message || MSG_FAILED_FETCH_WISHLIST);
       }
-      return rejectWithValue("Failed to fetch wishlist");
+      return rejectWithValue(MSG_FAILED_FETCH_WISHLIST);
     }
   }
 );
@@ -48,9 +53,9 @@ export const addToWishlist = createAsyncThunk(
       return response.data.wishlist;
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        return rejectWithValue(err.response?.data?.message || "Failed to add to wishlist");
+        return rejectWithValue(err.response?.data?.message || MSG_FAILED_ADD_WISHLIST);
       }
-      return rejectWithValue("Failed to add to wishlist");
+      return rejectWithValue(MSG_FAILED_ADD_WISHLIST);
     }
   }
 );
@@ -63,9 +68,9 @@ export const removeFromWishlist = createAsyncThunk(
       return productId;
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        return rejectWithValue(err.response?.data?.message || "Failed to remove from wishlist");
+        return rejectWithValue(err.response?.data?.message || MSG_FAILED_REMOVE_WISHLIST);
       }
-      return rejectWithValue("Failed to remove from wishlist");
+      return rejectWithValue(MSG_FAILED_REMOVE_WISHLIST);
     }
   }
 );

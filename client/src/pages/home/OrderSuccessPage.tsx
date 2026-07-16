@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { CheckCircle, ShoppingBag, Truck, Calendar, MapPin } from "lucide-react";
 import { orderApi } from "@/entities/order/api/orderApi";
 import { Header } from "@/shared/components/Header";
+import { MSG_FAILED_LOAD_ORDER_CONFIRM } from "@/shared/constants/messages";
 
 interface ClientProduct {
   images?: string[];
@@ -21,6 +22,7 @@ interface ClientOrder {
   createdAt?: string;
   totalAmount: number;
   status: string;
+  orderNumber?: string;
   items: ClientOrderItem[];
   shippingAddress: {
     fullName: string;
@@ -47,7 +49,7 @@ export const OrderSuccessPage: React.FC = () => {
         setOrder(res.data);
       } catch (err: unknown) {
         const error = err as { response?: { data?: { message?: string } }; message?: string };
-        setError(error.response?.data?.message || "Failed to load order confirmation details.");
+        setError(error.response?.data?.message || MSG_FAILED_LOAD_ORDER_CONFIRM);
       } finally {
         setLoading(false);
       }
@@ -85,8 +87,8 @@ export const OrderSuccessPage: React.FC = () => {
                 <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>Thank you for shopping with us. Your transaction was processed successfully.</p>
                 
                 <div style={{ marginTop: "2rem", display: "inline-flex", flexWrap: "wrap", justifyContent: "center", gap: "1.5rem", background: "#f8fafc", padding: "1rem 2rem", borderRadius: "16px", border: "1px solid var(--border)", fontSize: "0.85rem", fontWeight: 600, color: "var(--text-muted)" }}>
-                  <div>Order ID: <span style={{ color: "var(--text-main)", fontWeight: 700 }}>#{order._id}</span></div>
-                  <div>Payment ID: <span style={{ color: "var(--text-main)", fontWeight: 700 }}>{order.razorpayPaymentId}</span></div>
+                  <div>Order Number: <span style={{ color: "var(--text-main)", fontWeight: 700 }}>{order.orderNumber || "N/A"}</span></div>
+                  <div>Payment ID: <span style={{ color: "var(--text-main)", fontWeight: 700 }}>{order.razorpayPaymentId || "Wallet Payment"}</span></div>
                 </div>
               </div>
 

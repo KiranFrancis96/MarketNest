@@ -33,4 +33,5 @@ export interface User {
   profilePic?: string;
   preferences?: UserPreferences;
   addresses?: Address[];
+  walletBalance?: number;
 }

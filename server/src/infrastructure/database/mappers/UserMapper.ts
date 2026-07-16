@@ -14,6 +14,7 @@ interface IUserDoc {
   isBlocked?: boolean;
   profilePic?: string;
   addresses?: any[];
+  walletBalance?: number;
 }
 
 export class UserMapper {
@@ -42,6 +43,7 @@ export class UserMapper {
         country: addr.country || "",
         isDefault: !!addr.isDefault,
       })),
+      walletBalance: d.walletBalance ?? 0,
     };
   }
 
@@ -69,6 +71,9 @@ export class UserMapper {
         country: addr.country,
         isDefault: addr.isDefault,
       }));
+    }
+    if (entity.walletBalance !== undefined) {
+      doc.walletBalance = entity.walletBalance;
     }
     return doc;
   }

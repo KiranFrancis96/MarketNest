@@ -28,6 +28,7 @@ export interface MerchantSaleItem {
 
 export interface MerchantSale {
   orderId?: string;
+  orderNumber?: string;
   date?: Date;
   customerName: string;
   customerPhone: string;

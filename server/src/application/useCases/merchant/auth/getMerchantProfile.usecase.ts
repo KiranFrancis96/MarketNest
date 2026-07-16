@@ -16,8 +16,12 @@ export class GetMerchantProfileUseCase implements IGetMerchantProfileUseCase {
     }
 
     return {
+      _id: merchant._id?.toString(),
       email: merchant.email,
       businessName: merchant.businessName,
+      ownerName: merchant.ownerName,
+      phone: merchant.phone,
+      gstNumber: merchant.gstNumber,
       houseName: merchant.houseName,
       street: merchant.street,
       locality: merchant.locality,
@@ -28,6 +32,7 @@ export class GetMerchantProfileUseCase implements IGetMerchantProfileUseCase {
       status: merchant.status,
       isAdminVerified: merchant.isAdminVerified,
       rejectionReason: merchant.rejectionReason,
+      profilePic: merchant.profilePic,
     };
   }
 }

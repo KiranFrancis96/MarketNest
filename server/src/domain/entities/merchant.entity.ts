@@ -14,6 +14,7 @@ export interface Merchant {
   country: string;
   ownerName: string;
   documentUrl?: string | undefined;
+  profilePic?: string | undefined;
   isEmailVerified: boolean;
   isProfileComplete?: boolean;
   isAdminVerified: boolean;

@@ -6,16 +6,36 @@ import { Header } from "@/shared/components/Header";
 import type { RootState, AppDispatch } from "@/app/store";
 import { ArrowRight, Sparkles, Flame, Percent, HeartHandshake } from "lucide-react";
 import { Link } from "react-router-dom";
+import { setProfile } from "@/entities/userProfile/model/userProfileSlice";
+import { userProfileApi } from "@/entities/userProfile/api/userProfileApi";
+import { HttpStatus } from "@/shared/api/httpStatus";
 
 export const HomePage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.user.user);
   const shoppingFeed = useSelector((state: RootState) => state.product.shoppingFeed);
   const loading = useSelector((state: RootState) => state.product.loading);
+  const { profile } = useSelector((state: RootState) => state.userProfile);
 
   useEffect(() => {
     dispatch(fetchShoppingFeed());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (user) {
+      const fetchProfile = async () => {
+        try {
+          const res = await userProfileApi.getUserPersonalizationProfile();
+          dispatch(setProfile(res.data.profile));
+        } catch (err: any) {
+          if (err.response?.status === HttpStatus.NOT_FOUND) {
+            dispatch(setProfile(null));
+          }
+        }
+      };
+      fetchProfile();
+    }
+  }, [dispatch, user]);
 
   const userName = user?.email ? user.email.split("@")[0] : "Shopper";
 
@@ -37,6 +57,45 @@ export const HomePage: React.FC = () => {
             </Link>
           </div>
         </section>
+
+        {user && (
+          profile ? (
+            <section style={personalizationBannerStyles}>
+              <div style={bannerContentStyles}>
+                <div style={bannerHeaderStyles}>
+                  <Sparkles size={20} color="#6366f1" />
+                  <h3 style={bannerTitleStyles}>Complete Your AI Profile</h3>
+                </div>
+                <div style={bannerStatsStyles}>
+                  <span style={bannerStatBadgeStyles}>
+                    {profile.completionPercentage || 0}% Complete
+                  </span>
+                  <span style={bannerStatBadgeCoinsStyles}>
+                    {profile.rewardCoins || 0} Coins Earned
+                  </span>
+                </div>
+              </div>
+              <Link to="/profile" style={bannerBtnStyles}>
+                Continue <ArrowRight size={16} />
+              </Link>
+            </section>
+          ) : (
+            <section style={personalizationBannerStyles}>
+              <div style={bannerContentStyles}>
+                <div style={bannerHeaderStyles}>
+                  <Sparkles size={20} color="#a855f7" />
+                  <h3 style={bannerTitleStyles}>Build Your AI Profile</h3>
+                </div>
+                <p style={bannerTextStyles}>
+                  Unlock personalized offers and earn 100 Reward Coins.
+                </p>
+              </div>
+              <Link to="/profile?startOnboarding=true" style={bannerBtnStyles}>
+                Start Building <ArrowRight size={16} />
+              </Link>
+            </section>
+          )
+        )}
 
         {loading && !shoppingFeed ? (
           <div style={spinnerContainerStyles}>
@@ -233,4 +292,83 @@ const viewAllLinkStyles: React.CSSProperties = {
   fontWeight: 700,
   color: "var(--primary)",
   textDecoration: "none",
+};
+
+const personalizationBannerStyles: React.CSSProperties = {
+  maxWidth: "1200px",
+  margin: "2rem auto 0 auto",
+  padding: "1.5rem 2rem",
+  borderRadius: "20px",
+  backgroundColor: "#0b0f19",
+  border: "1px solid #1e293b",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.3)",
+  backgroundImage: "radial-gradient(circle at top right, rgba(99, 102, 241, 0.15), transparent 50%)",
+  flexWrap: "wrap",
+  gap: "1.5rem",
+};
+
+const bannerContentStyles: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "0.5rem",
+};
+
+const bannerHeaderStyles: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "0.5rem",
+};
+
+const bannerTitleStyles: React.CSSProperties = {
+  fontSize: "1.25rem",
+  fontWeight: 800,
+  color: "#f8fafc",
+  margin: 0,
+};
+
+const bannerTextStyles: React.CSSProperties = {
+  fontSize: "0.9rem",
+  color: "#94a3b8",
+  margin: 0,
+};
+
+const bannerStatsStyles: React.CSSProperties = {
+  display: "flex",
+  gap: "1rem",
+  alignItems: "center",
+};
+
+const bannerStatBadgeStyles: React.CSSProperties = {
+  fontSize: "0.8rem",
+  fontWeight: 700,
+  color: "#38bdf8",
+  backgroundColor: "rgba(56, 189, 248, 0.15)",
+  padding: "0.25rem 0.6rem",
+  borderRadius: "8px",
+};
+
+const bannerStatBadgeCoinsStyles: React.CSSProperties = {
+  fontSize: "0.8rem",
+  fontWeight: 700,
+  color: "#f59e0b",
+  backgroundColor: "rgba(245, 158, 11, 0.15)",
+  padding: "0.25rem 0.6rem",
+  borderRadius: "8px",
+};
+
+const bannerBtnStyles: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "0.5rem",
+  padding: "0.75rem 1.5rem",
+  borderRadius: "12px",
+  background: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+  color: "white",
+  fontWeight: 700,
+  fontSize: "0.925rem",
+  textDecoration: "none",
+  boxShadow: "0 4px 12px rgba(99, 102, 241, 0.3)",
 };

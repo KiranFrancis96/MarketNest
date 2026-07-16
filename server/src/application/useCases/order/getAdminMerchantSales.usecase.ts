@@ -39,6 +39,7 @@ export class GetAdminMerchantSalesUseCase implements IGetAdminMerchantSalesUseCa
 
       return {
         orderId: order._id,
+        orderNumber: order.orderNumber,
         date: order.createdAt,
         customerName: order.shippingAddress.fullName,
         customerPhone: order.shippingAddress.phone,

@@ -18,6 +18,7 @@ interface IMerchantDoc {
   country?: string;
   ownerName?: string;
   documentUrl?: string | null;
+  profilePic?: string | null;
   isEmailVerified?: boolean;
   isProfileComplete?: boolean;
   isAdminVerified?: boolean;
@@ -50,6 +51,7 @@ export class MerchantMapper {
       country: d.country || "",
       ownerName: d.ownerName || "",
       documentUrl: d.documentUrl ?? undefined,
+      profilePic: d.profilePic ?? undefined,
       isEmailVerified: !!d.isEmailVerified,
       isProfileComplete: d.isProfileComplete !== false,
       isAdminVerified: !!d.isAdminVerified,
@@ -79,6 +81,7 @@ export class MerchantMapper {
       country: entity.country,
       ownerName: entity.ownerName,
       documentUrl: entity.documentUrl,
+      profilePic: entity.profilePic,
       isEmailVerified: entity.isEmailVerified,
       isProfileComplete: entity.isProfileComplete,
       isAdminVerified: entity.isAdminVerified,

@@ -54,7 +54,7 @@ export class UpdateUserOrderItemStatusUseCase {
         throw new ApiError(HttpStatus.BAD_REQUEST, MSG_CANCEL_ALREADY + oldStatus);
       }
     } else if (status === "returned") {
-      if (oldStatus !== "completed") {
+      if (oldStatus !== "completed" && oldStatus !== "shipped") {
         throw new ApiError(HttpStatus.BAD_REQUEST, MSG_RETURN_ALREADY + oldStatus);
       }
     } else {

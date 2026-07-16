@@ -4,14 +4,14 @@ import type { Merchant } from "@/entities/admin/model/types";
 import { updateMerchantAction, setError } from "@/entities/admin/model/adminSlice";
 import { adminApi } from "@/entities/admin/api/adminApi";
 import { useAlertModal } from "@/shared/ui/AlertModalContext";
-import { 
-  ArrowLeft, 
-  Mail, 
-  Percent, 
-  ShieldAlert, 
-  Coins, 
-  FileText, 
-  Package, 
+import {
+  ArrowLeft,
+  Mail,
+  Percent,
+  ShieldAlert,
+  Coins,
+  FileText,
+  Package,
   Calendar,
   Building,
   Check,
@@ -57,7 +57,7 @@ export const CompanyDetailsView: React.FC<CompanyDetailsViewProps> = ({ merchant
         await adminApi.unblockMerchant(merchant._id);
       }
       setIsBlocked(nextBlocked);
-      
+
       const updated: Merchant = {
         ...merchant,
         isBlocked: nextBlocked
@@ -80,7 +80,7 @@ export const CompanyDetailsView: React.FC<CompanyDetailsViewProps> = ({ merchant
     }
     setCommissionRate(parsed);
     setShowCommissionEdit(false);
-    
+
     // We update the local Redux copy
     const updated: Merchant = {
       ...merchant,
@@ -91,9 +91,7 @@ export const CompanyDetailsView: React.FC<CompanyDetailsViewProps> = ({ merchant
     showAlert(`Commission tier updated to ${parsed}%`, "success");
   };
 
-  const handleContact = () => {
-    window.location.href = `mailto:${merchant.email}?subject=MarketNest Admin Inquiry`;
-  };
+
 
   return (
     <div className="details-page-wrapper">
@@ -125,17 +123,13 @@ export const CompanyDetailsView: React.FC<CompanyDetailsViewProps> = ({ merchant
         </div>
 
         <div className="company-banner-actions">
-          <button onClick={handleContact} className="btn-secondary-white">
-            <Mail size={16} />
-            <span>Contact Merchant</span>
-          </button>
           <button onClick={() => setShowCommissionEdit(true)} className="btn-secondary-white">
             <Percent size={16} />
             <span>Edit Commission</span>
           </button>
-          <button 
-            onClick={handleToggleSuspend} 
-            disabled={loading} 
+          <button
+            onClick={handleToggleSuspend}
+            disabled={loading}
             className="btn-primary-orange"
           >
             <ShieldAlert size={16} />
@@ -152,11 +146,11 @@ export const CompanyDetailsView: React.FC<CompanyDetailsViewProps> = ({ merchant
           </div>
           <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
             <div style={{ display: "flex", alignItems: "center", border: "1px solid #cbd5e1", borderRadius: "8px", overflow: "hidden", background: "#fff" }}>
-              <input 
-                type="number" 
-                value={editRateValue} 
-                onChange={(e) => setEditRateValue(e.target.value)} 
-                style={{ border: "none", padding: "0.5rem", width: "80px", textAlign: "center", outline: "none", fontSize: "0.9rem", fontWeight: "700" }} 
+              <input
+                type="number"
+                value={editRateValue}
+                onChange={(e) => setEditRateValue(e.target.value)}
+                style={{ border: "none", padding: "0.5rem", width: "80px", textAlign: "center", outline: "none", fontSize: "0.9rem", fontWeight: "700" }}
               />
               <span style={{ padding: "0 0.5rem", background: "#f1f5f9", height: "100%", display: "flex", alignItems: "center", borderLeft: "1px solid #cbd5e1", fontSize: "0.85rem", fontWeight: "700" }}>%</span>
             </div>
@@ -225,7 +219,7 @@ export const CompanyDetailsView: React.FC<CompanyDetailsViewProps> = ({ merchant
               <Building size={18} style={{ color: "#e15b24" }} />
               <span>Business Overview</span>
             </div>
-            
+
             <div className="overview-grid">
               <div className="overview-grid-item">
                 <span className="overview-grid-label">Registration No</span>

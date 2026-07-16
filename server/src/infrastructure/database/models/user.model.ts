@@ -29,7 +29,8 @@ const userSchema = new mongoose.Schema({
   },
   isBlocked: { type: Boolean, default: false },
   profilePic: { type: String },
-  addresses: [addressSchema]
+  addresses: [addressSchema],
+  walletBalance: { type: Number, default: 2000 }
 });
 
 export const UserModel = mongoose.model("User", userSchema, "users");

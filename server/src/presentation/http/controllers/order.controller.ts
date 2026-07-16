@@ -10,6 +10,10 @@ import type {
   IUpdateMerchantOrderItemStatusUseCase,
   IUpdateUserOrderItemStatusUseCase,
 } from "@/application/IUseCases/order/IOrderUseCases.ts";
+import { UserModel } from "@/infrastructure/database/models/user.model.ts";
+import { OrderModel } from "@/infrastructure/database/models/order.model.ts";
+import { ProductModel } from "@/infrastructure/database/models/product.model.ts";
+import { CartModel } from "@/infrastructure/database/models/cart.model.ts";
 import { ApiError } from "@/utils/apiError.ts";
 import { HttpStatus } from "@/utils/httpStatus.ts";
 import {
@@ -26,6 +30,9 @@ import {
   MSG_ORDER_INVALID_STATUS_REQ,
   MSG_ORDER_ITEM_CANCELLED_SUCCESS,
   MSG_ORDER_ITEM_RETURN_SUCCESS,
+  MSG_USER_NOT_FOUND,
+  MSG_ORDER_NOT_FOUND,
+  MSG_UNAUTHORIZED_ORDER_VERIFY,
 } from "@/presentation/http/controllers/messages.constants.ts";
 
 export class OrderController {
@@ -109,8 +116,19 @@ export class OrderController {
       throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
     }
 
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 2;
+
     const orders = await this._getUserOrdersUseCase.execute(userId);
-    res.status(HttpStatus.OK).json(orders);
+    const total = orders.length;
+    const paginatedOrders = orders.slice((page - 1) * limit, page * limit);
+
+    res.status(HttpStatus.OK).json({
+      orders: paginatedOrders,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    });
   };
 
   getMerchantSalesHistory = async (req: Request, res: Response): Promise<void> => {
@@ -202,5 +220,183 @@ export class OrderController {
       message: status === "cancelled" ? MSG_ORDER_ITEM_CANCELLED_SUCCESS : MSG_ORDER_ITEM_RETURN_SUCCESS,
       order
     });
+  };
+
+  payWithWallet = async (req: Request, res: Response): Promise<void> => {
+    // @ts-ignore
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
+    }
+
+    const orderId = req.params.id;
+    if (!orderId) {
+      throw new ApiError(HttpStatus.BAD_REQUEST, MSG_ORDER_ID_REQUIRED);
+    }
+
+    const order = await OrderModel.findById(orderId);
+    if (!order) {
+      throw new ApiError(HttpStatus.NOT_FOUND, MSG_ORDER_NOT_FOUND);
+    }
+
+    if (order.userId.toString() !== userId) {
+      throw new ApiError(HttpStatus.FORBIDDEN, MSG_UNAUTHORIZED_ORDER_VERIFY);
+    }
+
+    if (order.status === "paid") {
+      throw new ApiError(HttpStatus.BAD_REQUEST, "Order is already paid");
+    }
+
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      throw new ApiError(HttpStatus.NOT_FOUND, MSG_USER_NOT_FOUND);
+    }
+
+    const totalAmount = order.totalAmount;
+    const walletBalance = user.walletBalance || 0;
+
+    if (walletBalance < totalAmount) {
+      // Failed payment scenario: mark the order status as failed
+      order.status = "failed";
+      await order.save();
+      res.status(HttpStatus.BAD_REQUEST).json({
+        success: false,
+        message: "Insufficient wallet balance",
+        order
+      });
+      return;
+    }
+
+    // Success flow
+    await UserModel.updateOne({ _id: userId }, { $inc: { walletBalance: -totalAmount } });
+
+    order.status = "paid";
+    await order.save();
+
+    // Deduct stock for each product in order
+    for (const item of order.items) {
+      const product = await ProductModel.findById(item.productId);
+      if (product) {
+        product.stock = Math.max(0, product.stock - item.quantity);
+        await product.save();
+      }
+    }
+
+    // Clear cart
+    const cart = await CartModel.findOne({ userId });
+    if (cart) {
+      cart.items = [];
+      await cart.save();
+    }
+
+    // Assign order number based on total paid orders so far (this order is already paid, so count includes it)
+    const paidCount = await OrderModel.countDocuments({ status: "paid" });
+    await OrderModel.updateOne({ _id: order._id }, { $set: { orderNumber: String(paidCount) } });
+
+    const updatedUser = await UserModel.findById(userId);
+    res.status(HttpStatus.OK).json({
+      success: true,
+      message: "Order paid successfully via wallet",
+      order,
+      walletBalance: updatedUser?.walletBalance || 0
+    });
+  };
+
+  markAsFailed = async (req: Request, res: Response): Promise<void> => {
+    // @ts-ignore
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
+    }
+
+    const orderId = req.params.id;
+    if (!orderId) {
+      throw new ApiError(HttpStatus.BAD_REQUEST, MSG_ORDER_ID_REQUIRED);
+    }
+
+    const order = await OrderModel.findById(orderId);
+    if (!order) {
+      throw new ApiError(HttpStatus.NOT_FOUND, MSG_ORDER_NOT_FOUND);
+    }
+
+    if (order.userId.toString() !== userId) {
+      throw new ApiError(HttpStatus.FORBIDDEN, MSG_UNAUTHORIZED_ORDER_VERIFY);
+    }
+
+    if (order.status !== "failed") {
+      await UserModel.updateOne({ _id: userId }, { $inc: { walletBalance: order.totalAmount } });
+      order.status = "failed";
+      await order.save();
+    }
+
+    res.status(HttpStatus.OK).json({
+      success: true,
+      message: "Order payment failed. Refunded order amount to wallet.",
+      order
+    });
+  };
+
+  addWalletFunds = async (req: Request, res: Response): Promise<void> => {
+    try {
+      // @ts-ignore
+      const userId = req.user?.id;
+      if (!userId) {
+        throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
+      }
+
+      const { amount } = req.body;
+      if (!amount || typeof amount !== "number" || amount <= 0) {
+        throw new ApiError(HttpStatus.BAD_REQUEST, "Amount must be a positive number");
+      }
+
+      const user = await UserModel.findById(userId);
+      if (!user) {
+        throw new ApiError(HttpStatus.NOT_FOUND, MSG_USER_NOT_FOUND);
+      }
+
+      await UserModel.updateOne({ _id: userId }, { $inc: { walletBalance: amount } });
+
+      const updatedUser = await UserModel.findById(userId);
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: "Wallet funds added successfully",
+        walletBalance: updatedUser?.walletBalance || 0
+      });
+    } catch (err: any) {
+      console.error("DEBUG addWalletFunds error:", err);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Failed to add wallet funds: " + (err.message || "Internal server error")
+      });
+    }
+  };
+
+  migrateOrderNumbers = async (req: Request, res: Response): Promise<void> => {
+    try {
+      // Fetch all orders sorted by creation date (oldest first)
+      const orders = await OrderModel.find({}).sort({ createdAt: 1 }).lean();
+      let migrated = 0;
+      for (let i = 0; i < orders.length; i++) {
+        const order = orders[i] as any;
+        if (!order.orderNumber) {
+          await OrderModel.updateOne(
+            { _id: order._id },
+            { $set: { orderNumber: String(i + 1) } }
+          );
+          migrated++;
+        }
+      }
+      res.status(HttpStatus.OK).json({
+        success: true,
+        message: `Migration complete. Assigned order numbers to ${migrated} orders.`,
+        total: orders.length,
+        migrated
+      });
+    } catch (err: any) {
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Migration failed: " + (err.message || "Internal server error")
+      });
+    }
   };
 }

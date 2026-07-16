@@ -6,14 +6,9 @@ import type { IProductRepository } from "@/domain/interface/product.repository.t
 import type { Order } from "@/domain/entities/order.entity.ts";
 import { ApiError } from "@/utils/apiError.ts";
 import { HttpStatus } from "@/utils/httpStatus.ts";
-import {
-  MSG_RAZORPAY_CONFIG_MISSING,
-  MSG_ORDER_NOT_FOUND,
-  MSG_UNAUTHORIZED_ORDER_VERIFY,
-  MSG_PAYMENT_VERIFY_FAILED,
-  MSG_ORDER_STATUS_PAID_FAILED,
-} from "@/presentation/http/controllers/messages.constants.ts";
+import { MSG_RAZORPAY_CONFIG_MISSING, MSG_ORDER_NOT_FOUND, MSG_UNAUTHORIZED_ORDER_VERIFY, MSG_PAYMENT_VERIFY_FAILED, MSG_ORDER_STATUS_PAID_FAILED } from "@/presentation/http/controllers/messages.constants.ts";
 import crypto from "crypto";
+import { UserModel } from "@/infrastructure/database/models/user.model.ts";
 
 export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
   constructor(
@@ -24,7 +19,6 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
 
   async execute(input: VerifyPaymentInputDTO): Promise<Order> {
     const { userId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = input;
-
 
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
     if (!keySecret) {
@@ -37,7 +31,6 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
 
     const isSignatureValid = generatedSignature === razorpaySignature;
 
-
     const order = await this._orderRepository.findByRazorpayOrderId(razorpayOrderId);
     if (!order) {
       throw new ApiError(HttpStatus.NOT_FOUND, MSG_ORDER_NOT_FOUND);
@@ -48,11 +41,15 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
     }
 
     if (!isSignatureValid) {
+      const user = await UserModel.findById(userId);
+      if (user) {
+        user.walletBalance = (user.walletBalance || 0) + order.totalAmount;
+        await user.save();
+      }
       order.status = "failed";
       await this._orderRepository.updateById(order._id!, { status: "failed" });
       throw new ApiError(HttpStatus.BAD_REQUEST, MSG_PAYMENT_VERIFY_FAILED);
     }
-
 
     order.status = "paid";
     order.razorpayPaymentId = razorpayPaymentId;
@@ -68,6 +65,9 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
       throw new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, MSG_ORDER_STATUS_PAID_FAILED);
     }
 
+    // Assign order number based on total paid orders so far (this order is already paid, so count includes it)
+    const paidCount = await this._orderRepository.getCount({ status: "paid" } as any);
+    await this._orderRepository.updateById(order._id!, { orderNumber: String(paidCount) } as any);
 
     for (const item of order.items) {
       const product = await this._productRepository.findById(item.productId);
@@ -76,7 +76,6 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
         await this._productRepository.updateById(item.productId, { stock: newStock });
       }
     }
-
 
     const cart = await this._cartRepository.findByUser(userId);
     if (cart) {

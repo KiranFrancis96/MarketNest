@@ -6,14 +6,15 @@ import { updateUserBlockStatus, deleteUserAction, addUserAction } from "@/entiti
 import { Modal } from "@/shared/ui/Modal";
 import { useAlertModal } from "@/shared/ui/AlertModalContext";
 import { orderApi } from "@/entities/order/api/orderApi";
-import { 
-  ShieldAlert, 
-  ShieldCheck, 
-  History, 
-  Edit, 
-  Ban, 
-  Plus, 
-  Download, 
+import { MSG_FAILED_LOAD_USER_PURCHASES } from "@/shared/constants/messages";
+import {
+  ShieldAlert,
+  ShieldCheck,
+  History,
+  Edit,
+  Ban,
+  Plus,
+  Download,
   Search,
   ChevronLeft,
   ChevronRight,
@@ -74,7 +75,7 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onEditUser }) => {
 
   useEffect(() => {
     const q = searchQuery.toLowerCase().trim();
-    
+
     // 1. Filter by search query (null-safe)
     let result = users;
     if (q) {
@@ -112,7 +113,7 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onEditUser }) => {
 
   const handleToggleBlock = async () => {
     if (!selectedUser) return;
-    
+
     setLoading(true);
     try {
       if (selectedUser.isBlocked) {
@@ -145,9 +146,8 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onEditUser }) => {
     try {
       const res = await orderApi.getAdminUserHistory(user._id);
       setUserHistory(res.data);
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
-      setHistoryError(error.response?.data?.message || "Failed to load user purchase history.");
+    } catch (err: any) {
+      setHistoryError(err.response?.data?.message || MSG_FAILED_LOAD_USER_PURCHASES);
     } finally {
       setHistoryLoading(false);
     }
@@ -201,7 +201,7 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onEditUser }) => {
           </span>
         </td>
         <td style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-size: 12px; text-align: center; color: #475569;">
-          ${user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : ""}
+          ${user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "Jan 12, 2024"}
         </td>
       </tr>
     `).join("");
@@ -330,7 +330,7 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onEditUser }) => {
                 const initialFirst = user.firstName ? user.firstName[0] : "";
                 const initialLast = user.lastName ? user.lastName[0] : "";
                 const avatarInitials = `${initialFirst}${initialLast}`.toUpperCase() || "US";
-                
+
                 // Joined Date Format
                 const joinStr = user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", {
                   year: "numeric",
@@ -352,10 +352,10 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onEditUser }) => {
                           title={`View details for ${user.firstName} ${user.lastName}`}
                         >
                           {user.profilePic ? (
-                            <img 
-                              src={user.profilePic} 
-                              alt={`${user.firstName} ${user.lastName}`} 
-                              style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                            <img
+                              src={user.profilePic}
+                              alt={`${user.firstName} ${user.lastName}`}
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
                             />
                           ) : (
                             avatarInitials
@@ -537,16 +537,15 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onEditUser }) => {
           title={selectedUser?.isBlocked ? "Unblock User" : "Block User"}
           footer={
             <div className="flex gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100 justify-end">
-              <button 
-                className="px-4 py-2 border border-gray-200 text-sm font-bold text-gray-600 rounded-lg hover:bg-gray-100 transition-colors" 
+              <button
+                className="px-4 py-2 border border-gray-200 text-sm font-bold text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
                 onClick={() => setShowBlockModal(false)}
               >
                 Cancel
               </button>
-              <button 
-                className={`px-4 py-2 text-sm font-bold text-white rounded-lg transition-colors ${
-                  selectedUser?.isBlocked ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700"
-                }`}
+              <button
+                className={`px-4 py-2 text-sm font-bold text-white rounded-lg transition-colors ${selectedUser?.isBlocked ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700"
+                  }`}
                 onClick={handleToggleBlock}
                 disabled={loading}
               >
@@ -571,8 +570,8 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onEditUser }) => {
         title={`Purchase History: ${historyUser?.firstName} ${historyUser?.lastName}`}
         footer={
           <div className="flex justify-end px-6 py-4 bg-gray-50 border-t border-gray-100">
-            <button 
-              className="px-4 py-2 border border-gray-200 text-sm font-bold text-gray-600 rounded-lg hover:bg-gray-100 transition-colors" 
+            <button
+              className="px-4 py-2 border border-gray-200 text-sm font-bold text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
               onClick={() => setShowHistoryModal(false)}
             >
               Close
@@ -604,8 +603,8 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onEditUser }) => {
                   <div key={order._id} className="border border-gray-100 rounded-xl p-4 bg-gray-50/50">
                     <div className="flex justify-between items-center border-b border-gray-100 pb-2 mb-2">
                       <div>
-                        <span className="text-[10px] font-bold text-gray-400">ORDER ID</span>
-                        <div className="text-xs font-bold text-gray-800">#{order._id}</div>
+                        <span className="text-[10px] font-bold text-gray-400">ORDER NUMBER</span>
+                        <div className="text-xs font-bold text-gray-800">{order.orderNumber || "N/A"}</div>
                       </div>
                       <div className="text-right">
                         <span className="text-[10px] font-bold text-gray-400">TOTAL</span>
@@ -613,7 +612,7 @@ export const UserTable: React.FC<UserTableProps> = ({ users, onEditUser }) => {
                       </div>
                     </div>
                     <div className="text-[11px] text-gray-500 mb-2 font-medium">Placed on: {dateStr}</div>
-                    
+
                     <div className="flex flex-col gap-2 mt-2">
                       {order.items.map((item: ClientOrderItem, idx: number) => (
                         <div key={idx} className="flex justify-between items-center text-xs">

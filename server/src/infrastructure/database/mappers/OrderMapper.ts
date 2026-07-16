@@ -28,6 +28,7 @@ interface IOrderDoc {
   razorpayPaymentId?: string;
   razorpaySignature?: string;
   status?: Order["status"];
+  orderNumber?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -70,6 +71,7 @@ export class OrderMapper {
       razorpayPaymentId: d.razorpayPaymentId,
       razorpaySignature: d.razorpaySignature,
       status: d.status || "pending",
+      orderNumber: d.orderNumber,
       createdAt: d.createdAt,
       updatedAt: d.updatedAt,
     };
@@ -102,6 +104,7 @@ export class OrderMapper {
     if (entity.razorpayPaymentId !== undefined) doc.razorpayPaymentId = entity.razorpayPaymentId;
     if (entity.razorpaySignature !== undefined) doc.razorpaySignature = entity.razorpaySignature;
     if (entity.status !== undefined) doc.status = entity.status;
+    if (entity.orderNumber !== undefined) doc.orderNumber = entity.orderNumber;
     return doc;
   }
 }

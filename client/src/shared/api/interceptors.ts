@@ -1,4 +1,5 @@
 import { baseApi } from "./baseApi";
+import { AUTH_REFRESH } from "@/shared/api/apiRoutes";
 
 let isRefreshing = false;
 
@@ -33,7 +34,7 @@ export const setupInterceptors = () => {
       }
 
      
-      if (originalRequest.url.includes("/auth/refresh")) {
+      if (originalRequest.url.includes(AUTH_REFRESH)) {
         triggerLogout(); 
         return Promise.reject(error);
       }
@@ -53,7 +54,7 @@ export const setupInterceptors = () => {
 
       try {
         
-        await baseApi.post("/auth/refresh");
+        await baseApi.post(AUTH_REFRESH);
 
         processQueue(null);
 

@@ -1,5 +1,13 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
 import { baseApi } from "@/shared/api/baseApi";
+import {
+  MSG_FAILED_FETCH_NOTIFICATIONS,
+  MSG_FAILED_MARK_READ,
+  MSG_FAILED_DELETE_NOTIFICATION,
+  MSG_FAILED_REGISTER_DEVICE,
+  MSG_FAILED_FETCH_PREFERENCES,
+  MSG_FAILED_UPDATE_PREFERENCES,
+} from "@/shared/constants/messages";
 
 export interface Notification {
   _id: string;
@@ -44,7 +52,7 @@ export const fetchNotifications = createAsyncThunk(
       const response = await baseApi.get<Notification[]>("/notifications");
       return response.data;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to fetch notifications");
+      return rejectWithValue(err.response?.data?.message || MSG_FAILED_FETCH_NOTIFICATIONS);
     }
   }
 );
@@ -58,7 +66,7 @@ export const markNotificationAsRead = createAsyncThunk(
       );
       return response.data.notification;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to mark as read");
+      return rejectWithValue(err.response?.data?.message || MSG_FAILED_MARK_READ);
     }
   }
 );
@@ -70,7 +78,7 @@ export const deleteNotification = createAsyncThunk(
       await baseApi.delete(`/notifications/${id}`);
       return id;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to delete notification");
+      return rejectWithValue(err.response?.data?.message || MSG_FAILED_DELETE_NOTIFICATION);
     }
   }
 );
@@ -85,7 +93,7 @@ export const registerDevice = createAsyncThunk(
       await baseApi.post("/notifications/register-device", data);
       return true;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to register device");
+      return rejectWithValue(err.response?.data?.message || MSG_FAILED_REGISTER_DEVICE);
     }
   }
 );
@@ -97,7 +105,7 @@ export const fetchPreferences = createAsyncThunk(
       const response = await baseApi.get<NotificationPreference>("/notification-preferences");
       return response.data;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to fetch preferences");
+      return rejectWithValue(err.response?.data?.message || MSG_FAILED_FETCH_PREFERENCES);
     }
   }
 );
@@ -112,7 +120,7 @@ export const updatePreferences = createAsyncThunk(
       );
       return response.data.preferences;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || "Failed to update preferences");
+      return rejectWithValue(err.response?.data?.message || MSG_FAILED_UPDATE_PREFERENCES);
     }
   }
 );

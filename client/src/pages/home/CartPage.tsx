@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCart, updateCartQuantity, removeFromCart, clearCart } from "@/features/cart/model/cartSlice";
 import { Header } from "@/shared/components/Header";
@@ -11,6 +11,7 @@ export const CartPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const cartState = useSelector((state: RootState) => state.cart);
   const { cart, loading } = cartState;
+  const [isClearCartConfirmOpen, setIsClearCartConfirmOpen] = useState(false);
 
   useEffect(() => {
     dispatch(fetchCart());
@@ -36,9 +37,7 @@ export const CartPage: React.FC = () => {
   };
 
   const handleClearCart = () => {
-    if (window.confirm("Are you sure you want to clear your cart?")) {
-      dispatch(clearCart());
-    }
+    setIsClearCartConfirmOpen(true);
   };
 
   const items = cart?.items || [];
@@ -183,6 +182,56 @@ export const CartPage: React.FC = () => {
             </div>
           )}
         </div>
+      {/* Clear Cart Confirmation Modal */}
+      {isClearCartConfirmOpen && (
+        <div className="modal-overlay animate-fadeIn">
+          <div className="modal-container" style={{ maxWidth: "420px", width: "90%", padding: "2rem", borderRadius: "24px", textAlign: "center" }}>
+            <div style={{
+              width: "64px",
+              height: "64px",
+              borderRadius: "50%",
+              backgroundColor: "#fef2f2",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 1.5rem auto",
+              border: "2px solid #fee2e2"
+            }}>
+              <Trash2 size={30} color="#dc2626" />
+            </div>
+
+            <h3 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.5rem" }}>
+              Clear Shopping Cart?
+            </h3>
+
+            <p style={{ fontSize: "0.95rem", color: "var(--text-muted)", lineHeight: 1.6, margin: "0 0 2rem 0" }}>
+              Are you sure you want to remove all items from your shopping cart? This action cannot be undone.
+            </p>
+
+            <div style={{ display: "flex", gap: "0.75rem" }}>
+              <button
+                type="button"
+                onClick={() => setIsClearCartConfirmOpen(false)}
+                className="btn-secondary"
+                style={{ flex: 1, padding: "0.75rem", borderRadius: "12px", fontSize: "0.95rem", fontWeight: 700 }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  dispatch(clearCart());
+                  setIsClearCartConfirmOpen(false);
+                }}
+                className="btn-primary"
+                style={{ flex: 1, padding: "0.75rem", borderRadius: "12px", fontSize: "0.95rem", fontWeight: 700, backgroundColor: "#dc2626", border: "none", color: "white", marginTop: 0 }}
+              >
+                Clear Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </main>
     </div>
   );

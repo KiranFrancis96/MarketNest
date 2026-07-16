@@ -8,6 +8,7 @@ import { userApi } from "@/entities/user/api/userApi";
 import { Header } from "@/shared/components/Header";
 import { fetchCart } from "@/features/cart/model/cartSlice";
 import { setUser } from "@/entities/user/model/userSlice";
+import { MSG_FAILED_INIT_CHECKOUT, MSG_FAILED_SAVE_ADDRESS } from "@/shared/constants/messages";
 
 export const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
@@ -41,6 +42,14 @@ export const CheckoutPage: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"wallet" | "razorpay">("razorpay");
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [failedOrderId, setFailedOrderId] = useState<string | null>(null);
+  const [isAddFundsModalOpen, setIsAddFundsModalOpen] = useState(false);
+  const [fundsAmount, setFundsAmount] = useState("1000");
+  const [fundsError, setFundsError] = useState("");
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [successModalAmount, setSuccessModalAmount] = useState(0);
 
   // Initialize selectedAddressId to default or first address
   useEffect(() => {
@@ -114,6 +123,27 @@ interface RazorpayWindow {
     );
   }
 
+  const handleAddFundsAndRetry = async (amount: number) => {
+    try {
+      setLoading(true);
+      await orderApi.addWalletFunds(amount);
+      
+      const profileRes = await userApi.getProfile();
+      dispatch(setUser(profileRes.data));
+
+      setIsAddFundsModalOpen(false);
+      setFundsError("");
+      setPaymentError(null);
+      setSuccessModalAmount(amount);
+      setIsSuccessModalOpen(true);
+    } catch (err: any) {
+      console.error("Wallet checkout top-up error:", err);
+      setFundsError(err.response?.data?.message || err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName || !phone || !street || !city || !state || !zipCode || !country) {
@@ -122,94 +152,130 @@ interface RazorpayWindow {
     }
 
     setLoading(true);
+    setPaymentError(null);
 
-    const isScriptReady = await loadScript();
-    if (!isScriptReady) {
-      alert("Failed to load Razorpay checkout script. Check your network connection.");
-      setLoading(false);
-      return;
-    }
+    let createdOrderId = failedOrderId;
 
     try {
-      if (saveAddressToProfile && (!user?.addresses || user.addresses.length === 0)) {
-        try {
-          const res = await userApi.addAddress({
-            fullName,
-            phone,
-            street,
-            city,
-            state,
-            zipCode,
-            country,
-            isDefault: true,
-          });
-          dispatch(setUser(res.data.user));
-        } catch (err) {
-          console.error("Failed to save address to profile automatically", err);
+      // 1. Create order if not already created (or reuse failed order ID)
+      if (!createdOrderId) {
+        if (saveAddressToProfile && (!user?.addresses || user.addresses.length === 0)) {
+          try {
+            const res = await userApi.addAddress({
+              fullName,
+              phone,
+              street,
+              city,
+              state,
+              zipCode,
+              country,
+              isDefault: true,
+            });
+            dispatch(setUser(res.data.user));
+          } catch (err) {
+            console.error("Failed to save address to profile automatically", err);
+          }
         }
+
+        const res = await orderApi.create({
+          fullName,
+          phone,
+          street,
+          city,
+          state,
+          zipCode,
+          country
+        });
+        createdOrderId = res.data.order._id;
+        setFailedOrderId(createdOrderId);
       }
 
-      const res = await orderApi.create({
-        fullName,
-        phone,
-        street,
-        city,
-        state,
-        zipCode,
-        country
-      });
+      // 2. Perform wallet payment
+      if (paymentMethod === "wallet") {
+        try {
+          await orderApi.payWithWallet(createdOrderId!);
+          
+          // Sync user's profile to update wallet balance in state
+          const profileRes = await userApi.getProfile();
+          dispatch(setUser(profileRes.data));
 
-      const { keyId, razorpayOrder, order } = res.data;
-
-      const options = {
-        key: keyId,
-        amount: razorpayOrder.amount,
-        currency: razorpayOrder.currency,
-        name: "MarketNest",
-        description: "Order Payment Checkout",
-        image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100",
-        order_id: razorpayOrder.id,
-        handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
-          setLoading(true);
-          try {
-            const verifyRes = await orderApi.verify({
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature
-            });
-
-            navigate(`/order-success/${verifyRes.data.order._id}`);
-          } catch (err: unknown) {
-            const message = err && typeof err === "object" && "response" in err
-              ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
-              : err instanceof Error ? err.message : "Payment verification failed";
-            alert(message || "Payment verification failed");
-          } finally {
-            setLoading(false);
-          }
-        },
-        prefill: {
-          name: fullName,
-          email: user?.email,
-          contact: phone
-        },
-        theme: {
-          color: "#4f46e5"
-        },
-        modal: {
-          ondismiss: () => {
-            setLoading(false);
-          }
+          navigate(`/order-success/${createdOrderId}`);
+        } catch (err: any) {
+          const message = err.response?.data?.message || "Wallet payment failed";
+          setPaymentError(message);
+          setLoading(false);
         }
-      };
+      } else {
+        // 3. Perform Razorpay payment
+        const isScriptReady = await loadScript();
+        if (!isScriptReady) {
+          setPaymentError("Failed to load Razorpay checkout script. Check your network connection.");
+          setLoading(false);
+          return;
+        }
 
-      const rzp = new (window as unknown as RazorpayWindow).Razorpay!(options);
-      rzp.open();
-    } catch (err: unknown) {
-      const message = err && typeof err === "object" && "response" in err
-        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
-        : err instanceof Error ? err.message : "Failed to initialize order payment";
-      alert(message || "Failed to initialize order payment");
+        const res = await orderApi.create({
+          fullName,
+          phone,
+          street,
+          city,
+          state,
+          zipCode,
+          country
+        });
+        const { keyId, razorpayOrder } = res.data;
+
+        const options = {
+          key: keyId,
+          amount: razorpayOrder.amount,
+          currency: razorpayOrder.currency,
+          name: "MarketNest",
+          description: "Order Payment Checkout",
+          image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100",
+          order_id: razorpayOrder.id,
+          handler: async (response: any) => {
+            setLoading(true);
+            try {
+              const verifyRes = await orderApi.verify({
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature
+              });
+              navigate(`/order-success/${verifyRes.data.order._id}`);
+            } catch (err: any) {
+              const message = err.response?.data?.message || "Payment verification failed";
+              setPaymentError(message);
+            } finally {
+              setLoading(false);
+            }
+          },
+          prefill: {
+            name: fullName,
+            email: user?.email,
+            contact: phone
+          },
+          theme: {
+            color: "#4f46e5"
+          },
+          modal: {
+            ondismiss: async () => {
+              setLoading(false);
+              setPaymentError("Razorpay payment cancelled or dismissed. The order has been marked as failed.");
+              try {
+                await orderApi.markAsFailed(createdOrderId!);
+              } catch (err) {
+                console.error("Failed to mark order as failed in database", err);
+              }
+            }
+          }
+        };
+
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+      }
+    } catch (err: any) {
+      const message = err.response?.data?.message || MSG_FAILED_INIT_CHECKOUT;
+      setPaymentError(message);
       setLoading(false);
     }
   };
@@ -360,25 +426,159 @@ interface RazorpayWindow {
                         </p>
                       </div>
 
-                      <button
-                        type="submit"
-                        className="btn-primary"
-                        disabled={loading}
+                    {/* Payment Method Selector */}
+                    <div style={{ marginTop: "1.5rem", borderTop: "1px solid var(--border)", paddingTop: "1.25rem", marginBottom: "1rem" }}>
+                      <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.75rem", color: "var(--text-main)" }}>Select Payment Method</h3>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                        {/* Wallet Payment Method */}
+                        <label 
+                          style={{
+                            display: "flex", 
+                            alignItems: "center", 
+                            justifyContent: "space-between",
+                            padding: "0.85rem 1rem", 
+                            borderRadius: "12px", 
+                            border: paymentMethod === "wallet" ? "2px solid var(--primary)" : "1px solid var(--border)",
+                            backgroundColor: paymentMethod === "wallet" ? "rgba(79, 70, 229, 0.03)" : "transparent",
+                            cursor: "pointer"
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                            <input 
+                              type="radio" 
+                              name="paymentMethod" 
+                              value="wallet" 
+                              checked={paymentMethod === "wallet"}
+                              onChange={() => { setPaymentMethod("wallet"); setPaymentError(null); }}
+                              style={{ width: "16px", height: "16px", accentColor: "var(--primary)" }}
+                            />
+                            <div style={{ display: "flex", flexDirection: "column" }}>
+                              <span style={{ fontSize: "0.9rem", fontWeight: 700 }}>MarketNest Wallet</span>
+                              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>
+                                Balance: ₹{(user?.walletBalance || 0).toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                          <span style={{ fontSize: "0.75rem", color: (user?.walletBalance || 0) < subtotal ? "#dc2626" : "#10b981", fontWeight: 700 }}>
+                            {(user?.walletBalance || 0) < subtotal ? "Insufficient Balance" : "Available"}
+                          </span>
+                        </label>
+
+                        {/* Razorpay Payment Method */}
+                        <label 
+                          style={{
+                            display: "flex", 
+                            alignItems: "center", 
+                            padding: "0.85rem 1rem", 
+                            borderRadius: "12px", 
+                            border: paymentMethod === "razorpay" ? "2px solid var(--primary)" : "1px solid var(--border)",
+                            backgroundColor: paymentMethod === "razorpay" ? "rgba(79, 70, 229, 0.03)" : "transparent",
+                            cursor: "pointer"
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                            <input 
+                              type="radio" 
+                              name="paymentMethod" 
+                              value="razorpay" 
+                              checked={paymentMethod === "razorpay"}
+                              onChange={() => { setPaymentMethod("razorpay"); setPaymentError(null); }}
+                              style={{ width: "16px", height: "16px", accentColor: "var(--primary)" }}
+                            />
+                            <div style={{ display: "flex", flexDirection: "column" }}>
+                              <span style={{ fontSize: "0.9rem", fontWeight: 700 }}>Cards, NetBanking, UPI (Razorpay)</span>
+                              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Pay securely using Razorpay gateway</span>
+                            </div>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Payment Error Card for Failed Payment Scenario */}
+                    {paymentError && (
+                      <div 
                         style={{
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                          height: "48px",
+                          marginTop: "1.5rem",
+                          padding: "1rem",
                           borderRadius: "12px",
-                          width: "100%",
-                          marginTop: 0,
+                          backgroundColor: "#fef2f2",
+                          border: "1px solid #fee2e2",
+                          color: "#991b1b",
+                          marginBottom: "1rem"
                         }}
                       >
-                        <CreditCard size={18} />
-                        {loading ? "Processing Payment..." : `Pay ₹${subtotal.toFixed(2)}`}
-                      </button>
-                    </form>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                          <ShieldAlert size={18} color="#dc2626" />
+                          <span style={{ fontSize: "0.9rem", fontWeight: 800 }}>Payment Attempt Failed</span>
+                        </div>
+                        <p style={{ fontSize: "0.8rem", color: "#b91c1c", margin: "0 0 1rem 0", lineHeight: 1.4 }}>{paymentError}</p>
+                        
+                        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                          {paymentMethod === "wallet" && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const deficit = Math.max(1, Math.ceil(subtotal - (user?.walletBalance || 0)));
+                                setFundsAmount(String(deficit));
+                                setFundsError("");
+                                setIsAddFundsModalOpen(true);
+                              }}
+                              style={{
+                                padding: "0.4rem 0.8rem",
+                                borderRadius: "8px",
+                                border: "none",
+                                backgroundColor: "#10b981",
+                                color: "white",
+                                fontSize: "0.75rem",
+                                fontWeight: 700,
+                                cursor: "pointer"
+                              }}
+                            >
+                              Top Up Wallet
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPaymentError(null);
+                              setPaymentMethod("razorpay");
+                            }}
+                            style={{
+                              padding: "0.4rem 0.8rem",
+                              borderRadius: "8px",
+                              border: "1px solid #334155",
+                              backgroundColor: "#1e293b",
+                              color: "#cbd5e1",
+                              fontSize: "0.75rem",
+                              fontWeight: 700,
+                              cursor: "pointer"
+                            }}
+                          >
+                            Switch to Razorpay
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <button
+                      type="submit"
+                      className="btn-primary"
+                      disabled={loading}
+                      style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                        height: "48px",
+                        borderRadius: "12px",
+                        width: "100%",
+                        marginTop: 0,
+                      }}
+                    >
+                      <CreditCard size={18} />
+                      {loading ? "Processing Payment..." : `Pay ₹${subtotal.toFixed(2)}`}
+                    </button>
+                  </form>
                   </div>
                 ) : (
                   <form onSubmit={handlePayment}>
@@ -480,12 +680,145 @@ interface RazorpayWindow {
                       </label>
                     </div>
 
+                    {/* Payment Method Selector */}
+                    <div style={{ marginTop: "1.5rem", borderTop: "1px solid var(--border)", paddingTop: "1.25rem" }}>
+                      <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.75rem", color: "var(--text-main)" }}>Select Payment Method</h3>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                        {/* Wallet Payment Method */}
+                        <label 
+                          style={{
+                            display: "flex", 
+                            alignItems: "center", 
+                            justifyContent: "space-between",
+                            padding: "0.85rem 1rem", 
+                            borderRadius: "12px", 
+                            border: paymentMethod === "wallet" ? "2px solid var(--primary)" : "1px solid var(--border)",
+                            backgroundColor: paymentMethod === "wallet" ? "rgba(79, 70, 229, 0.03)" : "transparent",
+                            cursor: "pointer"
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                            <input 
+                              type="radio" 
+                              name="paymentMethod" 
+                              value="wallet" 
+                              checked={paymentMethod === "wallet"}
+                              onChange={() => { setPaymentMethod("wallet"); setPaymentError(null); }}
+                              style={{ width: "16px", height: "16px", accentColor: "var(--primary)" }}
+                            />
+                            <div style={{ display: "flex", flexDirection: "column" }}>
+                              <span style={{ fontSize: "0.9rem", fontWeight: 700 }}>MarketNest Wallet</span>
+                              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>
+                                Balance: ₹{(user?.walletBalance || 0).toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                          <span style={{ fontSize: "0.75rem", color: (user?.walletBalance || 0) < subtotal ? "#dc2626" : "#10b981", fontWeight: 700 }}>
+                            {(user?.walletBalance || 0) < subtotal ? "Insufficient Balance" : "Available"}
+                          </span>
+                        </label>
+
+                        {/* Razorpay Payment Method */}
+                        <label 
+                          style={{
+                            display: "flex", 
+                            alignItems: "center", 
+                            padding: "0.85rem 1rem", 
+                            borderRadius: "12px", 
+                            border: paymentMethod === "razorpay" ? "2px solid var(--primary)" : "1px solid var(--border)",
+                            backgroundColor: paymentMethod === "razorpay" ? "rgba(79, 70, 229, 0.03)" : "transparent",
+                            cursor: "pointer"
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                            <input 
+                              type="radio" 
+                              name="paymentMethod" 
+                              value="razorpay" 
+                              checked={paymentMethod === "razorpay"}
+                              onChange={() => { setPaymentMethod("razorpay"); setPaymentError(null); }}
+                              style={{ width: "16px", height: "16px", accentColor: "var(--primary)" }}
+                            />
+                            <div style={{ display: "flex", flexDirection: "column" }}>
+                              <span style={{ fontSize: "0.9rem", fontWeight: 700 }}>Cards, NetBanking, UPI (Razorpay)</span>
+                              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600 }}>Pay securely using Razorpay gateway</span>
+                            </div>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Payment Error Card for Failed Payment Scenario */}
+                    {paymentError && (
+                      <div 
+                        style={{
+                          marginTop: "1.5rem",
+                          padding: "1rem",
+                          borderRadius: "12px",
+                          backgroundColor: "#fef2f2",
+                          border: "1px solid #fee2e2",
+                          color: "#991b1b"
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+                          <ShieldAlert size={18} color="#dc2626" />
+                          <span style={{ fontSize: "0.9rem", fontWeight: 800 }}>Payment Attempt Failed</span>
+                        </div>
+                        <p style={{ fontSize: "0.8rem", color: "#b91c1c", margin: "0 0 1rem 0", lineHeight: 1.4 }}>{paymentError}</p>
+                        
+                        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                          {paymentMethod === "wallet" && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const deficit = Math.max(1, Math.ceil(subtotal - (user?.walletBalance || 0)));
+                                setFundsAmount(String(deficit));
+                                setFundsError("");
+                                setIsAddFundsModalOpen(true);
+                              }}
+                              style={{
+                                padding: "0.4rem 0.8rem",
+                                borderRadius: "8px",
+                                border: "none",
+                                backgroundColor: "#10b981",
+                                color: "white",
+                                fontSize: "0.75rem",
+                                fontWeight: 700,
+                                cursor: "pointer"
+                              }}
+                            >
+                              Top Up Wallet
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPaymentError(null);
+                              setPaymentMethod("razorpay");
+                            }}
+                            style={{
+                              padding: "0.4rem 0.8rem",
+                              borderRadius: "8px",
+                              border: "1px solid #334155",
+                              backgroundColor: "#1e293b",
+                              color: "#cbd5e1",
+                              fontSize: "0.75rem",
+                              fontWeight: 700,
+                              cursor: "pointer"
+                            }}
+                          >
+                            Switch to Razorpay
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     <button
                       type="submit"
                       className="btn-primary"
                       disabled={loading}
                       style={{
-                        marginTop: "2rem",
+                        marginTop: "1.5rem",
                         display: "flex",
                         justifyContent: "center",
                         alignItems: "center",
@@ -496,7 +829,7 @@ interface RazorpayWindow {
                       }}
                     >
                       <CreditCard size={18} />
-                      {loading ? "Processing Payment..." : `Pay ₹${subtotal.toFixed(2)}`}
+                      {loading ? "Processing..." : `Pay ₹${subtotal.toFixed(2)}`}
                     </button>
                   </form>
                 )}
@@ -605,7 +938,7 @@ interface RazorpayWindow {
                   }
                 }
               } catch (err: any) {
-                setModalError(err.response?.data?.message || "Failed to save address.");
+                setModalError(err.response?.data?.message || MSG_FAILED_SAVE_ADDRESS);
               }
             }} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               
@@ -720,6 +1053,116 @@ interface RazorpayWindow {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Wallet Funds Modal */}
+      {isAddFundsModalOpen && (
+        <div className="modal-overlay animate-fadeIn">
+          <div className="modal-container" style={{ maxWidth: "400px", width: "90%", borderRadius: "24px", padding: "2rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+              <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0 }}>Add Funds to Wallet</h3>
+              <button 
+                onClick={() => setIsAddFundsModalOpen(false)} 
+                style={{ border: "none", background: "none", fontSize: "1.5rem", cursor: "pointer", color: "var(--text-muted)" }}
+              >
+                &times;
+              </button>
+            </div>
+
+            {fundsError && (
+              <div style={{ padding: "0.75rem 1rem", borderRadius: "12px", backgroundColor: "#fef2f2", border: "1px solid #fee2e2", color: "#dc2626", fontSize: "0.875rem", fontWeight: 600, display: "flex", alignItems: "center", marginBottom: "1rem" }}>
+                <ShieldAlert size={18} style={{ marginRight: "0.5rem", flexShrink: 0 }} />
+                <span>{fundsError}</span>
+              </div>
+            )}
+
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                const amt = parseFloat(fundsAmount);
+                if (isNaN(amt) || amt <= 0) {
+                  setFundsError("Please enter a valid positive amount.");
+                  return;
+                }
+                handleAddFundsAndRetry(amt);
+              }}
+              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+            >
+              <div className="form-group">
+                <label className="form-label">Enter Amount (₹)</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  min="1"
+                  step="any"
+                  placeholder="e.g. 500"
+                  value={fundsAmount}
+                  onChange={(e) => setFundsAmount(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
+                <button
+                  type="button"
+                  onClick={() => setIsAddFundsModalOpen(false)}
+                  className="btn-secondary"
+                  style={{ flex: 1, padding: "0.75rem", borderRadius: "12px", width: "auto" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={loading}
+                  style={{ flex: 1, padding: "0.75rem", borderRadius: "12px", width: "auto", marginTop: 0 }}
+                >
+                  {loading ? "Processing..." : "Confirm Add"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Success Confirmation Modal */}
+      {isSuccessModalOpen && (
+        <div className="modal-overlay animate-fadeIn">
+          <div className="modal-container" style={{ maxWidth: "420px", width: "90%", padding: "2rem", borderRadius: "24px", textAlign: "center" }}>
+            <div style={{
+              width: "64px",
+              height: "64px",
+              borderRadius: "50%",
+              backgroundColor: "#ecfdf5",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 1.5rem auto",
+              border: "2px solid #a7f3d0"
+            }}>
+              <ShieldCheck size={36} color="#10b981" />
+            </div>
+
+            <h3 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.5rem" }}>
+              Funds Added!
+            </h3>
+
+            <p style={{ fontSize: "0.95rem", color: "var(--text-muted)", lineHeight: 1.6, margin: "0 0 1.75rem 0" }}>
+              Successfully added <strong style={{ color: "var(--text-main)" }}>₹{successModalAmount.toLocaleString()}</strong> to your MarketNest Wallet.
+              <br />
+              New Balance: <strong style={{ color: "var(--primary)" }}>₹{(user?.walletBalance || 0).toLocaleString()}</strong>
+            </p>
+
+            <button
+              onClick={() => setIsSuccessModalOpen(false)}
+              className="btn-primary"
+              style={{ width: "100%", padding: "0.75rem", borderRadius: "12px", fontSize: "0.95rem", fontWeight: 700, marginTop: 0 }}
+            >
+              Awesome
+            </button>
           </div>
         </div>
       )}

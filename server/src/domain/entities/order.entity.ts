@@ -26,6 +26,7 @@ export interface Order {
   razorpayPaymentId?: string;
   razorpaySignature?: string;
   status: "pending" | "paid" | "failed";
+  orderNumber?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }

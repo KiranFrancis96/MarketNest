@@ -11,6 +11,10 @@ import {
   ROUTE_ORDER_ADMIN_USER,
   ROUTE_ORDER_ADMIN_MERCHANT,
   ROUTE_ORDER_VERIFY,
+  ROUTE_ORDER_WALLET_PAY,
+  ROUTE_ORDER_FAIL,
+  ROUTE_ORDER_WALLET_ADD,
+  ROUTE_ORDER_MIGRATE_NUMBERS,
   ROUTE_ORDER_BY_ID,
 } from "./routes.constants.ts";
 
@@ -25,6 +29,10 @@ router.get(ROUTE_ORDER_ADMIN_MERCHANT, adminAuth, orderController.getAdminMercha
 
 router.post(ROUTE_ORDER_BASE, authenticate, orderController.create);
 router.post(ROUTE_ORDER_VERIFY, authenticate, orderController.verify);
+router.post(ROUTE_ORDER_WALLET_PAY, authenticate, orderController.payWithWallet);
+router.post(ROUTE_ORDER_FAIL, authenticate, orderController.markAsFailed);
+router.post(ROUTE_ORDER_WALLET_ADD, authenticate, orderController.addWalletFunds);
+router.post(ROUTE_ORDER_MIGRATE_NUMBERS, orderController.migrateOrderNumbers);
 
 router.get(ROUTE_ORDER_BY_ID, authenticate, orderController.getById);
 

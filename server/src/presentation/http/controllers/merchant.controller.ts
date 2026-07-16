@@ -14,6 +14,7 @@ import type {
   IMerchantGoogleAuthUseCase,
   ICompleteMerchantProfileUseCase,
 } from "@/application/IUseCases/merchant/IMerchantUseCases.ts";
+import { UpdateMerchantProfileUseCase } from "@/application/useCases/merchant/auth/updateMerchantProfile.usecase.ts";
 import {
   MSG_EMAIL_REQUIRED,
   MSG_EMAIL_PASSWORD_REQUIRED,
@@ -44,8 +45,21 @@ export class MerchantController {
     private _reapplyUseCase: IMerchantReapplyUseCase,
     private _logoutUseCase: IMerchantLogoutUseCase,
     private _googleAuthUseCase: IMerchantGoogleAuthUseCase,
-    private _completeProfileUseCase: ICompleteMerchantProfileUseCase
+    private _completeProfileUseCase: ICompleteMerchantProfileUseCase,
+    private _updateProfileUseCase: UpdateMerchantProfileUseCase
   ) {}
+
+  updateProfile = async (req: Request, res: Response): Promise<void> => {
+    // @ts-ignore
+    const merchantId = req.user?.id;
+    if (!merchantId) {
+      res.status(HttpStatus.UNAUTHORIZED).json({ message: MSG_UNAUTHORIZED });
+      return;
+    }
+
+    const updated = await this._updateProfileUseCase.execute(merchantId, req.body);
+    res.json({ message: "Merchant profile updated successfully", merchant: updated });
+  };
 
   googleAuth = async (req: Request, res: Response): Promise<void> => {
     const { credential } = req.body;

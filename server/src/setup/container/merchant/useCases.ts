@@ -10,6 +10,7 @@ import { GetMerchantProfileUseCase } from "@/application/useCases/merchant/auth/
 import { LogoutMerchantUseCase } from "@/application/useCases/merchant/auth/logoutMerchant.usecase.ts";
 import { GoogleMerchantAuthUseCase } from "@/application/useCases/merchant/auth/googleMerchantAuth.usecase.ts";
 import { CompleteMerchantProfileUseCase } from "@/application/useCases/merchant/auth/completeMerchantProfile.usecase.ts";
+import { UpdateMerchantProfileUseCase } from "@/application/useCases/merchant/auth/updateMerchantProfile.usecase.ts";
 
 export const registerMerchantUseCase = new RegisterMerchantUseCase(merchantRepository);
 export const verifyMerchantOtpUseCase = new VerifyMerchantOtpUseCase(merchantRepository);
@@ -22,3 +23,4 @@ export const getMerchantProfileUseCase = new GetMerchantProfileUseCase(merchantR
 export const logoutMerchantUseCase = new LogoutMerchantUseCase();
 export const googleMerchantAuthUseCase = new GoogleMerchantAuthUseCase(merchantRepository);
 export const completeMerchantProfileUseCase = new CompleteMerchantProfileUseCase(merchantRepository);
+export const updateMerchantProfileUseCase = new UpdateMerchantProfileUseCase(merchantRepository);

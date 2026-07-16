@@ -45,6 +45,7 @@ export class GetMerchantSalesUseCase implements IGetMerchantSalesUseCase {
 
       return {
         orderId: order._id,
+        orderNumber: order.orderNumber,
         date: order.createdAt,
         customerName: order.shippingAddress.fullName,
         customerPhone: order.shippingAddress.phone,
