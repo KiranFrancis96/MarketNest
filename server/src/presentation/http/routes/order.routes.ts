@@ -14,6 +14,7 @@ import {
   ROUTE_ORDER_WALLET_PAY,
   ROUTE_ORDER_FAIL,
   ROUTE_ORDER_WALLET_ADD,
+  ROUTE_ORDER_WALLET_HISTORY,
   ROUTE_ORDER_MIGRATE_NUMBERS,
   ROUTE_ORDER_BY_ID,
 } from "./routes.constants.ts";
@@ -21,6 +22,7 @@ import {
 const router = express.Router();
 
 router.get(ROUTE_ORDER_BASE, authenticate, orderController.getUserHistory);
+router.get(ROUTE_ORDER_WALLET_HISTORY, authenticate, orderController.getWalletHistory);
 router.get(ROUTE_ORDER_MERCHANT_SALES, authenticateMerchant, orderController.getMerchantSalesHistory);
 router.patch(ROUTE_ORDER_MERCHANT_ITEM_STATUS, authenticateMerchant, orderController.updateMerchantItemStatus);
 router.patch(ROUTE_ORDER_USER_ITEM_STATUS, authenticate, orderController.updateUserItemStatus);

@@ -23,7 +23,7 @@ export const adminOrMerchantAuth = async (req: Request, res: Response, next: Nex
       try {
         const decoded = jwt.verify(adminToken, process.env.ACCESS_TOKEN_SECRET as string) as jwt.JwtPayload;
         if (decoded.isAdmin) {
-          // @ts-ignore
+          req.admin = decoded;
           req.user = decoded;
           next();
           return;
@@ -55,7 +55,7 @@ export const adminOrMerchantAuth = async (req: Request, res: Response, next: Nex
         return;
       }
 
-      // @ts-ignore
+      req.merchant = decoded;
       req.user = decoded;
       next();
       return;

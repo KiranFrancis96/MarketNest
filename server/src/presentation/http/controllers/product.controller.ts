@@ -38,8 +38,7 @@ export class ProductController {
   ) {}
 
   add = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
-    const merchantId = req.user?.id;
+    const merchantId = req.merchant?.id || req.user?.id;
     if (!merchantId) {
       throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
     }
@@ -59,8 +58,7 @@ export class ProductController {
   };
 
   edit = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
-    const merchantId = req.user?.id;
+    const merchantId = req.merchant?.id || req.user?.id;
     const id = req.params.id;
     if (typeof id !== "string") {
       throw new ApiError(HttpStatus.BAD_REQUEST, MSG_PRODUCT_ID_STRING);
@@ -98,8 +96,7 @@ export class ProductController {
   };
 
   delete = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
-    const merchantId = req.user?.id;
+    const merchantId = req.merchant?.id || req.user?.id;
     const id = req.params.id;
     if (typeof id !== "string") {
       throw new ApiError(HttpStatus.BAD_REQUEST, MSG_PRODUCT_ID_STRING);
@@ -113,8 +110,7 @@ export class ProductController {
   };
 
   getMerchantProducts = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
-    const merchantId = req.user?.id;
+    const merchantId = req.merchant?.id || req.user?.id;
     if (!merchantId) {
       throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
     }
@@ -139,7 +135,6 @@ export class ProductController {
   };
 
   getRecommendations = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     const recommendations = await this._getRecommendationsUseCase.execute(userId);
     res.json(recommendations);

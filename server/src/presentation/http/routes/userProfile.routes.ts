@@ -24,4 +24,11 @@ router.get(
     userProfileController.getProfile
 );
 
+router.put(
+    ROUTE_PROFILE_BASE,
+    authenticate,
+    userProfileController.updateProfile
+);
+
+
 export default router;

@@ -9,6 +9,7 @@ import { HttpStatus } from "@/utils/httpStatus.ts";
 import { MSG_RAZORPAY_CONFIG_MISSING, MSG_ORDER_NOT_FOUND, MSG_UNAUTHORIZED_ORDER_VERIFY, MSG_PAYMENT_VERIFY_FAILED, MSG_ORDER_STATUS_PAID_FAILED } from "@/presentation/http/controllers/messages.constants.ts";
 import crypto from "crypto";
 import { UserModel } from "@/infrastructure/database/models/user.model.ts";
+import { recordWalletTransaction } from "@/application/services/walletTransaction.service.ts";
 
 export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
   constructor(
@@ -43,8 +44,18 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
     if (!isSignatureValid) {
       const user = await UserModel.findById(userId);
       if (user) {
-        user.walletBalance = (user.walletBalance || 0) + order.totalAmount;
+        const newBalance = (user.walletBalance || 0) + order.totalAmount;
+        user.walletBalance = newBalance;
         await user.save();
+
+        await recordWalletTransaction({
+          userId,
+          type: "credit",
+          amount: order.totalAmount,
+          description: `Refund for Failed Payment (Order #${order.orderNumber || order._id})`,
+          balanceAfter: newBalance,
+          orderId: order._id,
+        });
       }
       order.status = "failed";
       await this._orderRepository.updateById(order._id!, { status: "failed" });
@@ -65,22 +76,25 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
       throw new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, MSG_ORDER_STATUS_PAID_FAILED);
     }
 
-    // Assign order number based on total paid orders so far (this order is already paid, so count includes it)
     const paidCount = await this._orderRepository.getCount({ status: "paid" } as any);
-    await this._orderRepository.updateById(order._id!, { orderNumber: String(paidCount) } as any);
+    const finalOrderNumber = order.orderNumber && order.orderNumber.startsWith("ORD-")
+      ? order.orderNumber
+      : `ORD-${10000 + paidCount}`;
+    await this._orderRepository.updateById(order._id!, { orderNumber: finalOrderNumber } as any);
 
+    // Deduct stock for each product in order
     for (const item of order.items) {
       const product = await this._productRepository.findById(item.productId);
       if (product) {
-        const newStock = Math.max(0, product.stock - item.quantity);
-        await this._productRepository.updateById(item.productId, { stock: newStock });
+        const updatedStock = Math.max(0, product.stock - item.quantity);
+        await this._productRepository.updateById(product._id!, { stock: updatedStock });
       }
     }
 
-    const cart = await this._cartRepository.findByUser(userId);
+    // Clear cart
+    const cart = await this._cartRepository.findByUserId(userId);
     if (cart) {
-      cart.items = [];
-      await this._cartRepository.updateById(cart._id!, cart);
+      await this._cartRepository.updateByUserId(userId, { items: [] });
     }
 
     return updatedOrder;

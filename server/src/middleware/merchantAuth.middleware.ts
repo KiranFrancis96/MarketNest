@@ -40,7 +40,7 @@ export const authenticateMerchant = async (req: Request, res: Response, next: Ne
       return;
     }
 
-    // @ts-ignore
+    req.merchant = decoded;
     req.user = decoded;
     next();
   } catch (err: unknown) {

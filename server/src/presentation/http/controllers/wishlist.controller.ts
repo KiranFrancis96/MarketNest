@@ -22,7 +22,6 @@ export class WishlistController {
   ) {}
 
   get = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
 
@@ -31,7 +30,6 @@ export class WishlistController {
   };
 
   add = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
 
@@ -45,7 +43,6 @@ export class WishlistController {
   };
 
   remove = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
 

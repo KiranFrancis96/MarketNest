@@ -5,9 +5,9 @@ export abstract class BaseRepository<T, D = any> implements IBaseRepository<T> {
   constructor(
     protected model: mongoose.Model<D>,
     protected mapper: {
-      toEntity(doc: unknown): T | null;
-      toDocument(entity: T): Record<string, unknown>;
-    }
+    toEntity(doc: unknown): T | null;
+    toDocument(entity: Partial<T>): Record<string, unknown>;
+   }
   ) {}
 
   async findById(id: string): Promise<T | null> {
@@ -21,7 +21,7 @@ export abstract class BaseRepository<T, D = any> implements IBaseRepository<T> {
   }
 
   async create(data: Partial<T>): Promise<T | null> {
-    const docData = this.mapper.toDocument(data as T);
+    const docData = this.mapper.toDocument(data);
     
     Object.keys(docData).forEach((key) => {
       if (docData[key] === undefined) {
@@ -33,7 +33,7 @@ export abstract class BaseRepository<T, D = any> implements IBaseRepository<T> {
   }
 
   async updateById(id: string, data: Partial<T>): Promise<T | null> {
-    const docData = this.mapper.toDocument(data as T);
+    const docData = this.mapper.toDocument(data);
     Object.keys(docData).forEach((key) => {
       if (docData[key] === undefined) {
         delete docData[key];
@@ -53,7 +53,7 @@ export abstract class BaseRepository<T, D = any> implements IBaseRepository<T> {
   }
 
   async findOneAndUpdate(filter: Partial<T>, data: Partial<T>): Promise<T | null> {
-    const docData = this.mapper.toDocument(data as T);
+    const docData = this.mapper.toDocument(data);
     Object.keys(docData).forEach((key) => {
       if (docData[key] === undefined) {
         delete docData[key];

@@ -1,13 +1,14 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { ShoppingCart, Heart, Store, LogOut } from "lucide-react";
+import { ShoppingCart, Heart, Store, LogOut, Wallet } from "lucide-react";
 import type { RootState, AppDispatch } from "@/app/store";
 import { logout } from "@/entities/user/model/userSlice";
 import { userApi } from "@/entities/user/api/userApi";
 import { fetchCart } from "@/features/cart/model/cartSlice";
 import { fetchWishlist } from "@/features/wishlist/model/wishlistSlice";
 import { NotificationBell } from "@/features/notification/ui/NotificationBell";
+import { WalletHistoryModal } from "@/features/wallet";
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export const Header: React.FC = () => {
   const user = useSelector((state: RootState) => state.user.user);
   const cart = useSelector((state: RootState) => state.cart.cart);
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items);
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
 
   const cartCount = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
   const wishlistCount = wishlistItems?.length || 0;
@@ -103,6 +105,16 @@ export const Header: React.FC = () => {
             )}
           </Link>
 
+          {user && (
+            <button
+              onClick={() => setIsWalletModalOpen(true)}
+              style={{ ...iconBtnWrapperStyles, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+              title="Wallet History"
+            >
+              <Wallet size={20} color="var(--primary)" />
+            </button>
+          )}
+
           <NotificationBell />
 
           <span style={emailStyles}>{user?.email?.split("@")[0]}</span>
@@ -112,6 +124,11 @@ export const Header: React.FC = () => {
           </button>
         </div>
       </div>
+
+      <WalletHistoryModal
+        isOpen={isWalletModalOpen}
+        onClose={() => setIsWalletModalOpen(false)}
+      />
     </header>
   );
 };

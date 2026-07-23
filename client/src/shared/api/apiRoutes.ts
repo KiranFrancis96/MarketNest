@@ -54,6 +54,7 @@ export const ORDERS_ADMIN_MERCHANT          = (merchantId: string) => `/orders/a
 export const ORDERS_WALLET_PAY              = (id: string) => `/orders/${id}/wallet-pay`;
 export const ORDERS_MARK_FAILED             = (id: string) => `/orders/${id}/fail`;
 export const ORDERS_WALLET_ADD              = "/orders/wallet/add";
+export const ORDERS_WALLET_HISTORY          = "/orders/wallet/history";
 
 // ─── User Profile Routes ──────────────────────────────────────────────────────
 export const PROFILE                  = "/profile";

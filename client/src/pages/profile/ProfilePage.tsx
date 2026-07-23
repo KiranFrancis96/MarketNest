@@ -1,15 +1,30 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Plus, MapPin, Trash2, Edit3, ShieldAlert, ShieldCheck, User as UserIcon, Mail, Wallet as WalletIcon } from "lucide-react";
+import { 
+  Plus, 
+  MapPin, 
+  Trash2, 
+  Edit3, 
+  ShieldAlert, 
+  ShieldCheck, 
+  User as UserIcon, 
+  Mail, 
+  Wallet as WalletIcon,
+  ArrowUpRight,
+  ArrowDownLeft,
+  RefreshCw,
+  History
+} from "lucide-react";
 import type { RootState, AppDispatch } from "@/app/store";
 import { setUser } from "@/entities/user/model/userSlice";
 import { userApi } from "@/entities/user/api/userApi";
-import { orderApi } from "@/entities/order/api/orderApi";
+import { orderApi, type WalletTransaction } from "@/entities/order/api/orderApi";
 import type { Address } from "@/entities/user/model/types";
 import { Header } from "@/shared/components/Header";
 import { setProfile, setError, setLoading } from "@/entities/userProfile/model/userProfileSlice";
 import { userProfileApi } from "@/entities/userProfile/api/userProfileApi";
 import { PersonalizationOverviewCard } from "@/features/userProfile";
+import { WalletHistoryModal } from "@/features/wallet";
 import { HttpStatus } from "@/shared/api/httpStatus";
 import { MSG_FAILED_LOAD_PERSONALIZATION, MSG_FAILED_SAVE_ADDRESS } from "@/shared/constants/messages";
 
@@ -18,10 +33,32 @@ export const ProfilePage: React.FC = () => {
   const user = useSelector((state: RootState) => state.user.user);
   const [walletLoading, setWalletLoading] = useState(false);
   const [isAddFundsModalOpen, setIsAddFundsModalOpen] = useState(false);
+  const [isWalletHistoryModalOpen, setIsWalletHistoryModalOpen] = useState(false);
   const [fundsAmount, setFundsAmount] = useState("1000");
   const [fundsError, setFundsError] = useState("");
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [successModalAmount, setSuccessModalAmount] = useState(0);
+
+  const [walletTransactions, setWalletTransactions] = useState<WalletTransaction[]>([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+
+  const fetchWalletHistory = async () => {
+    try {
+      setLoadingTransactions(true);
+      const res = await orderApi.getWalletHistory();
+      if (res.data.success) {
+        setWalletTransactions(res.data.transactions || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch wallet history:", err);
+    } finally {
+      setLoadingTransactions(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWalletHistory();
+  }, []);
 
   const handleAddWalletFunds = async (amount: number) => {
     try {
@@ -31,6 +68,8 @@ export const ProfilePage: React.FC = () => {
       const profileRes = await userApi.getProfile();
       dispatch(setUser(profileRes.data));
       
+      await fetchWalletHistory();
+
       setIsAddFundsModalOpen(false);
       setFundsError("");
       setSuccessModalAmount(amount);
@@ -48,32 +87,19 @@ export const ProfilePage: React.FC = () => {
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [addressToDeleteId, setAddressToDeleteId] = useState<string | null>(null);
 
-  // Form states
+  // Address Form State
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [street, setStreet] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [zipCode, setZipCode] = useState("");
-  const [country, setCountry] = useState("");
+  const [country, setCountry] = useState("India");
   const [isDefault, setIsDefault] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [autoOpenPersonalizationModal, setAutoOpenPersonalizationModal] = useState(false);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("startOnboarding") === "true") {
-      setAutoOpenPersonalizationModal(true);
-    }
-  }, []);
-
-  const handlePersonalizationModalClose = () => {
-    const url = new URL(window.location.href);
-    url.searchParams.delete("startOnboarding");
-    window.history.replaceState({}, "", url.toString());
-    setAutoOpenPersonalizationModal(false);
-  };
 
   useEffect(() => {
     const fetchPersonalizationProfile = async () => {
@@ -84,6 +110,7 @@ export const ProfilePage: React.FC = () => {
       } catch (err: any) {
         if (err.response?.status === HttpStatus.NOT_FOUND) {
           dispatch(setProfile(null));
+          setAutoOpenPersonalizationModal(true);
         } else {
           dispatch(setError(err.response?.data?.message || MSG_FAILED_LOAD_PERSONALIZATION));
         }
@@ -95,306 +122,425 @@ export const ProfilePage: React.FC = () => {
     fetchPersonalizationProfile();
   }, [dispatch]);
 
+  const handlePersonalizationModalClose = () => {
+    setAutoOpenPersonalizationModal(false);
+  };
+
   useEffect(() => {
     if (user && user.addresses) {
       setAddresses(user.addresses);
     }
   }, [user]);
 
-  const openAddModal = () => {
+  const handleOpenAddModal = () => {
     setEditingAddress(null);
-    setFullName("");
+    setFullName(user?.name || "");
     setPhone("");
     setStreet("");
     setCity("");
     setState("");
     setZipCode("");
-    setCountry("");
-    setIsDefault(addresses.length === 0); // Force default if it is the first address
-    setErrorMsg("");
+    setCountry("India");
+    setIsDefault(addresses.length === 0);
+    setFormError(null);
     setIsModalOpen(true);
   };
 
-  const openEditModal = (addr: Address) => {
-    setEditingAddress(addr);
-    setFullName(addr.fullName);
-    setPhone(addr.phone);
-    setStreet(addr.street);
-    setCity(addr.city);
-    setState(addr.state);
-    setZipCode(addr.zipCode);
-    setCountry(addr.country);
-    setIsDefault(addr.isDefault);
-    setErrorMsg("");
+  const handleOpenEditModal = (address: Address) => {
+    setEditingAddress(address);
+    setFullName(address.fullName);
+    setPhone(address.phone);
+    setStreet(address.street);
+    setCity(address.city);
+    setState(address.state);
+    setZipCode(address.zipCode);
+    setCountry(address.country || "India");
+    setIsDefault(address.isDefault || false);
+    setFormError(null);
     setIsModalOpen(true);
   };
 
-  const handleFormSubmit = async (e: React.FormEvent) => {
+  const handleSaveAddress = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName || !phone || !street || !city || !state || !zipCode || !country) {
-      setErrorMsg("All fields are required.");
+    if (!fullName || !phone || !street || !city || !state || !zipCode) {
+      setFormError("Please fill in all required fields.");
       return;
     }
 
-    const payload = { fullName, phone, street, city, state, zipCode, country, isDefault };
+    setIsSubmitting(true);
+    setFormError(null);
+
+    const addressData = {
+      fullName,
+      phone,
+      street,
+      city,
+      state,
+      zipCode,
+      country,
+      isDefault,
+    };
 
     try {
-      let res;
-      if (editingAddress) {
-        res = await userApi.updateAddress(editingAddress._id, payload);
+      let updatedUser;
+      if (editingAddress && editingAddress._id) {
+        const res = await userApi.updateAddress(editingAddress._id, addressData);
+        updatedUser = res.data;
       } else {
-        res = await userApi.addAddress(payload);
+        const res = await userApi.addAddress(addressData);
+        updatedUser = res.data;
       }
 
-      dispatch(setUser(res.data.user));
+      dispatch(setUser(updatedUser));
       setIsModalOpen(false);
     } catch (err: any) {
-      setErrorMsg(err.response?.data?.message || MSG_FAILED_SAVE_ADDRESS);
+      setFormError(err.response?.data?.message || MSG_FAILED_SAVE_ADDRESS);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleDeleteAddress = async () => {
-    if (!addressToDeleteId) return;
+  const handleDeleteAddress = async (addressId: string) => {
     try {
-      const res = await userApi.deleteAddress(addressToDeleteId);
-      dispatch(setUser(res.data.user));
+      const res = await userApi.deleteAddress(addressId);
+      dispatch(setUser(res.data));
       setAddressToDeleteId(null);
     } catch (err) {
-      alert("Failed to delete address.");
+      console.error("Failed to delete address", err);
     }
   };
 
   return (
-    <div style={containerStyles}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Header />
-      <main style={mainContentStyles}>
-        {/* Profile Info Header */}
-        <section style={profileHeaderCardStyles}>
-          <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-            <div style={avatarCircleStyles}>
-              <UserIcon size={36} color="var(--primary)" />
-            </div>
-            <div>
-              <h1 style={profileNameStyles}>
-                {user?.firstName ? `${user.firstName} ${user.lastName}` : "User Profile"}
-              </h1>
-              <div style={profileDetailRowStyles}>
-                <Mail size={16} color="var(--text-muted)" />
-                <span style={profileEmailStyles}>{user?.email}</span>
+
+      <main style={{ flex: 1, backgroundColor: "#f8fafc", padding: "3rem 0" }}>
+        <div style={{ width: "100%", maxWidth: "1200px", margin: "0 auto", padding: "0 2rem" }}>
+          
+          {/* User Profile Header Card */}
+          <section style={profileHeaderCardStyles}>
+            <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+              <div style={avatarStyles}>
+                <UserIcon size={36} color="var(--primary)" />
+              </div>
+              <div>
+                <h1 style={{ fontSize: "1.75rem", fontWeight: 800, margin: 0, color: "var(--text-main)" }}>
+                  {user?.name || "User Account"}
+                </h1>
+                <div style={profileDetailRowStyles}>
+                  <Mail size={16} color="var(--text-muted)" />
+                  <span style={profileEmailStyles}>{user?.email}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Wallet Balance Widget */}
-          <div style={walletWidgetStyles}>
-            <div style={walletIconWrapperStyles}>
-              <WalletIcon size={22} color="var(--primary)" />
+            {/* Wallet Balance Widget */}
+            <div style={walletWidgetStyles}>
+              <div 
+                onClick={() => setIsWalletHistoryModalOpen(true)}
+                style={{ ...walletIconWrapperStyles, cursor: "pointer" }}
+                title="Click to view Wallet History"
+              >
+                <WalletIcon size={22} color="var(--primary)" />
+              </div>
+              <div 
+                onClick={() => setIsWalletHistoryModalOpen(true)}
+                style={{ display: "flex", flexDirection: "column", cursor: "pointer" }}
+                title="Click to view Wallet History"
+              >
+                <span style={walletLabelStyles}>MARKETNEST WALLET</span>
+                <span style={walletBalanceStyles}>₹{(user?.walletBalance || 0).toFixed(2)}</span>
+              </div>
+              <button 
+                onClick={() => {
+                  setFundsAmount("1000");
+                  setFundsError("");
+                  setIsAddFundsModalOpen(true);
+                }}
+                style={walletAddBtnStyles}
+              >
+                + Add Funds
+              </button>
             </div>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <span style={walletLabelStyles}>MARKETNEST WALLET</span>
-              <span style={walletBalanceStyles}>₹{(user?.walletBalance || 0).toFixed(2)}</span>
+          </section>
+
+          {/* Wallet Transaction History Section */}
+          <section style={{ marginTop: "2rem" }}>
+            <div style={sectionHeaderStyles}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <History size={20} color="var(--primary)" />
+                <h2 style={sectionTitleStyles}>Wallet Activity & History</h2>
+              </div>
+              <button 
+                onClick={fetchWalletHistory} 
+                style={{ 
+                  background: "none", 
+                  border: "none", 
+                  color: "var(--primary)", 
+                  cursor: "pointer", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: "0.25rem",
+                  fontSize: "0.85rem",
+                  fontWeight: 600
+                }}
+              >
+                <RefreshCw size={14} className={loadingTransactions ? "animate-spin" : ""} /> Refresh
+              </button>
             </div>
-            <button 
-              onClick={() => {
-                setFundsAmount("1000");
-                setFundsError("");
-                setIsAddFundsModalOpen(true);
-              }}
-              style={walletAddBtnStyles}
-            >
-              + Add Funds
-            </button>
-          </div>
-        </section>
 
-        {/* AI Personalization Section */}
-        <section style={{ marginTop: "2rem" }}>
-          <PersonalizationOverviewCard
-            autoOpenOnboardingModal={autoOpenPersonalizationModal}
-            onModalCloseAction={handlePersonalizationModalClose}
-          />
-        </section>
-
-        {/* Address Book Section */}
-        <section style={{ marginTop: "2rem" }}>
-          <div style={sectionHeaderStyles}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <MapPin size={22} color="var(--primary)" />
-              <h2 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0 }}>Saved Delivery Addresses</h2>
-            </div>
-            <button onClick={openAddModal} style={addBtnStyles}>
-              <Plus size={18} /> Add Address
-            </button>
-          </div>
-
-          {addresses.length === 0 ? (
-            <div style={emptyStateCardStyles}>
-              <MapPin size={48} color="var(--text-muted)" style={{ opacity: 0.5, marginBottom: "1rem" }} />
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "0.25rem" }}>No Addresses Saved</h3>
-              <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", margin: 0 }}>
-                Please add a delivery address to make the checkout process smooth and rapid.
-              </p>
-            </div>
-          ) : (
-            <div style={addressGridStyles}>
-              {addresses.map((addr) => (
-                <div key={addr._id} style={{
-                  ...addressCardStyles,
-                  borderColor: addr.isDefault ? "var(--primary)" : "var(--border)",
-                  boxShadow: addr.isDefault ? "0 4px 20px rgba(99, 102, 241, 0.08)" : "none",
-                }}>
-                  {addr.isDefault && (
-                    <span style={defaultBadgeStyles}>DEFAULT</span>
-                  )}
-                  <h3 style={cardNameStyles}>{addr.fullName}</h3>
-                  <p style={cardTextStyles}>{addr.street}</p>
-                  <p style={cardTextStyles}>{addr.city}, {addr.state} - {addr.zipCode}</p>
-                  <p style={cardTextStyles}>{addr.country}</p>
-                  <p style={{ ...cardTextStyles, marginTop: "0.5rem", fontWeight: 600 }}>Phone: {addr.phone}</p>
-
-                  <div style={cardActionsStyles}>
-                    <button onClick={() => openEditModal(addr)} style={actionBtnStyles} title="Edit Address">
-                      <Edit3 size={16} style={{ marginRight: "0.25rem" }} /> Edit
-                    </button>
-                    <button onClick={() => setAddressToDeleteId(addr._id)} style={{ ...actionBtnStyles, color: "#dc2626" }} title="Delete Address">
-                      <Trash2 size={16} style={{ marginRight: "0.25rem" }} /> Delete
-                    </button>
-                  </div>
+            <div style={historyCardContainerStyles}>
+              {loadingTransactions ? (
+                <div style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)", fontSize: "0.9rem" }}>
+                  Loading wallet history...
                 </div>
-              ))}
+              ) : walletTransactions.length === 0 ? (
+                <div style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)" }}>
+                  <p style={{ margin: 0, fontWeight: 600 }}>No wallet transactions recorded yet.</p>
+                  <p style={{ margin: "0.25rem 0 0", fontSize: "0.85rem" }}>Top up your wallet or make purchases to view your transaction log.</p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  {walletTransactions.map((tx) => {
+                    const isCredit = tx.type?.toLowerCase() === "credit" || tx.description?.toLowerCase().includes("credit") || tx.description?.toLowerCase().includes("added") || tx.description?.toLowerCase().includes("top-up");
+                    return (
+                      <div key={tx._id} style={transactionItemStyles}>
+                        <div style={{
+                          ...txIconWrapperStyles,
+                          backgroundColor: isCredit ? "rgba(16, 185, 129, 0.12)" : "rgba(239, 68, 68, 0.12)",
+                          color: isCredit ? "#10b981" : "#ef4444"
+                        }}>
+                          {isCredit ? <ArrowUpRight size={18} /> : <ArrowDownLeft size={18} />}
+                        </div>
+
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                              <span style={txDescriptionStyles}>{tx.description}</span>
+                              <span style={{
+                                fontSize: "0.65rem",
+                                fontWeight: 800,
+                                padding: "0.15rem 0.45rem",
+                                borderRadius: "6px",
+                                backgroundColor: isCredit ? "rgba(16, 185, 129, 0.12)" : "rgba(239, 68, 68, 0.12)",
+                                color: isCredit ? "#10b981" : "#ef4444",
+                                letterSpacing: "0.04em"
+                              }}>
+                                {isCredit ? "CREDITED" : "DEBITED"}
+                              </span>
+                            </div>
+                            <span style={{
+                              fontSize: "1rem",
+                              fontWeight: 800,
+                              color: isCredit ? "#10b981" : "#ef4444"
+                            }}>
+                              {isCredit ? "+" : "-"} ₹{tx.amount.toFixed(2)}
+                            </span>
+                          </div>
+
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.25rem" }}>
+                            <span style={txDateStyles}>
+                              {new Date(tx.createdAt).toLocaleString(undefined, {
+                                dateStyle: "medium",
+                                timeStyle: "short"
+                              })}
+                            </span>
+                            <span style={txBalanceAfterStyles}>
+                              Balance: ₹{(tx.balanceAfter || 0).toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
-        </section>
+          </section>
+
+          {/* AI Personalization Section */}
+          <section style={{ marginTop: "2rem" }}>
+            <PersonalizationOverviewCard
+              autoOpenOnboardingModal={autoOpenPersonalizationModal}
+              onModalCloseAction={handlePersonalizationModalClose}
+            />
+          </section>
+
+          {/* Address Book Section */}
+          <section style={{ marginTop: "2rem" }}>
+            <div style={sectionHeaderStyles}>
+              <h2 style={sectionTitleStyles}>Saved Delivery Addresses</h2>
+              <button onClick={handleOpenAddModal} className="btn-primary" style={{ padding: "0.5rem 1rem", fontSize: "0.875rem" }}>
+                <Plus size={16} style={{ marginRight: "0.35rem" }} /> Add New Address
+              </button>
+            </div>
+
+            {addresses.length === 0 ? (
+              <div style={emptyAddressStyles}>
+                <MapPin size={36} color="var(--text-muted)" style={{ marginBottom: "0.5rem" }} />
+                <p style={{ margin: 0, fontWeight: 600, color: "var(--text-main)" }}>No delivery addresses saved yet.</p>
+                <p style={{ margin: "0.25rem 0 1rem", color: "var(--text-muted)", fontSize: "0.875rem" }}>
+                  Add your home or work address for faster checkout.
+                </p>
+                <button onClick={handleOpenAddModal} className="btn-secondary" style={{ fontSize: "0.875rem" }}>
+                  Add Address
+                </button>
+              </div>
+            ) : (
+              <div style={addressGridStyles}>
+                {addresses.map((address) => (
+                  <div key={address._id} style={{ ...addressCardStyles, ...(address.isDefault ? defaultCardStyles : {}) }}>
+                    {address.isDefault && (
+                      <span style={defaultBadgeStyles}>
+                        <ShieldCheck size={12} style={{ marginRight: "0.2rem" }} /> DEFAULT
+                      </span>
+                    )}
+
+                    <h3 style={addressNameStyles}>{address.fullName}</h3>
+                    <p style={addressTextStyles}>{address.street}</p>
+                    <p style={addressTextStyles}>
+                      {address.city}, {address.state} - {address.zipCode}
+                    </p>
+                    <p style={addressTextStyles}>{address.country}</p>
+                    <p style={{ ...addressTextStyles, marginTop: "0.5rem", fontWeight: 500 }}>
+                      Phone: {address.phone}
+                    </p>
+
+                    <div style={addressActionsStyles}>
+                      <button onClick={() => handleOpenEditModal(address)} style={actionBtnStyles}>
+                        <Edit3 size={14} style={{ marginRight: "0.25rem" }} /> Edit
+                      </button>
+                      <button
+                        onClick={() => address._id && setAddressToDeleteId(address._id)}
+                        style={{ ...actionBtnStyles, color: "#dc2626" }}
+                      >
+                        <Trash2 size={14} style={{ marginRight: "0.25rem" }} /> Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+        </div>
       </main>
 
-      {/* Address Form Modal */}
+      {/* Add / Edit Address Modal */}
       {isModalOpen && (
         <div className="modal-overlay animate-fadeIn">
-          <div className="modal-container" style={{ maxWidth: "520px", width: "90%", borderRadius: "24px", padding: "2rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-              <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0 }}>
-                {editingAddress ? "Edit Shipping Address" : "Add Shipping Address"}
+          <div className="modal-container" style={{ maxWidth: "550px" }}>
+            <div style={modalHeaderStyles}>
+              <h3 style={modalTitleStyles}>
+                {editingAddress ? "Edit Delivery Address" : "Add New Delivery Address"}
               </h3>
-              <button onClick={() => setIsModalOpen(false)} style={closeBtnStyles}>&times;</button>
+              <button onClick={() => setIsModalOpen(false)} style={modalCloseBtnStyles}>×</button>
             </div>
 
-            {errorMsg && (
-              <div style={errorContainerStyles}>
-                <ShieldAlert size={18} style={{ marginRight: "0.5rem", flexShrink: 0 }} />
-                <span>{errorMsg}</span>
+            {formError && (
+              <div style={errorBannerStyles}>
+                <ShieldAlert size={16} style={{ marginRight: "0.5rem" }} /> {formError}
               </div>
             )}
 
-            <form onSubmit={handleFormSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <div className="form-group">
-                <label className="form-label">Full Name</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="e.g. John Doe"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                />
-              </div>
+            <form onSubmit={handleSaveAddress}>
+              <div style={formGridStyles}>
+                <div className="form-group" style={{ gridColumn: "span 2" }}>
+                  <label className="form-label">Full Name</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. John Doe"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                  />
+                </div>
 
-              <div className="form-group">
-                <label className="form-label">Phone Number</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="10-digit phone number"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-              </div>
+                <div className="form-group" style={{ gridColumn: "span 2" }}>
+                  <label className="form-label">Phone Number</label>
+                  <input
+                    type="tel"
+                    className="form-input"
+                    placeholder="10-digit mobile number"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
 
-              <div className="form-group">
-                <label className="form-label">Street Address</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Apartment, building, flat, street..."
-                  value={street}
-                  onChange={(e) => setStreet(e.target.value)}
-                />
-              </div>
+                <div className="form-group" style={{ gridColumn: "span 2" }}>
+                  <label className="form-label">Street Address / House No.</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Flat No, Building, Street"
+                    value={street}
+                    onChange={(e) => setStreet(e.target.value)}
+                  />
+                </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div className="form-group">
                   <label className="form-label">City</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="e.g. Mumbai"
+                    placeholder="City"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                   />
                 </div>
+
                 <div className="form-group">
-                  <label className="form-label">State / Province</label>
+                  <label className="form-label">State</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="e.g. Maharashtra"
+                    placeholder="State"
                     value={state}
                     onChange={(e) => setState(e.target.value)}
                   />
                 </div>
-              </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div className="form-group">
-                  <label className="form-label">ZIP / Postal Code</label>
+                  <label className="form-label">PIN Code / Zip Code</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="ZIP Code"
+                    placeholder="6-digit PIN"
                     value={zipCode}
                     onChange={(e) => setZipCode(e.target.value)}
                   />
                 </div>
+
                 <div className="form-group">
                   <label className="form-label">Country</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="e.g. India"
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
                   />
                 </div>
+
+                <div className="form-group" style={{ gridColumn: "span 2", flexDirection: "row", alignItems: "center", gap: "0.5rem" }}>
+                  <input
+                    type="checkbox"
+                    id="isDefaultCheckbox"
+                    checked={isDefault}
+                    onChange={(e) => setIsDefault(e.target.checked)}
+                    style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                  />
+                  <label htmlFor="isDefaultCheckbox" style={{ fontSize: "0.875rem", cursor: "pointer", fontWeight: 500 }}>
+                    Set as default delivery address
+                  </label>
+                </div>
               </div>
 
-              {/* Default toggle */}
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
-                <input
-                  type="checkbox"
-                  id="defaultAddressCheckbox"
-                  checked={isDefault}
-                  disabled={editingAddress?.isDefault} // Cannot unset default directly if it's the only default
-                  onChange={(e) => setIsDefault(e.target.checked)}
-                  style={{ width: "18px", height: "18px", cursor: "pointer" }}
-                />
-                <label htmlFor="defaultAddressCheckbox" style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--text-main)", cursor: "pointer" }}>
-                  Set as default shipping address
-                </label>
-              </div>
-
-              <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="btn-secondary"
-                  style={{ flex: 1, padding: "0.75rem", borderRadius: "12px", width: "auto" }}
-                >
+              <div style={modalFooterStyles}>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary">
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  style={{ flex: 1, padding: "0.75rem", borderRadius: "12px", width: "auto", marginTop: 0 }}
-                >
-                  Save Address
+                <button type="submit" disabled={isSubmitting} className="btn-primary">
+                  {isSubmitting ? "Saving..." : "Save Address"}
                 </button>
               </div>
             </form>
@@ -402,354 +548,181 @@ export const ProfilePage: React.FC = () => {
         </div>
       )}
 
-      {/* Delete Address Modal */}
+      {/* Delete Confirmation Modal */}
       {addressToDeleteId && (
         <div className="modal-overlay animate-fadeIn">
-          <div className="modal-container" style={{ maxWidth: "420px", width: "90%", padding: "1.75rem", borderRadius: "20px" }}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-              <div style={deleteWarningIconContainerStyles}>
-                <Trash2 width="28" height="28" style={{ color: "#dc2626" }} />
-              </div>
-
-              <h3 style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text-main)", marginTop: "1rem", marginBottom: "0.5rem" }}>
-                Remove Saved Address?
-              </h3>
-
-              <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", lineHeight: 1.5, margin: "0 0 1.5rem 0" }}>
-                Are you sure you want to remove this address from your saved address book?
-              </p>
-
-              <div style={{ display: "flex", gap: "0.75rem", width: "100%" }}>
-                <button
-                  onClick={() => setAddressToDeleteId(null)}
-                  className="modal-btn modal-btn-secondary"
-                  style={{ flex: 1, padding: "0.75rem 1rem", borderRadius: "12px", cursor: "pointer" }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeleteAddress}
-                  className="modal-btn"
-                  style={{
-                    flex: 1,
-                    padding: "0.75rem 1rem",
-                    borderRadius: "12px",
-                    backgroundColor: "#dc2626",
-                    color: "white",
-                    fontWeight: 600,
-                    border: "none",
-                    cursor: "pointer",
-                    transition: "opacity 0.2s"
-                  }}
-                >
-                  Remove
-                </button>
-              </div>
+          <div className="modal-container" style={{ maxWidth: "400px", textAlign: "center" }}>
+            <ShieldAlert size={48} color="#dc2626" style={{ margin: "0 auto 1rem" }} />
+            <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: "0 0 0.5rem" }}>Delete Address?</h3>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", margin: "0 0 1.5rem" }}>
+              Are you sure you want to delete this delivery address? This action cannot be undone.
+            </p>
+            <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
+              <button onClick={() => setAddressToDeleteId(null)} className="btn-secondary">
+                Cancel
+              </button>
+              <button onClick={() => handleDeleteAddress(addressToDeleteId)} className="btn-danger">
+                Delete
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Add Wallet Funds Modal */}
+      {/* Add Funds Modal */}
       {isAddFundsModalOpen && (
         <div className="modal-overlay animate-fadeIn">
-          <div className="modal-container" style={{ maxWidth: "400px", width: "90%", borderRadius: "24px", padding: "2rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-              <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0 }}>Add Funds to Wallet</h3>
-              <button 
-                onClick={() => setIsAddFundsModalOpen(false)} 
-                style={{ border: "none", background: "none", fontSize: "1.5rem", cursor: "pointer", color: "var(--text-muted)" }}
-              >
-                &times;
-              </button>
+          <div className="modal-container" style={{ maxWidth: "450px" }}>
+            <div style={modalHeaderStyles}>
+              <h3 style={modalTitleStyles}>Add Funds to Wallet</h3>
+              <button onClick={() => setIsAddFundsModalOpen(false)} style={modalCloseBtnStyles}>×</button>
             </div>
 
             {fundsError && (
-              <div style={{ padding: "0.75rem 1rem", borderRadius: "12px", backgroundColor: "#fef2f2", border: "1px solid #fee2e2", color: "#dc2626", fontSize: "0.875rem", fontWeight: 600, display: "flex", alignItems: "center", marginBottom: "1rem" }}>
-                <ShieldAlert size={18} style={{ marginRight: "0.5rem", flexShrink: 0 }} />
-                <span>{fundsError}</span>
+              <div style={errorBannerStyles}>
+                <ShieldAlert size={16} style={{ marginRight: "0.5rem" }} /> {fundsError}
               </div>
             )}
 
-            <form 
-              onSubmit={(e) => {
-                e.preventDefault();
-                const amt = parseFloat(fundsAmount);
-                if (isNaN(amt) || amt <= 0) {
-                  setFundsError("Please enter a valid positive amount.");
-                  return;
-                }
-                handleAddWalletFunds(amt);
-              }}
-              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
-            >
-              <div className="form-group">
-                <label className="form-label">Enter Amount (₹)</label>
-                <input
-                  type="number"
-                  className="form-input"
-                  min="1"
-                  step="any"
-                  placeholder="e.g. 500"
-                  value={fundsAmount}
-                  onChange={(e) => setFundsAmount(e.target.value)}
-                  required
-                  autoFocus
-                />
+            <div style={{ margin: "1rem 0" }}>
+              <label className="form-label" style={{ marginBottom: "0.5rem", display: "block" }}>Select or Enter Amount (₹)</label>
+              
+              {/* Quick Select Buttons */}
+              <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+                {["500", "1000", "2000", "5000"].map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setFundsAmount(preset)}
+                    style={{
+                      flex: 1,
+                      padding: "0.5rem",
+                      borderRadius: "8px",
+                      border: fundsAmount === preset ? "2px solid var(--primary)" : "1px solid var(--border)",
+                      backgroundColor: fundsAmount === preset ? "rgba(79, 70, 229, 0.05)" : "transparent",
+                      color: fundsAmount === preset ? "var(--primary)" : "var(--text-main)",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      fontSize: "0.85rem"
+                    }}
+                  >
+                    + ₹{preset}
+                  </button>
+                ))}
               </div>
 
-              <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-                <button
-                  type="button"
-                  onClick={() => setIsAddFundsModalOpen(false)}
-                  className="btn-secondary"
-                  style={{ flex: 1, padding: "0.75rem", borderRadius: "12px", width: "auto" }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  disabled={walletLoading}
-                  style={{ flex: 1, padding: "0.75rem", borderRadius: "12px", width: "auto", marginTop: 0 }}
-                >
-                  {walletLoading ? "Processing..." : "Confirm Add"}
-                </button>
-              </div>
-            </form>
+              <input
+                type="number"
+                min="1"
+                className="form-input"
+                placeholder="Enter custom amount"
+                value={fundsAmount}
+                onChange={(e) => setFundsAmount(e.target.value)}
+              />
+            </div>
+
+            <div style={modalFooterStyles}>
+              <button type="button" onClick={() => setIsAddFundsModalOpen(false)} className="btn-secondary">
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  const num = Number(fundsAmount);
+                  if (num > 0) handleAddWalletFunds(num);
+                }} 
+                disabled={walletLoading}
+                className="btn-primary"
+              >
+                {walletLoading ? "Processing..." : "Confirm Add"}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Success Confirmation Modal */}
+      {/* Success Modal */}
       {isSuccessModalOpen && (
         <div className="modal-overlay animate-fadeIn">
-          <div className="modal-container" style={{ maxWidth: "420px", width: "90%", padding: "2rem", borderRadius: "24px", textAlign: "center" }}>
+          <div className="modal-container" style={{ maxWidth: "400px", textAlign: "center", padding: "2rem" }}>
             <div style={{
-              width: "64px",
-              height: "64px",
+              width: "60px",
+              height: "60px",
               borderRadius: "50%",
-              backgroundColor: "#ecfdf5",
+              backgroundColor: "rgba(16, 185, 129, 0.1)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              margin: "0 auto 1.5rem auto",
-              border: "2px solid #a7f3d0"
+              margin: "0 auto 1rem"
             }}>
               <ShieldCheck size={36} color="#10b981" />
             </div>
 
-            <h3 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-main)", marginBottom: "0.5rem" }}>
-              Funds Added!
+            <h3 style={{ fontSize: "1.35rem", fontWeight: 800, margin: "0 0 0.5rem", color: "var(--text-main)" }}>
+              Funds Added Successfully!
             </h3>
 
-            <p style={{ fontSize: "0.95rem", color: "var(--text-muted)", lineHeight: 1.6, margin: "0 0 1.75rem 0" }}>
-              Successfully added <strong style={{ color: "var(--text-main)" }}>₹{successModalAmount.toLocaleString()}</strong> to your MarketNest Wallet.
-              <br />
-              New Balance: <strong style={{ color: "var(--primary)" }}>₹{(user?.walletBalance || 0).toLocaleString()}</strong>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", margin: "0 0 1.5rem" }}>
+              Added <strong style={{ color: "#10b981" }}>+ ₹{successModalAmount.toLocaleString()}</strong> to your MarketNest wallet.
             </p>
 
-            <button
+            <div style={{ backgroundColor: "#f8fafc", padding: "0.85rem", borderRadius: "12px", marginBottom: "1.5rem", fontSize: "0.85rem" }}>
+              New Balance: <strong style={{ color: "var(--primary)" }}>₹{(user?.walletBalance || 0).toLocaleString()}</strong>
+            </div>
+
+            <button 
               onClick={() => setIsSuccessModalOpen(false)}
-              className="btn-primary"
-              style={{ width: "100%", padding: "0.75rem", borderRadius: "12px", fontSize: "0.95rem", fontWeight: 700, marginTop: 0 }}
+              className="btn-primary" 
+              style={{ width: "100%" }}
             >
-              Awesome
+              Done
             </button>
           </div>
         </div>
       )}
+
+      {/* Wallet History Modal */}
+      <WalletHistoryModal
+        isOpen={isWalletHistoryModalOpen}
+        onClose={() => setIsWalletHistoryModalOpen(false)}
+      />
     </div>
   );
 };
 
 // Styles
-const containerStyles: React.CSSProperties = {
-  backgroundColor: "var(--background)",
-  minHeight: "100vh",
-  display: "flex",
-  flexDirection: "column",
-};
-
-const mainContentStyles: React.CSSProperties = {
-  flex: 1,
-  width: "100%",
-  maxWidth: "1200px",
-  margin: "0 auto",
-  padding: "2rem",
-};
-
 const profileHeaderCardStyles: React.CSSProperties = {
+  backgroundColor: "white",
+  borderRadius: "20px",
+  padding: "2rem",
+  boxShadow: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
   display: "flex",
   alignItems: "center",
-  gap: "1.5rem",
-  padding: "2rem",
-  borderRadius: "24px",
-  backgroundColor: "white",
+  justifyContent: "space-between",
   border: "1px solid var(--border)",
-  boxShadow: "0 4px 20px rgba(0,0,0,0.01)",
 };
 
-const avatarCircleStyles: React.CSSProperties = {
+const avatarStyles: React.CSSProperties = {
   width: "72px",
   height: "72px",
   borderRadius: "50%",
-  backgroundColor: "var(--background)",
-  border: "2px solid #e0e7ff",
+  backgroundColor: "rgba(79, 70, 229, 0.1)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-};
-
-const profileNameStyles: React.CSSProperties = {
-  fontSize: "1.5rem",
-  fontWeight: 800,
-  color: "var(--text-main)",
-  margin: 0,
-  letterSpacing: "-0.01em",
 };
 
 const profileDetailRowStyles: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
-  gap: "0.5rem",
+  gap: "0.4rem",
   marginTop: "0.35rem",
 };
 
 const profileEmailStyles: React.CSSProperties = {
-  fontSize: "0.95rem",
-  color: "var(--text-muted)",
-  fontWeight: 500,
-};
-
-const sectionHeaderStyles: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: "1.25rem",
-};
-
-const addBtnStyles: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "0.35rem",
-  padding: "0.625rem 1.25rem",
-  borderRadius: "12px",
-  backgroundColor: "var(--primary)",
-  color: "white",
-  border: "none",
-  fontWeight: 600,
-  fontSize: "0.875rem",
-  cursor: "pointer",
-  transition: "opacity 0.2s",
-};
-
-const emptyStateCardStyles: React.CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  textAlign: "center",
-  padding: "5rem 2rem",
-  backgroundColor: "white",
-  borderRadius: "24px",
-  border: "1px solid var(--border)",
-};
-
-const addressGridStyles: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-  gap: "1.5rem",
-};
-
-const addressCardStyles: React.CSSProperties = {
-  position: "relative",
-  padding: "1.5rem",
-  borderRadius: "20px",
-  backgroundColor: "white",
-  border: "2px solid var(--border)",
-  display: "flex",
-  flexDirection: "column",
-  transition: "all 0.25s ease",
-};
-
-const defaultBadgeStyles: React.CSSProperties = {
-  position: "absolute",
-  top: "1.25rem",
-  right: "1.25rem",
-  backgroundColor: "#e0e7ff",
-  color: "var(--primary)",
-  fontSize: "0.65rem",
-  fontWeight: 800,
-  padding: "0.25rem 0.6rem",
-  borderRadius: "8px",
-  letterSpacing: "0.05em",
-};
-
-const cardNameStyles: React.CSSProperties = {
-  fontSize: "1.1rem",
-  fontWeight: 700,
-  color: "var(--text-main)",
-  margin: "0 0 0.75rem 0",
-};
-
-const cardTextStyles: React.CSSProperties = {
   fontSize: "0.9rem",
   color: "var(--text-muted)",
-  margin: "0 0 0.25rem 0",
-  lineHeight: 1.45,
-};
-
-const cardActionsStyles: React.CSSProperties = {
-  display: "flex",
-  gap: "1rem",
-  marginTop: "1.5rem",
-  borderTop: "1px solid #f1f5f9",
-  paddingTop: "1rem",
-};
-
-const actionBtnStyles: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  background: "none",
-  border: "none",
-  fontSize: "0.85rem",
-  fontWeight: 600,
-  color: "var(--text-muted)",
-  cursor: "pointer",
-  transition: "color 0.2s",
-};
-
-const closeBtnStyles: React.CSSProperties = {
-  fontSize: "1.5rem",
-  fontWeight: 700,
-  border: "none",
-  background: "none",
-  cursor: "pointer",
-  color: "var(--text-muted)",
-  padding: 0,
-};
-
-const errorContainerStyles: React.CSSProperties = {
-  padding: "0.75rem 1rem",
-  borderRadius: "12px",
-  backgroundColor: "#fef2f2",
-  border: "1px solid #fee2e2",
-  color: "#dc2626",
-  fontSize: "0.875rem",
-  fontWeight: 600,
-  display: "flex",
-  alignItems: "center",
-  marginBottom: "1rem",
-};
-
-const deleteWarningIconContainerStyles: React.CSSProperties = {
-  width: "56px",
-  height: "56px",
-  borderRadius: "50%",
-  backgroundColor: "#fee2e2",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
+  fontWeight: 500,
 };
 
 const walletWidgetStyles: React.CSSProperties = {
@@ -796,4 +769,189 @@ const walletAddBtnStyles: React.CSSProperties = {
   fontWeight: 700,
   fontSize: "0.8rem",
   cursor: "pointer",
+};
+
+const historyCardContainerStyles: React.CSSProperties = {
+  backgroundColor: "white",
+  borderRadius: "20px",
+  padding: "1.5rem",
+  boxShadow: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
+  border: "1px solid var(--border)",
+};
+
+const transactionItemStyles: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "1rem",
+  padding: "0.85rem 1rem",
+  borderRadius: "12px",
+  backgroundColor: "#f8fafc",
+  border: "1px solid #f1f5f9",
+};
+
+const txIconWrapperStyles: React.CSSProperties = {
+  width: "36px",
+  height: "36px",
+  borderRadius: "10px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const txDescriptionStyles: React.CSSProperties = {
+  fontSize: "0.9rem",
+  fontWeight: 700,
+  color: "var(--text-main)",
+};
+
+const txDateStyles: React.CSSProperties = {
+  fontSize: "0.75rem",
+  color: "var(--text-muted)",
+  fontWeight: 500,
+};
+
+const txBalanceAfterStyles: React.CSSProperties = {
+  fontSize: "0.75rem",
+  color: "#64748b",
+  fontWeight: 600,
+};
+
+const sectionHeaderStyles: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: "1rem",
+};
+
+const sectionTitleStyles: React.CSSProperties = {
+  fontSize: "1.25rem",
+  fontWeight: 800,
+  color: "var(--text-main)",
+  margin: 0,
+};
+
+const emptyAddressStyles: React.CSSProperties = {
+  backgroundColor: "white",
+  borderRadius: "20px",
+  padding: "3rem 2rem",
+  textAlign: "center",
+  border: "1px solid var(--border)",
+  boxShadow: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
+};
+
+const addressGridStyles: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+  gap: "1.5rem",
+};
+
+const addressCardStyles: React.CSSProperties = {
+  backgroundColor: "white",
+  borderRadius: "16px",
+  padding: "1.5rem",
+  border: "1px solid var(--border)",
+  boxShadow: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
+  position: "relative",
+  display: "flex",
+  flexDirection: "column",
+};
+
+const defaultCardStyles: React.CSSProperties = {
+  border: "2px solid var(--primary)",
+  backgroundColor: "rgba(79, 70, 229, 0.02)",
+};
+
+const defaultBadgeStyles: React.CSSProperties = {
+  position: "absolute",
+  top: "1rem",
+  right: "1rem",
+  fontSize: "0.65rem",
+  fontWeight: 800,
+  color: "var(--primary)",
+  backgroundColor: "rgba(79, 70, 229, 0.1)",
+  padding: "0.2rem 0.5rem",
+  borderRadius: "6px",
+  display: "flex",
+  alignItems: "center",
+};
+
+const addressNameStyles: React.CSSProperties = {
+  fontSize: "1.1rem",
+  fontWeight: 700,
+  color: "var(--text-main)",
+  margin: "0 0 0.5rem",
+};
+
+const addressTextStyles: React.CSSProperties = {
+  fontSize: "0.875rem",
+  color: "var(--text-muted)",
+  margin: "0 0 0.2rem",
+};
+
+const addressActionsStyles: React.CSSProperties = {
+  display: "flex",
+  gap: "1rem",
+  marginTop: "auto",
+  paddingTop: "1rem",
+  borderTop: "1px solid var(--border)",
+};
+
+const actionBtnStyles: React.CSSProperties = {
+  background: "none",
+  border: "none",
+  color: "var(--primary)",
+  fontWeight: 600,
+  fontSize: "0.85rem",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  padding: 0,
+};
+
+const modalHeaderStyles: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: "1.5rem",
+};
+
+const modalTitleStyles: React.CSSProperties = {
+  fontSize: "1.25rem",
+  fontWeight: 800,
+  color: "var(--text-main)",
+  margin: 0,
+};
+
+const modalCloseBtnStyles: React.CSSProperties = {
+  background: "none",
+  border: "none",
+  fontSize: "1.5rem",
+  cursor: "pointer",
+  color: "var(--text-muted)",
+};
+
+const errorBannerStyles: React.CSSProperties = {
+  backgroundColor: "#fef2f2",
+  border: "1px solid #fee2e2",
+  color: "#dc2626",
+  padding: "0.75rem 1rem",
+  borderRadius: "8px",
+  marginBottom: "1.25rem",
+  fontSize: "0.875rem",
+  fontWeight: 600,
+  display: "flex",
+  alignItems: "center",
+};
+
+const formGridStyles: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "1rem",
+};
+
+const modalFooterStyles: React.CSSProperties = {
+  display: "flex",
+  justifyContent: "flex-end",
+  gap: "0.75rem",
+  marginTop: "1.5rem",
 };

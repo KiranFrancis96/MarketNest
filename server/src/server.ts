@@ -66,25 +66,31 @@ mongoose.connect(process.env.MONGO_URI!).then(async () => {
   await seedCategories();
   await seedUsers();
 
-  // Drop stale unique index on orderNumber (schema no longer enforces unique, but old index may still exist in MongoDB)
+  
   try {
     await OrderModel.collection.dropIndex("orderNumber_1");
     logger.info("Dropped stale unique index on orderNumber.");
   } catch (_e) {
-    // Index may not exist — that's fine
+    
   }
 
-  // Auto-migrate: assign sequential orderNumbers to all PAID orders sorted by creation date (oldest = 1)
+  
   try {
-    const paidOrders = await OrderModel.find({ status: "paid" }).sort({ createdAt: 1 }).lean();
-    for (let i = 0; i < paidOrders.length; i++) {
-      await OrderModel.updateOne(
-        { _id: paidOrders[i]._id },
-        { $set: { orderNumber: String(i + 1) } }
-      );
+    const allOrders = await OrderModel.find({}).sort({ createdAt: 1 }).lean();
+    let migratedCount = 0;
+    for (let i = 0; i < allOrders.length; i++) {
+      const o = allOrders[i];
+      if (!o.orderNumber || !o.orderNumber.startsWith("ORD-")) {
+        const num = 10000 + i + 1;
+        await OrderModel.updateOne(
+          { _id: o._id },
+          { $set: { orderNumber: `ORD-${num}` } }
+        );
+        migratedCount++;
+      }
     }
-    if (paidOrders.length > 0) {
-      logger.info(`Order number migration: renumbered ${paidOrders.length} paid orders from 1 in date order.`);
+    if (migratedCount > 0) {
+      logger.info(`Order number migration: updated ${migratedCount} orders to ORD-12345 format.`);
     }
   } catch (err) {
     logger.warn("Order number migration failed: " + (err as Error).message);

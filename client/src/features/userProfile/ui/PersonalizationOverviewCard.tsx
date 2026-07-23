@@ -16,6 +16,19 @@ import { setProfile, setError, setLoading } from "@/entities/userProfile/model/u
 import { userProfileApi } from "@/entities/userProfile/api/userProfileApi";
 import { SectionCard } from "./SectionCard";
 import { BasicInformationForm } from "./BasicInformationForm";
+import { LifestyleForm } from "./LifestyleForm";
+import { FamilyForm } from "./FamilyForm";
+import { HomeForm } from "./HomeForm";
+import { ShoppingForm } from "./ShoppingForm";
+import { PrivacyForm } from "./PrivacyForm";
+import { OccupationForm } from "./OccupationForm";
+import { TechnologyForm } from "./TechnologyForm";
+import { TravelForm } from "./TravelForm";
+import { FoodForm } from "./FoodForm";
+import { EntertainmentForm } from "./EntertainmentForm";
+import { AiPreferencesForm } from "./AiPreferencesForm";
+import { calculateSectionCompletion } from "../model/sectionCompletion";
+import { useUpdateUserProfile } from "../model/useUpdateUserProfile";
 import { HttpStatus } from "@/shared/api/httpStatus";
 import { MSG_FAILED_LOAD_PERSONALIZATION } from "@/shared/constants/messages";
 import type { ProfileSection } from "@/entities/userProfile/model/types";
@@ -24,7 +37,7 @@ interface PersonalizationOverviewCardProps {
   autoOpenOnboardingModal?: boolean;
   onModalCloseAction?: () => void;
 }
-
+  
 export const PersonalizationOverviewCard: React.FC<PersonalizationOverviewCardProps> = ({
   autoOpenOnboardingModal = false,
   onModalCloseAction,
@@ -32,7 +45,10 @@ export const PersonalizationOverviewCard: React.FC<PersonalizationOverviewCardPr
   const dispatch = useDispatch<AppDispatch>();
   const { profile, loading, error } = useSelector((state: RootState) => state.userProfile);
   const user = useSelector((state: RootState) => state.user.user);
-  const [isModalOpen, setIsModalOpen] = useState(autoOpenOnboardingModal);
+  const [activeSection, setActiveSection] = useState<ProfileSection | null>(
+    autoOpenOnboardingModal ? "basicInformation" : null
+  );
+  const { mutateAsync: updateProfile } = useUpdateUserProfile();
 
   const fetchProfile = async () => {
     dispatch(setLoading(true));
@@ -52,12 +68,200 @@ export const PersonalizationOverviewCard: React.FC<PersonalizationOverviewCardPr
 
   const handleFormSubmit = async (formData: any) => {
     try {
-      await userProfileApi.createUserProfile(formData);
-      await fetchProfile();
-      setIsModalOpen(false);
+      if (profile) {
+        // Edit/Review mode: profile already exists, use PUT
+        await updateProfile(formData);
+        await fetchProfile();
+      } else {
+        // Create mode: first-time submission, use POST
+        await userProfileApi.createUserProfile(formData);
+        await fetchProfile();
+      }
+      setActiveSection(null);
       if (onModalCloseAction) onModalCloseAction();
     } catch (err: any) {
       throw err;
+    }
+  };
+
+  const getModalTitle = (section: ProfileSection) => {
+    switch (section) {
+      case "basicInformation":
+        return "Basic Information";
+      case "lifestyle":
+        return "Lifestyle";
+      case "family":
+        return "Family";
+      case "home":
+        return "Home & Living";
+      case "occupation":
+        return "Occupation";
+      case "shopping":
+        return "Shopping Preferences";
+      case "technology":
+        return "Technology";
+      case "travel":
+        return "Travel Preferences";
+      case "food":
+        return "Food & Dining";
+      case "entertainment":
+        return "Entertainment & Media";
+      case "aiPreferences":
+        return "AI Preferences";
+      case "privacy":
+        return "Privacy Settings";
+      default:
+        return "";
+    }
+  };
+
+  const getModalSubtitle = (section: ProfileSection) => {
+    switch (section) {
+      case "basicInformation":
+        return "Help us get the essentials right to personalize your experience.";
+      case "lifestyle":
+        return "Help us understand your daily routines and habits.";
+      case "family":
+        return "Help us understand your household composition.";
+      case "home":
+        return "Help us understand your real estate and living environment.";
+      case "occupation":
+        return "Tell us about your professional background and work environment.";
+      case "shopping":
+        return "Help us understand your brand loyalty and habits.";
+      case "technology":
+        return "Share your hardware, software, and tech usage habits.";
+      case "travel":
+        return "Tell us about your travel frequency and destination preferences.";
+      case "food":
+        return "Help us understand your dining preferences and dietary needs.";
+      case "entertainment":
+        return "Tell us about your media consumption and entertainment choices.";
+      case "aiPreferences":
+        return "Configure your automation and AI interaction preferences.";
+      case "privacy":
+        return "Manage your data visibility and AI model usage preferences.";
+      default:
+        return "";
+    }
+  };
+
+  const handleProfileUpdate = async (formData: any) => {
+    try {
+      await updateProfile(formData);
+      await fetchProfile();
+      setActiveSection(null);
+      if (onModalCloseAction) onModalCloseAction();
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  const renderActiveForm = (section: ProfileSection) => {
+    const handleClose = () => {
+      setActiveSection(null);
+      if (onModalCloseAction) onModalCloseAction();
+    };
+
+    switch (section) {
+      case "basicInformation":
+        return (
+          <BasicInformationForm
+            onSubmit={handleFormSubmit}
+            onClose={handleClose}
+            initialValues={profile?.basicInformation}
+          />
+        );
+      case "lifestyle":
+        return (
+          <LifestyleForm
+            onSubmit={handleProfileUpdate}
+            onClose={handleClose}
+            initialValues={profile?.lifestyle}
+          />
+        );
+      case "family":
+        return (
+          <FamilyForm
+            onSubmit={handleProfileUpdate}
+            onClose={handleClose}
+            initialValues={profile?.family}
+          />
+        );
+      case "home":
+        return (
+          <HomeForm
+            onSubmit={handleProfileUpdate}
+            onClose={handleClose}
+            initialValues={profile?.home}
+          />
+        );
+      case "occupation":
+        return (
+          <OccupationForm
+            onSubmit={handleProfileUpdate}
+            onClose={handleClose}
+            initialValues={profile?.occupation}
+          />
+        );
+      case "shopping":
+        return (
+          <ShoppingForm
+            onSubmit={handleProfileUpdate}
+            onClose={handleClose}
+            initialValues={profile?.shopping}
+          />
+        );
+      case "technology":
+        return (
+          <TechnologyForm
+            onSubmit={handleProfileUpdate}
+            onClose={handleClose}
+            initialValues={profile?.technology}
+          />
+        );
+      case "travel":
+        return (
+          <TravelForm
+            onSubmit={handleProfileUpdate}
+            onClose={handleClose}
+            initialValues={profile?.travel}
+          />
+        );
+      case "food":
+        return (
+          <FoodForm
+            onSubmit={handleProfileUpdate}
+            onClose={handleClose}
+            initialValues={profile?.food}
+          />
+        );
+      case "entertainment":
+        return (
+          <EntertainmentForm
+            onSubmit={handleProfileUpdate}
+            onClose={handleClose}
+            initialValues={profile?.entertainment}
+          />
+        );
+      case "aiPreferences":
+        return (
+          <AiPreferencesForm
+            onSubmit={handleProfileUpdate}
+            onClose={handleClose}
+            initialValues={profile?.aiPreferences}
+          />
+        );
+      case "privacy":
+        return (
+          <PrivacyForm
+            onSubmit={handleProfileUpdate}
+            onClose={handleClose}
+            initialValues={profile?.privacy}
+          />
+        );
+      default:
+        return null;
     }
   };
 
@@ -163,36 +367,28 @@ export const PersonalizationOverviewCard: React.FC<PersonalizationOverviewCardPr
     },
   ];
 
-  // Helper to determine status dynamically based on backend
+  // Helper to determine progress dynamically based on completed fields
+  const getSectionProgress = (sectionId: string) => {
+    if (!profile) return 0;
+    const sectionData = (profile as any)[sectionId];
+    return calculateSectionCompletion(sectionId, sectionData);
+  };
+
+  // Helper to determine status dynamically based on section progress
   const getSectionStatus = (sectionId: string) => {
     if (!profile) return "upcoming" as const;
-    
+    const progress = getSectionProgress(sectionId);
+    if (progress === 100) {
+      return "completed" as const;
+    }
     const completed = profile.completedSections || [];
     if (completed.includes(sectionId as any)) {
       return "completed" as const;
     }
-    
-    if (profile.currentSection === sectionId) {
+    if (profile.currentSection === sectionId || progress > 0) {
       return "current" as const;
     }
-    
     return "upcoming" as const;
-  };
-
-  // Helper to determine progress dynamically
-  const getSectionProgress = (sectionId: string) => {
-    if (!profile) return 0;
-    
-    const completed = profile.completedSections || [];
-    if (completed.includes(sectionId as any)) {
-      return 100;
-    }
-    
-    if (profile.currentSection === sectionId) {
-      return 0;
-    }
-    
-    return 0;
   };
 
   // Render SVG circular progress ring
@@ -306,11 +502,11 @@ export const PersonalizationOverviewCard: React.FC<PersonalizationOverviewCardPr
           </div>
         </div>
 
-        <button onClick={() => setIsModalOpen(true)} style={startBtnStyles}>
+        <button onClick={() => setActiveSection("basicInformation")} style={startBtnStyles}>
           Start Building <ArrowRight size={16} style={{ marginLeft: "0.5rem" }} />
         </button>
 
-        {isModalOpen && (
+        {activeSection === "basicInformation" && (
           <div className="modal-overlay animate-fadeIn">
             <div className="modal-container" style={modalContainerStyles}>
               <div style={modalHeaderStyles}>
@@ -320,7 +516,7 @@ export const PersonalizationOverviewCard: React.FC<PersonalizationOverviewCardPr
                     Basic Information
                   </h3>
                 </div>
-                <button onClick={() => { setIsModalOpen(false); if (onModalCloseAction) onModalCloseAction(); }} style={modalCloseBtnStyles}>
+                <button onClick={() => { setActiveSection(null); if (onModalCloseAction) onModalCloseAction(); }} style={modalCloseBtnStyles}>
                   <X size={20} />
                 </button>
               </div>
@@ -328,7 +524,7 @@ export const PersonalizationOverviewCard: React.FC<PersonalizationOverviewCardPr
               
               <BasicInformationForm 
                 onSubmit={handleFormSubmit}
-                onClose={() => { setIsModalOpen(false); if (onModalCloseAction) onModalCloseAction(); }}
+                onClose={() => { setActiveSection(null); if (onModalCloseAction) onModalCloseAction(); }}
               />
             </div>
           </div>
@@ -427,7 +623,7 @@ export const PersonalizationOverviewCard: React.FC<PersonalizationOverviewCardPr
                 iconName={section.iconName}
                 status={getSectionStatus(section.id)}
                 progress={getSectionProgress(section.id)}
-                onAction={section.id === "basicInformation" ? () => setIsModalOpen(true) : undefined}
+                onAction={() => setActiveSection(section.id as ProfileSection)}
               />
             ))}
           </div>
@@ -499,27 +695,23 @@ export const PersonalizationOverviewCard: React.FC<PersonalizationOverviewCardPr
 
       </div>
 
-      {isModalOpen && (
+      {activeSection && (
         <div className="modal-overlay animate-fadeIn">
           <div className="modal-container" style={modalContainerStyles}>
             <div style={modalHeaderStyles}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <Sparkles size={20} color="#6366f1" />
                 <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: 0, color: "#1e293b" }}>
-                  Basic Information
+                  {getModalTitle(activeSection)}
                 </h3>
               </div>
-              <button onClick={() => { setIsModalOpen(false); if (onModalCloseAction) onModalCloseAction(); }} style={modalCloseBtnStyles}>
+              <button onClick={() => { setActiveSection(null); if (onModalCloseAction) onModalCloseAction(); }} style={modalCloseBtnStyles}>
                 <X size={20} />
               </button>
             </div>
-            <p style={modalSubtitleStyles}>Help us get the essentials right to personalize your experience.</p>
+            <p style={modalSubtitleStyles}>{getModalSubtitle(activeSection)}</p>
             
-            <BasicInformationForm 
-              onSubmit={handleFormSubmit}
-              onClose={() => { setIsModalOpen(false); if (onModalCloseAction) onModalCloseAction(); }}
-              initialValues={profile.basicInformation}
-            />
+            {renderActiveForm(activeSection)}
           </div>
         </div>
       )}

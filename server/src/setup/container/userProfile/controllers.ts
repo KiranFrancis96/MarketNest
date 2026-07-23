@@ -7,6 +7,8 @@ export const userProfileController =
 
         useCases.createUserProfileUseCase,
 
-        useCases.getUserProfileUseCase
+        useCases.getUserProfileUseCase,
+
+        useCases.updateUserProfileUseCase
 
     );

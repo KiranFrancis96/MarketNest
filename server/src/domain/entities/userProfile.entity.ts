@@ -3,7 +3,13 @@ export type ProfileSection =
     | "lifestyle"
     | "family"
     | "home"
+    | "occupation"
     | "shopping"
+    | "technology"
+    | "travel"
+    | "food"
+    | "entertainment"
+    | "aiPreferences"
     | "privacy";
 
 export interface BasicInformation {
@@ -42,6 +48,14 @@ export interface HomeInformation {
     smartHomeDevices?: string[];
 }
 
+export interface Occupation {
+    companyIndustry?: string;
+    jobRole?: string;
+    yearsExperience?: number;
+    workLocation?: string;
+    skills?: string[];
+}
+
 export interface ShoppingPreferences {
     favoriteBrands?: string[];
     favoriteCategories?: string[];
@@ -49,6 +63,41 @@ export interface ShoppingPreferences {
     couponUsage?: boolean;
     cashbackInterest?: boolean;
     preferredShoppingTime?: string;
+}
+
+export interface Technology {
+    primaryDevice?: string;
+    operatingSystem?: string;
+    techSavviness?: string;
+    favoriteGadgets?: string[];
+}
+
+export interface Travel {
+    travelFrequency?: string;
+    preferredDestination?: string;
+    accommodationStyle?: string;
+    passportStatus?: boolean;
+}
+
+export interface Food {
+    dietaryPreferences?: string[];
+    favoriteCuisines?: string[];
+    cookingFrequency?: string;
+    diningOutFrequency?: string;
+}
+
+export interface Entertainment {
+    favoriteGenres?: string[];
+    streamingServices?: string[];
+    hobbies?: string[];
+    weeklyScreenTime?: string;
+}
+
+export interface AiPreferences {
+    aiFeatureUsage?: string;
+    preferredAiStyle?: string;
+    dataSharingConsent?: boolean;
+    automatedRecommendations?: boolean;
 }
 
 export interface PrivacySettings {
@@ -71,7 +120,19 @@ export interface UserProfile {
 
     home?: HomeInformation;
 
+    occupation?: Occupation;
+
     shopping?: ShoppingPreferences;
+
+    technology?: Technology;
+
+    travel?: Travel;
+
+    food?: Food;
+
+    entertainment?: Entertainment;
+
+    aiPreferences?: AiPreferences;
 
     privacy?: PrivacySettings;
 

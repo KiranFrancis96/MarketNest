@@ -50,8 +50,7 @@ export class MerchantController {
   ) {}
 
   updateProfile = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
-    const merchantId = req.user?.id;
+    const merchantId = req.merchant?.id || req.user?.id;
     if (!merchantId) {
       res.status(HttpStatus.UNAUTHORIZED).json({ message: MSG_UNAUTHORIZED });
       return;
@@ -77,8 +76,7 @@ export class MerchantController {
   };
 
   completeProfile = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
-    const merchantId = req.user?.id;
+    const merchantId = req.merchant?.id || req.user?.id;
     if (!merchantId) {
       res.status(HttpStatus.UNAUTHORIZED).json({ message: MSG_UNAUTHORIZED });
       return;
@@ -144,8 +142,7 @@ export class MerchantController {
   };
 
   getProfile = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
-    const merchantId = req.user?.id;
+    const merchantId = req.merchant?.id || req.user?.id;
 
     if (!merchantId) {
       res.status(HttpStatus.UNAUTHORIZED).json({ message: MSG_UNAUTHORIZED });
@@ -176,8 +173,7 @@ export class MerchantController {
   };
 
   reapply = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
-    const merchantId = req.user?.id;
+    const merchantId = req.merchant?.id || req.user?.id;
     if (!merchantId) {
       res.status(HttpStatus.UNAUTHORIZED).json({ message: MSG_UNAUTHORIZED });
       return;

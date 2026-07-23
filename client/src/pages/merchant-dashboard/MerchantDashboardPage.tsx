@@ -978,7 +978,7 @@ export const MerchantDashboardPage = () => {
                               textAlign: "left"
                             }}
                           >
-                            #{sale.orderNumber || sale.orderId.substring(0, 8)}
+                            {sale.orderNumber?.startsWith("ORD-") ? sale.orderNumber : `#${sale.orderNumber || sale.orderId.substring(0, 8)}`}
                           </button>
                         </td>
                         <td style={{ padding: "1.25rem 1.5rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>{dateStr}</td>
@@ -1415,7 +1415,7 @@ export const MerchantDashboardPage = () => {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "#0f172a", marginBottom: "0.25rem" }}>
-              Order #{sale.orderNumber || sale.orderId.substring(0, 8)}
+              Order {sale.orderNumber?.startsWith("ORD-") ? sale.orderNumber : `#${sale.orderNumber || sale.orderId.substring(0, 8)}`}
             </h1>
             <p style={{ fontSize: "0.9rem", color: "#64748b", fontWeight: 500 }}>
               Placed on {dateStr} • ID: {sale.orderId}
@@ -1582,7 +1582,7 @@ export const MerchantDashboardPage = () => {
           </div>
         </div>
       </div>
-  };
+  )};
 
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

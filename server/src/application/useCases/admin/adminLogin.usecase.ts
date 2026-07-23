@@ -48,3 +48,76 @@ export class AdminLoginUseCase implements IAdminLoginUseCase {
     };
   }
 }
+
+
+// ------------------------
+
+
+// interface IMySQLDatabase{
+//     save(data:string):void{}
+// }
+
+// class MySQLDatabase implements IMySQLDatabase {
+//   save(data: string): void {
+//     console.log(`Saving ${data} to MySQL`);
+//   }
+// }
+
+
+// interface Worker {
+//   work(): void;
+//   eat(): void;
+// }
+
+// class Robot implements Worker {
+//   work(): void {
+//     console.log("Robot working");
+//   }
+// }
+
+// const mySqlD = new MySQLDatabase()
+
+// class EmployeeManager {
+// //   private db: MySQLDatabase;
+
+//   constructor(
+//         database:IMySQLDatabase
+      
+//       ) {
+  
+//     // this.db = new MySQLDatabase();
+//   }
+
+  
+//   manageEmployee(
+//     employeeType: string,
+//     employeeName: string
+//   ): void {
+//     // Business Logic
+//     console.log(`Managing employee ${employeeName}`);
+
+  
+//     if (employeeType === "FULL_TIME") {
+//       console.log("Calculate Full-Time Salary");
+//     } else if (employeeType === "CONTRACT") {
+//       console.log("Calculate Contract Salary");
+//     } else if (employeeType === "INTERN") {
+//       console.log("Calculate Intern Stipend");
+//     }
+
+//     // Database Logic
+//     this.database.save(employeeName);
+
+//     // Reporting Logic
+//     console.log(`Generating report for ${employeeName}`);
+//   }
+  
+  
+// }
+
+// // Usage
+// const manager = new EmployeeManager();
+// manager.manageEmployee("FULL_TIME", "John");
+
+// const robot = new Robot();
+// robot.eat(); // Runtime Error

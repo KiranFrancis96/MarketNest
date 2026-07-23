@@ -28,7 +28,6 @@ export class CartController {
   ) {}
 
   get = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
 
@@ -37,7 +36,6 @@ export class CartController {
   };
 
   add = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
 
@@ -51,7 +49,6 @@ export class CartController {
   };
 
   updateQuantity = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
 
@@ -65,7 +62,6 @@ export class CartController {
   };
 
   remove = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
 
@@ -79,7 +75,6 @@ export class CartController {
   };
 
   clear = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
 

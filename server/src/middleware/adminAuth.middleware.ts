@@ -29,7 +29,7 @@ export const adminAuth = async (req: Request, res: Response, next: NextFunction)
       return;
     }
 
-    // @ts-ignore
+    req.admin = decoded;
     req.user = decoded;
     next();
   } catch (err: unknown) {

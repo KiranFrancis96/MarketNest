@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import mongoose from "mongoose";
 import type {
   ICreateOrderUseCase,
   IVerifyPaymentUseCase,
@@ -14,6 +15,8 @@ import { UserModel } from "@/infrastructure/database/models/user.model.ts";
 import { OrderModel } from "@/infrastructure/database/models/order.model.ts";
 import { ProductModel } from "@/infrastructure/database/models/product.model.ts";
 import { CartModel } from "@/infrastructure/database/models/cart.model.ts";
+import { WalletTransactionModel } from "@/infrastructure/database/models/walletTransaction.model.ts";
+import { recordWalletTransaction } from "@/application/services/walletTransaction.service.ts";
 import { ApiError } from "@/utils/apiError.ts";
 import { HttpStatus } from "@/utils/httpStatus.ts";
 import {
@@ -49,7 +52,6 @@ export class OrderController {
   ) {}
 
   create = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) {
       throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
@@ -69,7 +71,6 @@ export class OrderController {
   };
 
   verify = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) {
       throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
@@ -94,7 +95,6 @@ export class OrderController {
   };
 
   getById = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) {
       throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
@@ -110,7 +110,6 @@ export class OrderController {
   };
 
   getUserHistory = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) {
       throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
@@ -132,8 +131,7 @@ export class OrderController {
   };
 
   getMerchantSalesHistory = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
-    const merchantId = req.user?.id;
+    const merchantId = req.merchant?.id || req.user?.id;
     if (!merchantId) {
       throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
     }
@@ -163,8 +161,7 @@ export class OrderController {
   };
 
   updateMerchantItemStatus = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
-    const merchantId = req.user?.id;
+    const merchantId = req.merchant?.id || req.user?.id;
     if (!merchantId) {
       throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
     }
@@ -193,7 +190,6 @@ export class OrderController {
   };
 
   updateUserItemStatus = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) {
       throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
@@ -223,7 +219,6 @@ export class OrderController {
   };
 
   payWithWallet = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) {
       throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
@@ -289,21 +284,34 @@ export class OrderController {
       await cart.save();
     }
 
-    // Assign order number based on total paid orders so far (this order is already paid, so count includes it)
     const paidCount = await OrderModel.countDocuments({ status: "paid" });
-    await OrderModel.updateOne({ _id: order._id }, { $set: { orderNumber: String(paidCount) } });
+    const finalOrderNumber = order.orderNumber && order.orderNumber.startsWith("ORD-")
+      ? order.orderNumber
+      : `ORD-${10000 + paidCount}`;
+    await OrderModel.updateOne({ _id: order._id }, { $set: { orderNumber: finalOrderNumber } });
+    order.orderNumber = finalOrderNumber;
 
     const updatedUser = await UserModel.findById(userId);
+    const newBal = updatedUser?.walletBalance || 0;
+
+    await recordWalletTransaction({
+      userId,
+      type: "debit",
+      amount: totalAmount,
+      description: `Payment for Order #${order.orderNumber || order._id}`,
+      balanceAfter: newBal,
+      orderId: order._id,
+    });
+
     res.status(HttpStatus.OK).json({
       success: true,
       message: "Order paid successfully via wallet",
       order,
-      walletBalance: updatedUser?.walletBalance || 0
+      walletBalance: newBal
     });
   };
 
   markAsFailed = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) {
       throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
@@ -327,6 +335,18 @@ export class OrderController {
       await UserModel.updateOne({ _id: userId }, { $inc: { walletBalance: order.totalAmount } });
       order.status = "failed";
       await order.save();
+
+      const updatedUser = await UserModel.findById(userId);
+      const newBal = updatedUser?.walletBalance || 0;
+
+      await recordWalletTransaction({
+        userId,
+        type: "credit",
+        amount: order.totalAmount,
+        description: `Refund for Failed Payment (Order #${order.orderNumber || order._id})`,
+        balanceAfter: newBal,
+        orderId: order._id,
+      });
     }
 
     res.status(HttpStatus.OK).json({
@@ -338,7 +358,6 @@ export class OrderController {
 
   addWalletFunds = async (req: Request, res: Response): Promise<void> => {
     try {
-      // @ts-ignore
       const userId = req.user?.id;
       if (!userId) {
         throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
@@ -357,16 +376,72 @@ export class OrderController {
       await UserModel.updateOne({ _id: userId }, { $inc: { walletBalance: amount } });
 
       const updatedUser = await UserModel.findById(userId);
+      const newBal = updatedUser?.walletBalance || 0;
+
+      await recordWalletTransaction({
+        userId,
+        type: "credit",
+        amount,
+        description: "Funds Added to Wallet (Credit)",
+        balanceAfter: newBal,
+      });
+
       res.status(HttpStatus.OK).json({
         success: true,
         message: "Wallet funds added successfully",
-        walletBalance: updatedUser?.walletBalance || 0
+        walletBalance: newBal
       });
     } catch (err: any) {
       console.error("DEBUG addWalletFunds error:", err);
       res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: "Failed to add wallet funds: " + (err.message || "Internal server error")
+      });
+    }
+  };
+
+  getWalletHistory = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
+      }
+
+      const user = await UserModel.findById(userId);
+      if (!user) {
+        throw new ApiError(HttpStatus.NOT_FOUND, MSG_USER_NOT_FOUND);
+      }
+
+      let transactions = await WalletTransactionModel.find({
+        $or: [
+          { userId: user._id },
+          { userId: String(userId) }
+        ]
+      })
+        .sort({ createdAt: -1 })
+        .lean();
+
+      // If user has existing wallet balance but no logged history yet, create initial credit log for existing balance
+      if (transactions.length === 0 && (user.walletBalance || 0) > 0) {
+        const initialTx = await WalletTransactionModel.create({
+          userId: user._id,
+          type: "credit",
+          amount: user.walletBalance,
+          description: "Funds Added to Wallet (Credit)",
+          balanceAfter: user.walletBalance,
+        });
+        transactions = [initialTx.toObject() as any];
+      }
+
+      res.status(HttpStatus.OK).json({
+        success: true,
+        transactions
+      });
+    } catch (err: any) {
+      console.error("DEBUG getWalletHistory error:", err);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "Failed to fetch wallet transaction history: " + (err.message || "Internal server error")
       });
     }
   };

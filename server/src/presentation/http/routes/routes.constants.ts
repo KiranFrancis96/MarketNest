@@ -65,6 +65,7 @@ export const ROUTE_ORDER_VERIFY = "/verify";
 export const ROUTE_ORDER_WALLET_PAY = "/:id/wallet-pay";
 export const ROUTE_ORDER_FAIL = "/:id/fail";
 export const ROUTE_ORDER_WALLET_ADD = "/wallet/add";
+export const ROUTE_ORDER_WALLET_HISTORY = "/wallet/history";
 export const ROUTE_ORDER_MIGRATE_NUMBERS = "/migrate/order-numbers";
 export const ROUTE_ORDER_BY_ID = "/:id";
 

@@ -21,7 +21,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
     private _cartRepository: ICartRepository,
     private _orderRepository: IOrderRepository,
     private _productRepository: IProductRepository
-  ) {}
+  ) { }
 
   async execute(input: CreateOrderInputDTO): Promise<CreateOrderOutputDTO> {
     const { userId, shippingAddress } = input;
@@ -45,7 +45,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
           `${MSG_PRODUCT_STOCK_SHORT}'${product.name}' (Available: ${product.stock})`
         );
       }
-      
+
       const price = product.offerPrice !== undefined && product.offerPrice !== null
         ? product.offerPrice
         : product.price;
@@ -69,7 +69,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
       throw new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, MSG_RAZORPAY_CONFIG_MISSING);
     }
 
-    // @ts-ignore
+
     const razorpay = new Razorpay({
       key_id: razorpayKeyId,
       key_secret: razorpayKeySecret

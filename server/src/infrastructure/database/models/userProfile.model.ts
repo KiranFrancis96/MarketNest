@@ -8,6 +8,7 @@ const basicInformationSchema = new mongoose.Schema(
         gender: String,
         maritalStatus: String,
         occupation: String,
+        occupationType: String,
         education: String,
         languages: [String],
     },
@@ -50,6 +51,17 @@ const homeSchema = new mongoose.Schema(
     { _id: false }
 );
 
+const occupationSchema = new mongoose.Schema(
+    {
+        companyIndustry: String,
+        jobRole: String,
+        yearsExperience: Number,
+        workLocation: String,
+        skills: [String],
+    },
+    { _id: false }
+);
+
 const shoppingSchema = new mongoose.Schema(
     {
         favoriteBrands: [String],
@@ -58,6 +70,56 @@ const shoppingSchema = new mongoose.Schema(
         couponUsage: Boolean,
         cashbackInterest: Boolean,
         preferredShoppingTime: String,
+    },
+    { _id: false }
+);
+
+const technologySchema = new mongoose.Schema(
+    {
+        primaryDevice: String,
+        operatingSystem: String,
+        techSavviness: String,
+        favoriteGadgets: [String],
+    },
+    { _id: false }
+);
+
+const travelSchema = new mongoose.Schema(
+    {
+        travelFrequency: String,
+        preferredDestination: String,
+        accommodationStyle: String,
+        passportStatus: Boolean,
+    },
+    { _id: false }
+);
+
+const foodSchema = new mongoose.Schema(
+    {
+        dietaryPreferences: [String],
+        favoriteCuisines: [String],
+        cookingFrequency: String,
+        diningOutFrequency: String,
+    },
+    { _id: false }
+);
+
+const entertainmentSchema = new mongoose.Schema(
+    {
+        favoriteGenres: [String],
+        streamingServices: [String],
+        hobbies: [String],
+        weeklyScreenTime: String,
+    },
+    { _id: false }
+);
+
+const aiPreferencesSchema = new mongoose.Schema(
+    {
+        aiFeatureUsage: String,
+        preferredAiStyle: String,
+        dataSharingConsent: Boolean,
+        automatedRecommendations: Boolean,
     },
     { _id: false }
 );
@@ -113,8 +175,38 @@ const userProfileSchema = new mongoose.Schema(
             default: {},
         },
 
+        occupation: {
+            type: occupationSchema,
+            default: {},
+        },
+
         shopping: {
             type: shoppingSchema,
+            default: {},
+        },
+
+        technology: {
+            type: technologySchema,
+            default: {},
+        },
+
+        travel: {
+            type: travelSchema,
+            default: {},
+        },
+
+        food: {
+            type: foodSchema,
+            default: {},
+        },
+
+        entertainment: {
+            type: entertainmentSchema,
+            default: {},
+        },
+
+        aiPreferences: {
+            type: aiPreferencesSchema,
             default: {},
         },
 

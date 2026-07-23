@@ -45,6 +45,17 @@ export interface ClientOrder {
   };
 }
 
+export interface WalletTransaction {
+  _id: string;
+  userId: string;
+  type: "credit" | "debit";
+  amount: number;
+  description: string;
+  orderId?: string;
+  balanceAfter: number;
+  createdAt: string;
+}
+
 export const orderApi = {
   create: (shippingAddress: Record<string, unknown>) => baseApi.post(ORDERS, { shippingAddress }),
   verify: (paymentDetails: { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string }) =>
@@ -65,4 +76,6 @@ export const orderApi = {
     baseApi.post<{ success: boolean; message: string; order: ClientOrder }>(ORDERS_MARK_FAILED(orderId), {}),
   addWalletFunds: (amount: number) =>
     baseApi.post<{ success: boolean; message: string; walletBalance: number }>(ORDERS_WALLET_ADD, { amount }),
+  getWalletHistory: () =>
+    baseApi.get<{ success: boolean; transactions: WalletTransaction[] }>(ORDERS_WALLET_HISTORY),
 };

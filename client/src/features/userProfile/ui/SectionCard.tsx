@@ -76,10 +76,12 @@ export const SectionCard: React.FC<SectionCardProps> = ({
 
   return (
     <div 
+      onClick={onAction}
       style={{
         ...cardStyles,
         ...(status === "current" ? currentCardStyles : {}),
         ...(status === "upcoming" ? upcomingCardStyles : {}),
+        cursor: onAction ? "pointer" : "default",
       }}
     >
       {/* Header of the Card */}
@@ -151,18 +153,26 @@ export const SectionCard: React.FC<SectionCardProps> = ({
       {/* Action Button */}
       <div style={actionWrapperStyles}>
         {status === "completed" && (
-          <button onClick={onAction} style={reviewBtnStyles}>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onAction) onAction();
+            }} 
+            style={reviewBtnStyles}
+          >
             Review
           </button>
         )}
         {status === "current" && (
           <button 
-            onClick={onAction} 
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onAction) onAction();
+            }} 
             style={{
               ...continueBtnStyles,
-              // If it's not basic info, it's just a visual continue button (disabled under the hood or shows coming soon)
-              cursor: id === "basicInformation" ? "pointer" : "not-allowed",
-              opacity: id === "basicInformation" ? 1 : 0.8,
+              cursor: onAction ? "pointer" : "not-allowed",
+              opacity: onAction ? 1 : 0.8,
             }}
           >
             {id === "basicInformation" ? "Continue" : `Start (${estTime})`}
@@ -170,12 +180,19 @@ export const SectionCard: React.FC<SectionCardProps> = ({
         )}
         {status === "upcoming" && (
           <button 
-            disabled 
-            style={
-              id === "aiPreferences" 
-                ? priorityBtnStyles 
-                : startBtnStyles
-            }
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onAction) onAction();
+            }}
+            disabled={!onAction} 
+            style={{
+              ...(id === "aiPreferences" ? priorityBtnStyles : startBtnStyles),
+              cursor: onAction ? "pointer" : "not-allowed",
+              opacity: onAction ? 1 : 0.6,
+              color: onAction ? "#e2e8f0" : "#475569",
+              border: onAction ? "1px solid #6366f1" : "1px solid #1e293b",
+              backgroundColor: onAction ? "rgba(99, 102, 241, 0.15)" : "rgba(30, 41, 59, 0.2)",
+            }}
           >
             {id === "aiPreferences" ? "Start Priority" : `Start (${estTime})`}
           </button>

@@ -263,6 +263,8 @@ interface RazorpayWindow {
               setPaymentError("Razorpay payment cancelled or dismissed. The order has been marked as failed.");
               try {
                 await orderApi.markAsFailed(createdOrderId!);
+                const profileRes = await userApi.getProfile();
+                dispatch(setUser(profileRes.data));
               } catch (err) {
                 console.error("Failed to mark order as failed in database", err);
               }

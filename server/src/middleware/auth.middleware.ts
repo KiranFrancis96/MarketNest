@@ -40,7 +40,6 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       return;
     }
 
-    // @ts-ignore
     req.user = decoded;
     next();
   } catch (err: unknown) {

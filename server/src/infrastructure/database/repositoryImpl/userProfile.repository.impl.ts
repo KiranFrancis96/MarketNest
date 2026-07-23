@@ -20,4 +20,16 @@ export class UserProfileRepository
 
         return this.mapper.toEntity(profile);
     }
+
+
+        async updateByUserId(
+        userId: string,
+        data: Partial<UserProfile>
+    ): Promise<UserProfile | null> {
+
+        return this.findOneAndUpdate(
+            { userId },
+            data
+        );
+    }
 }

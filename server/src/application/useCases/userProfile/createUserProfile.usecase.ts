@@ -58,7 +58,7 @@ export class CreateUserProfileUseCase
             completionPercentage,
             rewardCoins,
             completedSections,
-        } = calculateProfileCompletion(initialProfile);
+        } = calculateProfileCompletion(initialProfile, [], ["basicInformation"]);
 
 
         const profile =

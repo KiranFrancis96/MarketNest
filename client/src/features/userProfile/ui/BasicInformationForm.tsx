@@ -29,14 +29,19 @@ export const BasicInformationForm: React.FC<BasicInformationFormProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  const handleAddLanguage = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleAddLanguage = (e?: React.SyntheticEvent) => {
+    if (e) e.preventDefault();
+    const val = langInput.trim().replace(/,$/, "");
+    if (val && !languages.includes(val)) {
+      setLanguages([...languages, val]);
+    }
+    setLangInput("");
+  };
+
+  const handleKeyDownLanguage = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
-      const val = langInput.trim().replace(/,$/, "");
-      if (val && !languages.includes(val)) {
-        setLanguages([...languages, val]);
-      }
-      setLangInput("");
+      handleAddLanguage();
     }
   };
 
@@ -73,6 +78,12 @@ export const BasicInformationForm: React.FC<BasicInformationFormProps> = ({
       return;
     }
 
+    const finalLanguages = [...languages];
+    const pendingLang = langInput.trim().replace(/,$/, "");
+    if (pendingLang && !finalLanguages.includes(pendingLang)) {
+      finalLanguages.push(pendingLang);
+    }
+
     setErrors({});
     setLoading(true);
     try {
@@ -84,7 +95,7 @@ export const BasicInformationForm: React.FC<BasicInformationFormProps> = ({
           occupation,
           occupationType: occupation,
           education: education || undefined,
-          languages: languages.length > 0 ? languages : undefined,
+          languages: finalLanguages.length > 0 ? finalLanguages : undefined,
         },
       };
 
@@ -236,7 +247,7 @@ export const BasicInformationForm: React.FC<BasicInformationFormProps> = ({
                 placeholder={languages.length === 0 ? "Add language (press Enter)" : ""}
                 value={langInput}
                 onChange={(e) => setLangInput(e.target.value)}
-                onKeyDown={handleAddLanguage}
+                onKeyDown={handleKeyDownLanguage}
                 style={langInputFieldStyles}
               />
             </div>

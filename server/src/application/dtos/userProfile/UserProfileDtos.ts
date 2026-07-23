@@ -3,6 +3,8 @@ import type {
     UserProfile,
 } from "@/domain/entities/userProfile.entity.ts";
 
+/* -------------------- CREATE -------------------- */
+
 export interface CreateUserProfileInputDTO {
     userId: string;
     basicInformation: BasicInformation;
@@ -12,31 +14,42 @@ export interface CreateUserProfileOutputDTO {
     profile: UserProfile;
 }
 
+/* -------------------- GET -------------------- */
+
 export interface GetUserProfileInputDTO {
     userId: string;
 }
 
-export interface UpdateLifestyleInputDTO {
+/* -------------------- UPDATE -------------------- */
+
+export interface UpdateUserProfileInputDTO {
     userId: string;
-    lifestyle: UserProfile["lifestyle"];
+
+    basicInformation?: UserProfile["basicInformation"];
+
+    lifestyle?: UserProfile["lifestyle"];
+
+    family?: UserProfile["family"];
+
+    home?: UserProfile["home"];
+
+    occupation?: UserProfile["occupation"];
+
+    shopping?: UserProfile["shopping"];
+
+    technology?: UserProfile["technology"];
+
+    travel?: UserProfile["travel"];
+
+    food?: UserProfile["food"];
+
+    entertainment?: UserProfile["entertainment"];
+
+    aiPreferences?: UserProfile["aiPreferences"];
+
+    privacy?: UserProfile["privacy"];
 }
 
-export interface UpdateFamilyInputDTO {
-    userId: string;
-    family: UserProfile["family"];
-}
-
-export interface UpdateHomeInputDTO {
-    userId: string;
-    home: UserProfile["home"];
-}
-
-export interface UpdateShoppingInputDTO {
-    userId: string;
-    shopping: UserProfile["shopping"];
-}
-
-export interface UpdatePrivacyInputDTO {
-    userId: string;
-    privacy: UserProfile["privacy"];
+export interface UpdateUserProfileOutputDTO {
+    profile: UserProfile;
 }

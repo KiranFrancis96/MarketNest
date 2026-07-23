@@ -185,14 +185,12 @@ export class AuthController {
   };
 
   getProfile = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
-    const userId = req.user.id;
+    const userId = req.user?.id;
     const user = await this._getUserProfileUseCase.execute(userId);
     res.json(user);
   };
 
   addAddress = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) {
       res.status(HttpStatus.UNAUTHORIZED).json({ message: MSG_UNAUTHORIZED });
@@ -221,7 +219,6 @@ export class AuthController {
   };
 
   updateAddress = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) {
       res.status(HttpStatus.UNAUTHORIZED).json({ message: MSG_UNAUTHORIZED });
@@ -252,7 +249,6 @@ export class AuthController {
   };
 
   deleteAddress = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) {
       res.status(HttpStatus.UNAUTHORIZED).json({ message: MSG_UNAUTHORIZED });

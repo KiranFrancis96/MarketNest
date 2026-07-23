@@ -31,7 +31,6 @@ export class NotificationController {
   ) {}
 
   registerDevice = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) {
       throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
@@ -44,7 +43,6 @@ export class NotificationController {
   };
 
   getNotifications = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) {
       throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
@@ -55,7 +53,6 @@ export class NotificationController {
   };
 
   getUnreadNotifications = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) {
       throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
@@ -66,7 +63,6 @@ export class NotificationController {
   };
 
   markAsRead = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     const { id } = req.params;
     
@@ -82,7 +78,6 @@ export class NotificationController {
   };
 
   delete = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     const { id } = req.params;
 
@@ -98,7 +93,6 @@ export class NotificationController {
   };
 
   getPreferences = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) {
       throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
@@ -109,7 +103,6 @@ export class NotificationController {
   };
 
   updatePreferences = async (req: Request, res: Response): Promise<void> => {
-    // @ts-ignore
     const userId = req.user?.id;
     if (!userId) {
       throw new ApiError(HttpStatus.UNAUTHORIZED, MSG_UNAUTHORIZED);
