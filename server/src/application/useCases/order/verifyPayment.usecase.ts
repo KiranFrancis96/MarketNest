@@ -92,9 +92,9 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
     }
 
     // Clear cart
-    const cart = await this._cartRepository.findByUserId(userId);
-    if (cart) {
-      await this._cartRepository.updateByUserId(userId, { items: [] });
+    const cart = await this._cartRepository.findByUser(userId);
+    if (cart && cart._id) {
+      await this._cartRepository.updateById(cart._id, { items: [] });
     }
 
     return updatedOrder;

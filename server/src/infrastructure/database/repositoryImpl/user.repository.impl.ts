@@ -4,6 +4,7 @@ import type { User } from "@/domain/entities/user.entity.ts";
 import { UserModel } from "../models/user.model.ts";
 import { UserMapper } from "../mappers/UserMapper.ts";
 
+
 export class UserRepository extends BaseRepository<User> implements IUserRepository {
   constructor() {
     super(UserModel, UserMapper);
@@ -46,4 +47,5 @@ export class UserRepository extends BaseRepository<User> implements IUserReposit
   async toggleBlockStatus(id: string, isBlocked: boolean): Promise<void> {
     await this.model.findByIdAndUpdate(id, { isBlocked });
   }
+
 }

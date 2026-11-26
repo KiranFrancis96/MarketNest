@@ -81,7 +81,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
       receipt: `receipt_${Date.now()}_${userId.substring(0, 5)}`
     };
 
-    let rzOrder;
+    let rzOrder: any;
     try {
       rzOrder = await razorpay.orders.create(options);
     } catch (err: unknown) {

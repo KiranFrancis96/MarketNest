@@ -4,6 +4,7 @@ import type { Product } from "@/domain/entities/product.entity.ts";
 import { ProductModel } from "../models/product.model.ts";
 import { ProductMapper } from "../mappers/ProductMapper.ts";
 
+
 export class ProductRepository extends BaseRepository<Product> implements IProductRepository {
   constructor() {
     super(ProductModel, ProductMapper);
@@ -125,4 +126,6 @@ export class ProductRepository extends BaseRepository<Product> implements IProdu
       total
     };
   }
+
+  
 }

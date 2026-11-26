@@ -53,7 +53,7 @@ export class MerchantMapper {
       documentUrl: d.documentUrl ?? undefined,
       profilePic: d.profilePic ?? undefined,
       isEmailVerified: !!d.isEmailVerified,
-      isProfileComplete: d.isProfileComplete !== false,
+      isProfileComplete: !!d.isProfileComplete,
       isAdminVerified: !!d.isAdminVerified,
       isBlocked: !!d.isBlocked,
       status: d.status || "pending",

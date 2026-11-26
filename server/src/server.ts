@@ -1,3 +1,10 @@
+import fs from 'fs';
+process.on('uncaughtException', (err) => {
+  fs.writeFileSync('crash_log.txt', 'UNCAUGHT EXCEPTION: ' + String(err.stack || err));
+});
+process.on('unhandledRejection', (reason, promise) => {
+  fs.writeFileSync('crash_log.txt', 'UNHANDLED REJECTION: ' + String(reason instanceof Error ? reason.stack : reason));
+});
 import express from 'express'
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";

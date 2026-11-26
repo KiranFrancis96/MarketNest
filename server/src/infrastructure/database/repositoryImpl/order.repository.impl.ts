@@ -3,6 +3,7 @@ import type { IOrderRepository } from "@/domain/interface/order.repository.ts";
 import type { Order } from "@/domain/entities/order.entity.ts";
 import { OrderModel } from "../models/order.model.ts";
 import { OrderMapper } from "../mappers/OrderMapper.ts";
+import type mongoose from "mongoose";
 
 export class OrderRepository extends BaseRepository<Order> implements IOrderRepository {
   constructor() {
@@ -32,5 +33,25 @@ export class OrderRepository extends BaseRepository<Order> implements IOrderRepo
       .populate("items.productId")
       .lean();
     return doc ? (this.mapper.toEntity(doc) as Order) : null;
+  }
+
+  async getPurchaseFreq(userId:string):Promise<{
+    _id:mongoose.Types.ObjectId,
+    count:number,
+    lastBought:Date
+  } []| null>{
+    const doc = await this.model.aggregate([
+      {$match:{userId:userId}},
+      {$unwind:"$items"},
+      {$group:{
+        _id:"$items.product",
+        count:{$sum:1},
+        lastBought:{$max:"$createdAt"}
+      }},
+      {$match:{count:{$gte:3}}}
+      
+    ])
+
+    return doc
   }
 }
